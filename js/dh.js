@@ -357,6 +357,20 @@
     });
   };
 
+  /* ---------- 폰 메뉴(≡) : 720px 이하에서 nav 를 접고 버튼으로 펼친다 ---------- */
+  DH.mobileNav = function () {
+    document.querySelectorAll('header.top .wrap, header.dh-top .wrap').forEach(function (w) {
+      if (w.querySelector('.menu-btn')) return;
+      var nav = w.querySelector('nav'); if (!nav) return;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'menu-btn'; b.setAttribute('aria-label', '메뉴'); b.setAttribute('aria-expanded', 'false');
+      b.innerHTML = '<span></span><span></span><span></span>';
+      w.appendChild(b);
+      b.addEventListener('click', function () { var on = w.classList.toggle('nav-open'); b.setAttribute('aria-expanded', on ? 'true' : 'false'); });
+      document.addEventListener('click', function (e) { if (!w.contains(e.target)) { w.classList.remove('nav-open'); b.setAttribute('aria-expanded', 'false'); } });
+    });
+  };
+  document.addEventListener('DOMContentLoaded', function () { DH.mobileNav(); });
+
   /* ---------- 공통 상단바·푸터 ---------- */
   DH.chrome = function (opt) {
     opt = opt || {};
@@ -367,6 +381,7 @@
       nav.map(function (n) { return '<a href="' + n[0] + '"' + (here === n[2] ? ' class="on"' : '') + '>' + n[1] + '</a>'; }).join('') +
       '<a href="https://daehantax.com/info.html" target="_blank" rel="noopener">블로그</a></nav></div>';
     document.body.prepend(top);
+    DH.mobileNav();
     if (opt.contact !== false) {
       const c = document.createElement('div'); c.className = 'dh-contact no-print';
       c.innerHTML = '<div class="wrap">' + DH.consultHtml({ title: opt.contactTitle }) + '</div>';

@@ -26,6 +26,7 @@ h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.3;word-break:keep-all}
 
 /* ---------- 상단바 ---------- */
 .dh-top{background:#fff;border-bottom:1px solid var(--line)}
+.menu-btn{display:none}
 .dh-top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
 .dh-top .logo{font-weight:900;color:var(--ink)}
 .dh-top .logo span{color:var(--main)}
@@ -179,12 +180,21 @@ details.dh>div,details.dh>ul,details.dh>p{padding:0 0 12px;font-size:14px;color:
   .field{grid-template-columns:1fr;gap:4px}
   .grid2{grid-template-columns:1fr}
   .dh-top nav a.hide-m{display:none}
-  .dh-top .wrap{height:52px;gap:12px}
-  .dh-top .logo{font-size:14px;white-space:nowrap}
-  .dh-top .logo span{display:none}
-  .dh-top nav{gap:14px;font-size:13px;white-space:nowrap;overflow-x:auto;scrollbar-width:none}
-  .dh-top nav::-webkit-scrollbar{display:none}
-  .dh-top nav a{flex:0 0 auto}
+
+  /* 폰 메뉴(≡) */
+  .dh-top .wrap{position:relative;height:52px;gap:12px}
+  .dh-top .logo{font-size:15px;white-space:nowrap}
+  .dh-top nav{display:none;position:absolute;left:0;right:0;top:52px;flex-direction:column;align-items:stretch;gap:0;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.08);z-index:50;padding:6px 0}
+  .dh-top .wrap.nav-open nav{display:flex}
+  .dh-top nav a{display:block;padding:12px 20px;font-size:15px;border-top:1px solid var(--line);white-space:nowrap}
+  .dh-top nav a:first-child{border-top:0}
+  .dh-top nav a.hide-m{display:block}
+  .menu-btn{display:inline-flex;flex-direction:column;justify-content:center;gap:5px;width:40px;height:40px;padding:8px;margin-right:-8px;border:0;background:none;cursor:pointer}
+  .menu-btn span{display:block;height:2px;border-radius:2px;background:var(--ink);transition:transform .18s,opacity .18s}
+  .nav-open .menu-btn span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .nav-open .menu-btn span:nth-child(2){opacity:0}
+  .nav-open .menu-btn span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
   input[type=text],input[type=number],select{max-width:none}
   .card{padding:18px 16px}
   .form-sheet{padding:18px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
