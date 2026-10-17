@@ -148,3 +148,22 @@ footer a{color:var(--main)}
 .ask-cta .btn.ghost{background:#fff;color:var(--main);border:1px solid var(--main);box-shadow:none}
 .hero-text{padding-bottom:56px}
 @media (max-width:820px){.ask{max-width:none}}
+
+/* 메인 첫 화면 축소 */
+.hero.compact .hero-text{padding:40px 0 44px}
+.hero.compact h1{margin-top:0;font-size:clamp(28px,4.4vw,42px)}
+.hero.compact p{margin-bottom:18px}
+.hero.compact .ask{padding:14px 18px}
+
+/* 증여 랜딩: 사진 2단 (배경 사진 없음) */
+.hero.people{background:linear-gradient(180deg,#fff 0%,var(--main-soft) 100%)}
+.hero.people::before{display:none}
+.hero.people .wrap{display:grid;grid-template-columns:1.15fr .85fr;align-items:end;gap:20px}
+.hero.people .hero-text{padding:48px 0 52px}
+.hero.people .hero-photo{align-self:end;padding:0}
+.hero.people .hero-photo img{max-width:330px;margin:0 0 0 auto;border-radius:0;box-shadow:none;mix-blend-mode:multiply}
+@media (max-width:820px){
+  .hero.people .wrap{grid-template-columns:1fr}
+  .hero.people .hero-text{padding:32px 0 8px}
+  .hero.people .hero-photo img{max-width:240px;margin:0 auto}
+}

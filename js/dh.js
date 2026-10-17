@@ -254,7 +254,7 @@
   DH.chrome = function (opt) {
     opt = opt || {};
     const here = location.pathname.split('/').pop();
-    const nav = [['./', '상속세', 'index.html'], ['gift.html', '상황별 증여세', 'gift.html'], ['about.html', '소개', 'about.html']];
+    const nav = [['./', '상속세', 'index.html'], ['gift.html', '상황별 증여세', 'gift.html'], ['about.html', '소개', 'about.html'], ['guide.html', '사용 안내', 'guide.html']];
     const top = document.createElement('header'); top.className = 'dh-top';
     top.innerHTML = '<div class="wrap' + (opt.wide ? ' wide' : '') + '"><a class="logo" href="./">대한세무법인 <span>상속·증여</span></a><nav>' +
       nav.map(function (n) { return '<a href="' + n[0] + '"' + (here === n[2] ? ' class="on"' : '') + '>' + n[1] + '</a>'; }).join('') +
