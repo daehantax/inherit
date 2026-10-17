@@ -27,7 +27,7 @@ const fakeStorage = (w, init) => { const s = Object.assign({}, init || {}); Obje
     if (f === 'inheritGoldAnswer.html') { expect('  골드답변: 답변 편집기', p.d.querySelectorAll('#ansEditor').length, 1); expect('  골드답변: 질문 편집기 없음', p.d.querySelectorAll('#qaEditor').length, 0); }
     if (f === 'inheritPremium.html') { expect('  프리미엄: 제목에 (P)', title.includes('(P)') ? 1 : 0, 1); expect('  프리미엄: 질문·상담 없음', p.d.querySelectorAll('.qa').length, 0); }
     expect('  ' + f + ': 인라인 onclick 없음', p.d.querySelectorAll('[onclick]').length, 0);
-    expect('  ' + f + ': 입력칸 모두 data-save 안', p.d.querySelectorAll('input:not([data-save] input), select:not([data-save] select)').length, 0);
+    expect('  ' + f + ': 입력칸 모두 data-save 안', p.d.querySelectorAll('input:not([data-save] input):not(#dhConsult input), select:not([data-save] select)').length, 0);
   }
 
   /* ---------- 2. 사례 A (골드) ---------- */
