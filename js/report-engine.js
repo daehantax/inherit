@@ -296,7 +296,7 @@
       else tax = 570000 + (base - 300000000) * 0.004;
     }
     const p = Math.floor(tax), d = Math.floor(base * 0.0014), e = Math.floor(tax * 0.2);
-    return { property: p, dosi: d, edu: e, total: p + d + e };
+    return { property: p, dosi: d, edu: e, total: p + d + e, base: base };
   }
   const HOUSE_IDS = ['gongsi_1', 'gongsi_1_2', 'gongsi_1_3', 'gongsi_1_4'];
   function ownedHouseCount() { return Math.min(4, intOf('owned_houses')); }
@@ -358,23 +358,26 @@
     }
     return tax;
   }
-  function calculateComprehensiveTax(gongsi, isOneHouse, houseCountForRate, age, period, property_tax, creditRatio) {
+  // houses: [{ gongsi, base(재산세 과표) }] — 재산세 중복분 공제 계산용. 생략하면 공시가격 합계 1채로 본다.
+  function calculateComprehensiveTax(gongsi, isOneHouse, houseCountForRate, age, period, property_tax, creditRatio, houses) {
     const deduction = isOneHouse ? 1200000000 : 900000000;
     const tax_base = Math.max((gongsi - deduction) * 0.6, 0);
     const tax = comprehensiveTax(tax_base, houseCountForRate);
-    // 공제할 재산세 = 재산세 × (종부세 과세표준분 / 재산세 과세표준) — 간이 계산
-    const deductible_property_tax = gongsi > 0 ? (tax_base / gongsi) * property_tax : 0;
+    // 공제할 재산세 (종부세법 시행령 §4의3): 재산세 × (종부세 과표 × 재산세 공정시장가액비율 × 0.4%) ÷ 표준세율 재산세 상당액
+    const hs = houses || [{ gongsi: gongsi, base: gongsi * (isOneHouse ? (gongsi <= 300000000 ? 0.43 : (gongsi <= 600000000 ? 0.44 : 0.45)) : 0.6) }];
+    const deductible_property_tax = Math.min(tax, DH.aggrPropCredit(property_tax, tax_base, hs));
     const comprehensive_tax = Math.max(tax - deductible_property_tax, 0);
     // 고령자·장기보유 세액공제: 1세대1주택자만, 합계 80% 한도 (종부세법 9조)
     let ageRate = age >= 70 ? 0.4 : (age >= 65 ? 0.3 : (age >= 60 ? 0.2 : 0));
     let periodRate = period >= 15 ? 0.5 : (period >= 10 ? 0.4 : (period >= 5 ? 0.2 : 0));
     if (!isOneHouse) { ageRate = 0; periodRate = 0; }
     const totalRate = ageRate + periodRate;
-    const scale = totalRate > 0.8 ? 0.8 / totalRate : 1;
     // 상속주택 특례로 1세대1주택자가 된 경우 상속주택분 세액은 공제 대상에서 제외
     const creditBase = comprehensive_tax * (creditRatio === undefined ? 1 : creditRatio);
-    const age_deduction = creditBase * ageRate * scale;
-    const period_deduction = creditBase * periodRate * scale;
+    // 합계 80% 한도 — 공제 합계를 정수 비율(%)로 한 번에 계산해 부동소수점 오차(…999원)로 10원 절사가 틀어지지 않게 한다
+    const creditTotal = Math.floor(creditBase * Math.round(Math.min(0.8, totalRate) * 100) / 100 + 1e-6);
+    const age_deduction = totalRate > 0 ? Math.floor(creditTotal * ageRate / totalRate) : 0;
+    const period_deduction = creditTotal - age_deduction;
     const payable_tax = Math.max(comprehensive_tax - age_deduction - period_deduction, 0);
     const rural_tax = payable_tax * 0.2;                 // 농어촌특별세 20%
     return { tax_base: tax_base, tax: tax, deductible_property_tax: deductible_property_tax, comprehensive_tax: comprehensive_tax,
@@ -387,12 +390,14 @@
     const age = intOf('age'), period = intOf('period');
     const pt = comparePropertyTax();
     // 상속 전: 1주택이면 1세대1주택
-    const result1 = calculateComprehensiveTax(gongsi_1, n === 1, n, age, period, pt.before, 1);
+    const hb = function (r) { return { gongsi: r.gongsi, base: r.tax.base || 0 }; };
+    const rowsBefore = pt.result.rows.slice(0, -1).map(hb), rowsAfter = pt.result.rows.map(hb);
+    const result1 = calculateComprehensiveTax(gongsi_1, n === 1, n, age, period, pt.before, 1, rowsBefore);
     // 상속 후: 상속주택 특례(5년 이내·지분 40% 이하·지분 공시가 6억(수도권 밖 3억) 이하 중 하나)를 충족하고 신청했다고 가정
     //          → 1세대1주택 유지, 세율 판정 시 상속주택 제외
     const total = gongsi_1 + gongsi_2;
     const creditRatio = (n === 1 && total > 0) ? gongsi_1 / total : 1;
-    const result2 = calculateComprehensiveTax(total, n <= 1, Math.max(n, 1), age, period, pt.after, creditRatio);
+    const result2 = calculateComprehensiveTax(total, n <= 1, Math.max(n, 1), age, period, pt.after, creditRatio, rowsAfter);
     const rows = [['과세표준', 'tax_base'], ['종합부동산세액', 'tax'], ['공제할 재산세액', 'deductible_property_tax'], ['종합부동산산출세액', 'comprehensive_tax'],
       ['연령별 세액공제', 'age_deduction'], ['보유기간 세액공제', 'period_deduction'], ['납부할 세액', 'payable_tax'], ['농어촌특별세', 'rural_tax'], ['총 납부세액', 'total_tax']];
     let html = '<table class="dh"><thead><tr><th>구분</th><th>상속 전</th><th>상속 후</th></tr></thead><tbody>';

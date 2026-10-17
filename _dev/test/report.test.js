@@ -60,12 +60,14 @@ function setRow(p,body,i,cls,v){ const el=p.d.querySelectorAll('#'+body+' tr')[i
   expect('A 한도 초과 시 ㉛', p.num('d31'), 892000000);
   expect('A ⑱ = ㉛', p.num('t18'), 892000000);
 
-  // ---- 사례 C: 기한후신고, 자녀 8, 재산 20억 → 기초+인적 6억이지만 일괄 5억만, 신고세액공제 0 ----
+  // ---- 사례 C: 기한후신고, 자녀 8, 재산 20억 → 기한후신고도 기초+인적 6억 선택(§21① 단서·국기법 §45의3), 신고세액공제 0 ----
+  //      과세가액 19.95억 − 6억 = 13.95억 → 40% − 1.6억 = 3.98억 → 납부 398,000,000
   p=await page();
   setRow(p,'assetBody',0,'atype','A11'); setRow(p,'assetBody',0,'price',2e9);
   p.radio('spouse','no'); p.set('childCount',8); p.radio('filing','late');
-  expect('C ㉛ 기한후 → 5억', p.num('d31'), 5e8);
-  expect('C ㉓ 일괄', p.num('d23'), 5e8); expect('C ⑲ 자녀공제 미적용', p.num('d19'), 0);
+  expect('C ㉛ 기한후 → 6억', p.num('d31'), 6e8);
+  expect('C ㉓ 일괄 미선택', p.num('d23'), 0); expect('C ⑲ 자녀공제 4억', p.num('d19'), 4e8);
+  expect('C ㊹ 납부 (신고세액공제 없음)', p.num('t44'), 398000000);
   expect('C ㉝ 신고세액공제 0', p.num('t33'), 0);
   expect('C 4단계 신고구분 동기화', p.d.querySelector('input[name="filingType"]:checked').value, 'late');
   p.radio('filing','ontime');

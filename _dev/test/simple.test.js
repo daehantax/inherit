@@ -25,3 +25,11 @@ const {open,expect,near}=require('./harness');
   near('감사 사례A 전체공제 → 납부', p.num('r_pay'), 57091428, 2);
   console.log(p.errors.length?('JS errors: '+p.errors):'  (JS 오류 없음)');
 })();
+(async()=>{
+  // 기한 후 신고(국기법 §45의3)도 §21① 단서의 '신고'에 해당 → 기초2억+자녀8×5천만 = 6억 선택.
+  // 과세가액 20억−장례 최소 500만 = 19.95억 − 6억 = 13.95억 → 40%−1.6억 = 3.98억, 신고세액공제 없음 → 398,000,000
+  const p=await open('cal_Inherit_simple.html');
+  p.set('houseValue',2e9); p.radio('spouse','no'); p.set('childCount',8); p.radio('filing','late');
+  expect('기한후 자녀8 재산20억 → 공제 6억', p.num('r_ded'), 6e8);
+  expect('기한후 자녀8 재산20억 → 납부', p.num('r_pay'), 398000000);
+})();

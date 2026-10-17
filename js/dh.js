@@ -114,6 +114,26 @@
     return Math.max(0, limit);
   };
 
+  // 종부세에서 빼 줄 재산세 중복분 (종부세법 시행령 §4의3, 국세청 신고서 산식)
+  //   재산세 부과액 합계 × (종부세 과세표준 × 재산세 공정시장가액비율 × 0.4%) ÷ (주택을 합산한 재산세 과표에 표준세율을 적용한 세액)
+  //   — tax-ai-consulting core/comprehensive-tax.js 와 같은 산식
+  //   houses: [{ gongsi: 공시가격, base: 재산세 과세표준 }] — 공정시장가액비율은 Σ과표 ÷ Σ공시가격(1채면 그 주택 비율)
+  DH.propStdTax = function (base) {
+    base = DH.clamp0(base);
+    if (base <= 6e7) return base * .001;
+    if (base <= 1.5e8) return 6e4 + (base - 6e7) * .0015;
+    if (base <= 3e8) return 1.95e5 + (base - 1.5e8) * .0025;
+    return 5.7e5 + (base - 3e8) * .004;
+  };
+  DH.aggrPropCredit = function (propTaxSum, ctBase, houses) {
+    houses = (houses || []).filter(function (h) { return h && h.gongsi > 0; });
+    const g = houses.reduce(function (s, h) { return s + h.gongsi; }, 0);
+    const b = houses.reduce(function (s, h) { return s + h.base; }, 0);
+    const den = DH.propStdTax(b);   // '주택을 합산하여' 표준세율로 계산한 재산세 상당액
+    if (!(ctBase > 0) || !(g > 0) || !(den > 0)) return 0;
+    return Math.max(0, Math.min(DH.clamp0(propTaxSum), DH.clamp0(propTaxSum) * (ctBase * (b / g) * .004) / den));
+  };
+
   /* ---------- 저장 (페이지별 키) ---------- */
   DH.storeKey = function () { return 'dh.' + (document.body.dataset.store || location.pathname.split('/').pop().replace(/\.html$/, '')) + '.v1'; };
   // 저장 대상: data-save 영역 안의 input/select/textarea 중 id 또는 name 이 있는 것

@@ -171,8 +171,9 @@
     const base = Math.floor(Math.max(0, sum-ded)*.6);
     const heavy = nRate>=3 && base>1.2e9;
     const tax = ctax(base, heavy);
-    const propSum = houses.reduce((s,h)=>s+h.prop.tax,0), propBaseSum = houses.reduce((s,h)=>s+h.prop.base,0);
-    const propCredit = propBaseSum>0 ? Math.min(tax, Math.floor(propSum * (base*.6) / propBaseSum)) : 0;
+    const propSum = houses.reduce((s,h)=>s+h.prop.tax,0);
+    // 재산세 중복분 공제 (종부세법 시행령 §4의3) — dh.js 공통 산식 (절세보고서와 같은 값)
+    const propCredit = Math.min(tax, Math.floor(DH.aggrPropCredit(propSum, base, houses.map(h=>({ gongsi:h.value, base:h.prop.base })))));
     const calc = Math.max(0, tax-propCredit);
     const rate = oneHome ? Math.min(.8, ageRate(age)+holdRate(hold)) : 0;
     const credit = Math.floor(calc * (creditShare||0) * rate);

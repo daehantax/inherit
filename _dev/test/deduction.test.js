@@ -29,10 +29,11 @@ const {open,expect}=require('./harness');
   expect('종합한도 18.5억', p.num('r_limit'), 1.85e9);
   expect('최종 17.6억', p.num('r_final'), 1.76e9);
 
-  // 4. 기한 후 신고, 배우자 없음, 자녀 10 → 인적 7억이지만 일괄 5억만
+  // 4. 기한 후 신고, 배우자 없음, 자녀 10 → §21① 단서는 '신고가 없는 경우'(무신고)만 일괄 5억.
+  //    기한후신고(국기법 §45의3)는 신고로 보므로 기초2억+자녀10×5천만 = 7억 선택 가능
   p=await open('상속공제.html');
   p.radio('filing','late'); p.radio('spouse','no'); p.set('childCount',10);
-  expect('기한후 → 일괄 5억만', p.num('r_d1'), 5e8);
+  expect('기한후 → 기초+인적 7억 선택 가능', p.num('r_d1'), 7e8);
 
   // 5. 배우자 단독상속: 자녀0 → 기초 2억만, 법정상속분 100% → 기준 10억·실제 10억 → 10억 ; 합계 12억
   p=await open('상속공제.html');

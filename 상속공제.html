@@ -40,7 +40,7 @@
       <div class="field"><label>신고 구분</label>
         <div class="ctl radio-row">
           <label><input type="radio" name="filing" value="ontime" checked><span>기한 내 신고</span></label>
-          <label><input type="radio" name="filing" value="late"><span>기한 후 신고·무신고</span></label>
+          <label><input type="radio" name="filing" value="late"><span>기한 후 신고</span></label>
         </div></div>
       <div class="field"><label>배우자</label>
         <div class="ctl radio-row">
@@ -166,11 +166,10 @@
     const personal = R.basic + children*R.child + minorY*R.minorPerYear + seniors*R.senior + disY*R.disabledPerYear;
     txt('r_personalNote', '(자녀 '+children+'명, 미성년 '+minorY+'년, 연로자 '+seniors+'명, 장애인 '+disY+'년)');
 
-    // §21: 일괄공제와 비교. 배우자 단독상속 → 일괄 불가, 무신고·기한후 → 일괄만
+    // §21: 일괄공제와 비교. 배우자 단독상속 → 일괄 불가. 무신고만 일괄 5억(§21① 단서), 기한 후 신고(국기법 §45의3)는 큰 금액 선택
     let d1, d1note;
     if (spouseOnly){ d1=personal; d1note='배우자 단독상속: 기초+인적공제만 (일괄공제 불가)'; }
-    else if (late){ d1=R.lumpSum; d1note='기한 후 신고·무신고: 일괄공제 5억만'; }
-    else if (personal>R.lumpSum){ d1=personal; d1note='기초+인적공제가 5억보다 커서 그대로 적용'; }
+    else if (personal>R.lumpSum){ d1=personal; d1note='기초+인적공제가 5억보다 커서 그대로 적용'+(late?' (기한 후 신고도 선택 가능)':''); }
     else { d1=R.lumpSum; d1note='일괄공제 5억 적용'; }
 
     // §19 배우자상속공제
