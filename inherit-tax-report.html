@@ -133,7 +133,7 @@
           <tr><th rowspan="2">번호</th><th rowspan="2">① 재산구분<br>코드</th><th rowspan="2">② 재산종류<br>코드</th><th colspan="3">③ 소재지 · 법인명 등</th><th rowspan="2">④ 사업자등록번호<br>(계좌번호·지분)</th><th rowspan="2">⑤ 수량<br>(면적)</th><th rowspan="2">⑥ 단가</th><th rowspan="2">⑦ 평가가액</th><th rowspan="2">⑧ 평가기준<br>코드</th><th rowspan="2" class="del">삭제</th></tr>
           <tr><th>국외자산<br>여부</th><th>국외재산<br>국가명</th><th>소재지 · 법인명</th></tr>
         </thead>
-        <tbody id="assetBody"></tbody>
+        <tbody id="assetBody" data-pad-rows></tbody>
         <tfoot><tr class="total"><td colspan="9" class="c">계</td><td class="num"><b class="calc" id="grandTotal">0</b></td><td></td><td class="del"></td></tr></tfoot>
       </table>
       </div>
@@ -671,10 +671,9 @@
     document.querySelectorAll('#stepsBar a').forEach(function (a) { const k = Number(a.dataset.go); a.classList.toggle('on', k === n); a.classList.toggle('done', k < n); });
     recalc(); window.scrollTo(0, 0);
   }
-  function printAll() {
-    document.body.classList.add('print-all');
-    const done = function () { document.body.classList.remove('print-all'); window.removeEventListener('afterprint', done); };
-    window.addEventListener('afterprint', done); window.print(); setTimeout(done, 1500);
+  function printAll() {                       // 1~4단계 서식을 각각 A4 한 장씩, 서식만 인쇄
+    const sheets = Array.prototype.slice.call(document.querySelectorAll('#step1 .form-sheet, #step2 .form-sheet, #step3 .form-sheet, #step4 .form-sheet'));
+    DH.printSheets(sheets);
   }
 
   document.addEventListener('click', function (e) {

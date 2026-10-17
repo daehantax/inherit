@@ -211,9 +211,96 @@
   };
 
   /* ---------- 인쇄 ---------- */
-  DH.print = function () { window.print(); };
+  /* ---------- 서식 전용 인쇄 (A4 한 장에 서식만) ----------
+     .form-sheet(또는 [data-print-sheet]) 만 떼어 인쇄 전용 문서를 만들고, 서식마다 A4 한 장에
+     꽉 차도록 확대·축소한다. 제목·안내·결과·버튼·바닥글·브라우저 머리글(URL·날짜)은 들어가지 않는다. */
+  DH.sheets = function () {
+    var all = Array.prototype.slice.call(document.querySelectorAll('.form-sheet, [data-print-sheet]'));
+    return all.filter(function (el) { return el.offsetParent !== null; });   // 화면에 보이는 것만
+  };
+  function freezeValues(root) {               // 입력값을 속성으로 굳혀 복제본에 남게 한다
+    root.querySelectorAll('input, select, textarea').forEach(function (el) {
+      if (el.tagName === 'TEXTAREA') { el.textContent = el.value; return; }
+      if (el.tagName === 'SELECT') { Array.prototype.forEach.call(el.options, function (o) { if (o.selected) o.setAttribute('selected', ''); else o.removeAttribute('selected'); }); return; }
+      if (el.type === 'checkbox' || el.type === 'radio') { if (el.checked) el.setAttribute('checked', ''); else el.removeAttribute('checked'); return; }
+      el.setAttribute('value', el.value);
+    });
+  }
+  function printRulesText() {                 // 모든 @media print 규칙을 화면용으로 펼쳐서 돌려준다
+    var out = [];
+    Array.prototype.forEach.call(document.styleSheets, function (ss) {
+      var rules; try { rules = ss.cssRules; } catch (e) { return; }
+      if (!rules) return;
+      Array.prototype.forEach.call(rules, function (r) {
+        if (r.media && /print/.test(r.media.mediaText)) Array.prototype.forEach.call(r.cssRules, function (x) { if (!(x.type === 6)) out.push(x.cssText); });
+      });
+    });
+    return out.join('\n');
+  }
+  DH.buildPrintDoc = function (sheets) {
+    sheets = sheets || DH.sheets();
+    var head = [];
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(function (l) { head.push('<link rel="stylesheet" href="' + l.href + '">'); });
+    document.querySelectorAll('style').forEach(function (st) { head.push('<style>' + st.textContent + '</style>'); });
+    head.push('<style>' + printRulesText() + '</style>');
+    head.push('<style>' +
+      '@page{size:A4;margin:0}@page land{size:A4 landscape;margin:0}' +
+      'html,body{margin:0;padding:0;background:#fff}' +
+      '.pp{width:210mm;height:296mm;padding:12mm;box-sizing:border-box;overflow:hidden;position:relative;break-after:page;page-break-after:always}' +
+      '.pp.land{width:297mm;height:209mm;page:land}' +
+      '.pp:last-child{break-after:auto;page-break-after:auto}' +
+      '.pp .form-sheet,.pp [data-print-sheet]{border:0!important;padding:0!important;margin:0!important;box-shadow:none!important;background:#fff;break-inside:auto}' +
+      '.pp .no-print,.pp .btn,.pp .actions,.pp .toolbar,.pp .dh-top,.pp .dh-contact,.pp .dh-foot,.pp .print-foot{display:none!important}' +
+      '.pp table{break-inside:auto}.pp tr{break-inside:avoid}' +
+      '</style>');
+    var body = [];
+    sheets.forEach(function (sh) {
+      freezeValues(sh);
+      var land = !!sh.closest('.print-landscape');
+      var step = sh.closest('.step');
+      var cls = 'pp' + (land ? ' land' : '') + (step ? ' ' + Array.prototype.filter.call(step.classList, function (c) { return c !== 'step' && c !== 'on'; }).join(' ') : '');
+      body.push('<div class="' + cls + '"' + (step && step.id ? ' id="' + step.id + '"' : '') + '>' + sh.outerHTML + '</div>');
+    });
+    var script = '<script>' +
+      'function ext(sh){var b=sh.getBoundingClientRect(),w=b.width,h=b.height;sh.querySelectorAll("*").forEach(function(e){var q=e.getBoundingClientRect();if(!q.width||!q.height)return;w=Math.max(w,q.right-b.left);h=Math.max(h,q.bottom-b.top);});return{w:w,h:h};}' +
+      'function fit(){var mm=96/25.4;document.querySelectorAll(".pp").forEach(function(pp){var sh=pp.firstElementChild;if(!sh)return;var land=pp.classList.contains("land");' +
+      'var W=(land?297:210)-24,H=(land?210:297)-24-1,r=1,cap=2.2,pad=sh.querySelector("tbody[data-pad-rows]");sh.style.transformOrigin="0 0";' +
+      'function meas(){sh.style.transform="none";sh.style.width=(W/r)+"mm";var e=ext(sh);if(e.w>sh.getBoundingClientRect().width+1)cap=Math.min(cap,W*mm/e.w);return e;}' +
+      'for(var i=0;i<6;i++){var e=meas();if(!e.h)break;r=Math.max(.45,Math.min(cap,H*mm/e.h));}' +
+      'if(pad&&pad.lastElementChild&&r>1.25){r=Math.min(cap,1.25);var tpl=pad.lastElementChild;for(var k=0;k<80;k++){var tr=tpl.cloneNode(true);tr.querySelectorAll("input").forEach(function(x){x.removeAttribute("value");x.removeAttribute("checked");});tr.querySelectorAll("select").forEach(function(x){x.selectedIndex=0;Array.prototype.forEach.call(x.options,function(o){o.removeAttribute("selected");});});' +
+      'tr.querySelectorAll("b.calc,.calc").forEach(function(x){x.textContent="";});var no=tr.querySelector("td.no,td:first-child");if(no&&/^\\d+$/.test(no.textContent.trim()))no.textContent=String(pad.children.length+1);pad.appendChild(tr);if(meas().h*r>H*mm){pad.removeChild(tr);break;}}' +
+      'e=meas();r=Math.max(.45,Math.min(r,H*mm/e.h));}' +
+      'sh.style.width=(W/r)+"mm";sh.style.transform="scale("+r+")";pp.dataset.zoom=r.toFixed(3);});window.__sheetsFitted=true;document.dispatchEvent(new Event("sheetsfitted"));}' +
+      'function go(){(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(function(){setTimeout(fit,30);});}' +
+      'if(document.readyState==="complete")go();else window.addEventListener("load",go);' +
+      '<\/script>';
+    return '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>' + document.title.replace(' · 대한세무법인', '') + '</title>' + head.join('\n') + '</head><body class="print-all print-doc">' + body.join('\n') + script + '</body></html>';
+  };
+  DH.printSheets = function (sheets) {
+    var html = DH.buildPrintDoc(sheets);
+    var old = document.getElementById('dh-print-frame'); if (old) old.remove();
+    var f = document.createElement('iframe'); f.id = 'dh-print-frame';
+    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none';
+    document.body.appendChild(f);
+    var done = false;
+    var fire = function () {
+      if (done) return; done = true;
+      try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { window.print(); }
+      setTimeout(function () { f.remove(); }, 60000);
+    };
+    f.addEventListener('load', function () {
+      var w = f.contentWindow;
+      if (w.__sheetsFitted) fire(); else { w.document.addEventListener('sheetsfitted', fire); setTimeout(fire, 2500); }
+    });
+    f.srcdoc = html;
+  };
+  DH.print = function () { if (DH.sheets().length) DH.printSheets(); else window.print(); };
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 'p' || e.key === 'P') && DH.sheets().length) { e.preventDefault(); DH.printSheets(); }
+  });
   window.addEventListener('beforeprint', function () {
     document.querySelectorAll('details:not([open])').forEach(function (d) { d.dataset.po = '1'; d.open = true; });
+    if (DH.sheets().length) return;                  // 서식 페이지: 바닥글 없음 (서식만 인쇄)
     let f = document.getElementById('dh-print-foot');
     if (!f) { f = document.createElement('div'); f.id = 'dh-print-foot'; f.className = 'print-foot'; document.body.appendChild(f); }
     f.textContent = '대한세무법인 · 상속·증여 도구 · ' + location.host + location.pathname + ' · 출력 ' + new Date().toLocaleString('ko-KR') + ' · 계산 결과는 참고용입니다.';
