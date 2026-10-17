@@ -69,7 +69,8 @@
   .line{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 0;padding:16px 0;border-top:1px solid var(--line);font-size:14.5px}
   .line:last-child{border-bottom:1px solid var(--line)}
   .line b{flex:0 0 150px;color:var(--main);font-size:14px}
-  .line a{color:var(--ink)}
+  .line .items{flex:1;min-width:0;line-height:2}
+  .line a{color:var(--ink);white-space:nowrap}
   .line a:hover{color:var(--main);text-decoration:underline}
   .line a:not(:last-child)::after{content:"·";color:#c9b8bc;margin:0 10px}
 
@@ -154,6 +155,7 @@
   <section class="lines">
     <div class="line">
       <b>그 밖의 도구</b>
+      <span class="items">
       <a href="inherit-tax-report.html">상속세신고서</a>
       <a href="adquisitionTaxClaim.html">상속취득세 경정청구</a>
       <a href="상속으로인한재산세.html">상속 후 재산세·종부세 비교</a>
@@ -161,15 +163,18 @@
       <a href="inheritGoldAnswer.html">골드 질문 답변서</a>
       <a href="상속세과세표준 자진납부.html">과세표준 자진납부</a>
       <a href="납부서.html">납부서</a>
+      </span>
     </div>
     <div class="line">
       <b>공제·세부 계산 서식</b>
+      <span class="items">
       <a href="spose-inherit-deduction.html">배우자 상속공제</a>
       <a href="co-habitation-deduction.html">동거주택 상속공제</a>
       <a href="finantial-asset-deduction.html">금융재산 상속공제</a>
       <a href="inheritance-deduction-limit.html">상속공제 한도</a>
       <a href="상속공제.html">상속공제 계산기</a>
       <a href="채무공과금.html">채무·공과금</a>
+      </span>
     </div>
   </section>
 
