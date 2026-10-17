@@ -191,12 +191,12 @@
       <div class="ctl"><input type="text" id="appraisalFee" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
     <div class="field"><label for="appraisalFeeStock">비상장주식 평가수수료 <small>1천만원 한도 (평가심의위원회 신용평가전문기관 수수료)</small></label>
       <div class="ctl"><input type="text" id="appraisalFeeStock" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <div class="field"><label for="skipGenRatio">세대를 건너뛴 상속 비율 <small>손자녀 등이 받는 재산 ÷ 전체 상속재산 (%). 자녀가 먼저 사망해 대습상속하면 0</small></label>
-      <div class="ctl"><input type="number" id="skipGenRatio" class="short" min="0" max="100" value="0"><span class="unit">%</span>
+    <div class="field"><label for="skipGenAmount">손자녀 등이 받는 상속재산 <small>자녀가 아닌 직계비속(손자녀 등)이 유증·사인증여로 받는 재산가액. 자녀가 먼저 사망해 대습상속하면 0</small></label>
+      <div class="ctl"><input type="text" id="skipGenAmount" data-money placeholder="0"><span class="unit">원</span><span class="won"></span>
         <label class="check"><input type="checkbox" id="skipGenMinorBig"> 미성년 손자녀가 20억 초과 상속 (40% 할증)</label></div></div>
     <ul class="tips">
       <li>감정평가수수료는 부동산 5백만원, 비상장주식 1천만원 한도로 과세가액에서 뺍니다 (상증령 20조의3).</li>
-      <li>자녀가 아닌 손자녀 등이 상속받으면 그 비율만큼 산출세액에 30%(미성년자가 20억 초과 시 40%)를 더합니다. 자녀가 먼저 사망하여 대습상속하는 경우는 할증하지 않습니다 (상증법 27조). 자녀가 살아 있는데 손자녀가 유증으로 받으면 상속인이 아닌 자가 받은 것이므로 그 금액만큼 상속공제 종합한도도 줄어듭니다 (상증법 24조).</li>
+      <li>자녀가 아닌 손자녀 등이 상속받으면 산출세액 × (그 재산가액 ÷ 총상속재산가액) × 30%(미성년자가 20억 초과 시 40%)를 더합니다. 총상속재산가액에는 상속인·수유자가 받은 합산 사전증여재산이 포함됩니다. 자녀가 먼저 사망하여 대습상속하는 경우는 할증하지 않습니다 (상증법 27조). 자녀가 살아 있는데 손자녀가 유증으로 받으면 상속인이 아닌 자가 받은 것이므로 그 금액만큼 상속공제 종합한도도 줄어듭니다 (상증법 24조).</li>
     </ul>
     <div class="actions"><button class="btn ghost" data-go="9">뒤로가기</button><button class="btn" id="btnCalc" data-go="11">상속세계산</button></div>
   </section>
@@ -214,7 +214,7 @@
         <tr><td class="lab">상속인 외 증여(5년)</td><td class="num" data-ps="giftToOthers"></td><td class="lab">증여세 산출세액</td><td class="num" data-ps="giftTaxDeduction"></td></tr>
         <tr><td class="lab">증여 과세표준</td><td class="num" data-ps="priorGiftTaxBase"></td><td class="lab">배우자 / 상속공제(기본)</td><td class="num"><span id="psSpouse"></span> · <span data-ps="inheritanceDeduction"></span></td></tr>
         <tr><td class="lab">감정평가수수료(부동산)</td><td class="num" data-ps="appraisalFee"></td><td class="lab">평가수수료(비상장주식)</td><td class="num" data-ps="appraisalFeeStock"></td></tr>
-        <tr><td class="lab">세대생략 상속 비율</td><td class="num" data-ps="skipGenRatio" data-unit="%"></td><td class="lab">자녀 수</td><td class="num" data-ps="childrensNumber" data-unit="명"></td></tr>
+        <tr><td class="lab">손자녀 등 상속재산</td><td class="num" data-ps="skipGenAmount"></td><td class="lab">자녀 수</td><td class="num" data-ps="childrensNumber" data-unit="명"></td></tr>
       </tbody>
     </table>
   </section>

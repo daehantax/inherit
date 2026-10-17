@@ -76,9 +76,11 @@
     // 사전증여 과세표준: 모르면 증여가액 전액으로 보아 보수적으로 계산
     const priorGiftTaxBase = isBlank('priorGiftTaxBase') ? priorGifts : Math.min(num('priorGiftTaxBase'), priorGifts);
     // 세대생략 상속분 (손자녀 등 자녀 외 직계비속이 받는 재산) — 할증(27조)과 종합한도(24조) 양쪽에 쓴다
-    const skipRatio = Math.min(100, Math.max(0, DH.num(($('skipGenRatio') || {}).value))) / 100;
+    const skipAmount = Math.min(num('skipGenAmount'), totalProperty);
     const skipBig = !!($('skipGenMinorBig') && $('skipGenMinorBig').checked);
-    const skipAmount = Math.floor(totalProperty * skipRatio);
+    // 할증 비율의 분모 = 상속재산가액 + 상속인·수유자가 받은 합산 사전증여재산 (27조①). 상속인 외의 자 증여분은 제외
+    const skipDenom = totalProperty + giftFromMother + giftToChildren;
+    const skipRatio = skipDenom > 0 ? skipAmount / skipDenom : 0;
     // 공제 종합한도 (상증법 24조): 상속인이 아닌 자(손자녀 등)에게 유증·사인증여한 재산은 한도에서 빼고,
     // 과세가액 > 5억일 때만 사전증여 과세표준을 뺀다. 대습상속이면 비율을 0으로 두므로 영향 없음.
     const deductionLimit = DH.deductionLimit(taxableAmount, skipAmount, 0, priorGiftTaxBase);

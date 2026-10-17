@@ -86,14 +86,17 @@ const fakeStorage = (w, init) => { const s = Object.assign({}, init || {}); Obje
 
   /* ---------- 5. 세대생략 할증 · 감정평가수수료 ---------- */
   // 재산 20억(기타), 장례비 500만 → 과세가액 19.95억, 공제 10억, 수수료 부동산 700만→500만 + 주식 1,500만→1,000만 = 1,500만
-  // 손자녀 몫 50% = 10억은 상속인 아닌 자의 유증 → 종합한도 19.95억 − 10억 = 9.95억 (공제 10억 → 9.95억, 상증법 24조)
+  // 손자녀 유증 10억(= 총상속재산 20억의 50%)은 상속인 아닌 자의 유증 → 종합한도 19.95억 − 10억 = 9.95억 (공제 10억 → 9.95억, 상증법 24조)
   // 과표 19.95 − 9.95 − 0.15 = 9.85억 → 30% − 6천만 = 235,500,000. 할증 50% × 30% = 35,325,000 → 270,825,000 → 3% 8,124,750 → 262,700,250
   p = await open('inheritGold.html');
-  p.set('otherProperty', 2e9); p.set('appraisalFee', 7e6); p.set('appraisalFeeStock', 1.5e7); p.set('skipGenRatio', 50);
+  p.set('otherProperty', 2e9); p.set('appraisalFee', 7e6); p.set('appraisalFeeStock', 1.5e7); p.set('skipGenAmount', 1e9);
   p.click('#btnCalc');
   expect('감정평가수수료 한도 합', p.num('appraisalFeeValueCell'), 15000000);
   expect('세대생략 할증 30%', p.num('surchargeValueCell'), 35325000);
   expect('할증 포함 납부세액', p.num('payableTaxValueCell'), 262700250);
+  // 사전증여(자녀 5억) 추가: 할증 분모 = 20억 + 5억 → 비율 40%. 과세가액 24.95억, 한도 24.95−10−5 = 9.95억, 과표 14.85억 → 4.34억 × 40% × 30% = 52,080,000
+  p.set('giftToChildren', 5e8); p.click('#btnCalc');
+  expect('할증 분모에 상속인 사전증여 포함', p.num('surchargeValueCell'), 52080000);
 
   /* ---------- 6. 취득세 ---------- */
   // 주택 공시 10.5억, 국민주택규모 초과: 2.8% 29,400,000 + 농특 0.2% 2,100,000 + 교육 0.16% 1,680,000 = 33,180,000
