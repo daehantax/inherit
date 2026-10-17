@@ -1,152 +1,264 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>상속 후 재산세 종부세 비교</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
-    <link rel="stylesheet" href="css/styles/layouts_simpleCalculator.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속 후 재산세·종부세 비교 · 대한세무법인</title>
+<meta name="description" content="주택을 상속받으면 재산세와 종합부동산세가 어떻게 달라지는지 상속 전·후를 비교합니다. 상속주택 주택수 제외(5년·소수지분), 1세대1주택 특례세율, 고령자·장기보유 세액공제 반영. 2026년 기준.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  .houses{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .houses label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .houses input{max-width:none}
+  .houses .won{display:block;font-size:12px;color:var(--main);min-height:18px}
+  .result table.dh{margin:6px 0 14px}
+  .result table.dh td.num{white-space:nowrap}
+  .result .sec{font-size:15px;font-weight:700;color:var(--main);margin:14px 0 4px}
+  table.dh td.lbl{color:var(--muted);font-size:12.5px}
+  .is-off{opacity:.45}
+  @media print{.result table.dh{font-size:8.5pt}.result table.dh td{padding:1mm 2mm}.card{padding:3mm 4mm}.houses{gap:4px}details.dh>div{font-size:9pt!important}.dh-head{padding-bottom:3mm}}
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
 </head>
-<body>
-    <h4>상속 후 재산세 비교</h4>
-    <label for="owned_houses">상속 전 소유주택 수:</label>
-    <input type="number" id="owned_houses" value="0">
-    <br>
-    <label for="gongsi_1">상속전 주택공시가 합 :</label>
-    <input type="number" id="gongsi_1" value="0">
-    <br>
-    <label for="gongsi_2">상속주택분 공시가격:</label>
-    <input type="number" id="gongsi_2" value="0">
-    <br>
-    <button onclick="comparePropertyTax()">계산하기</button>
-    <table id="resultTableProperty" style="display: none;">
-        <thead>
-            <tr>
-                <th>구분</th>
-                <th>종전주택만 있는 경우</th>
-                <th>상속주택 추가된 경우</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>재산세</td>
-                <td id="property_tax_1"></td>
-                <td id="property_tax_2"></td>
-            </tr>
-            <tr>
-                <td>도시계획세</td>
-                <td id="dosi_tax_1"></td>
-                <td id="dosi_tax_2"></td>
-            </tr>
-            <tr>
-                <td>지방교육세</td>
-                <td id="p_edu_tax_1"></td>
-                <td id="p_edu_tax_2"></td>
-            </tr>
-        </tbody>
+<body data-store="inherit-property-tax" data-subject="상속주택 보유세" data-autoload="1">
+
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 계산기</div>
+    <h1>상속 후 재산세·종부세 비교</h1>
+    <p>주택을 상속받으면 보유세가 얼마나 늘어날까요? 상속 전·후의 재산세(주택별)와 종합부동산세(인별 합산)를 비교합니다. 상속주택은 5년간(또는 소수지분이면 계속) 주택 수에서 빠지는 규정을 반영합니다.</p>
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
+
+  <div data-save>
+    <section class="card">
+      <h2>1. 상속 전 보유 주택 <small>내 명의 주택의 공시가격 (최대 4채). 없으면 비움</small></h2>
+      <div class="houses">
+        <div><label for="h1">주택 1 공시가격</label><input type="text" id="h1" data-money placeholder="0"><span class="won"></span></div>
+        <div><label for="h2">주택 2 공시가격</label><input type="text" id="h2" data-money placeholder="0"><span class="won"></span></div>
+        <div><label for="h3">주택 3 공시가격</label><input type="text" id="h3" data-money placeholder="0"><span class="won"></span></div>
+        <div><label for="h4">주택 4 공시가격</label><input type="text" id="h4" data-money placeholder="0"><span class="won"></span></div>
+      </div>
+      <p class="hint" id="countNote"></p>
+    </section>
+
+    <section class="card">
+      <h2>2. 상속주택</h2>
+      <div class="field"><label for="ihValue">상속주택 공시가격 <small>주택 전체 기준</small></label>
+        <div class="ctl"><input type="text" id="ihValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="ihShare">내 상속 지분</label>
+        <div class="ctl"><input type="number" id="ihShare" class="short" min="0" max="100" step="0.01" value="100"><span class="unit">%</span></div></div>
+      <div class="field"><label for="ihDate">상속개시일 <small>5년 경과 판정. 비우면 5년 이내로 봄</small></label>
+        <div class="ctl"><input type="date" id="ihDate" class="mid"></div></div>
+      <div class="field"><label>상속주택 소재지</label>
+        <div class="ctl radio-row">
+          <label><input type="radio" name="region" value="metro" checked><span>수도권 (소수지분 기준 6억)</span></label>
+          <label><input type="radio" name="region" value="other"><span>수도권 외 (기준 3억)</span></label>
+        </div></div>
+    </section>
+
+    <section class="card">
+      <h2>3. 소유자 <small>종부세 1세대1주택 세액공제 판정</small></h2>
+      <div class="field"><label for="age">소유자 나이 <small>과세기준일(6월 1일) 현재 만 나이</small></label>
+        <div class="ctl"><input type="number" id="age" class="short" min="0" max="120" step="1" placeholder="0"><span class="unit">세</span></div></div>
+      <div class="field"><label for="hold">상속 전 주택 보유기간 <small>종전 주택 1채일 때. 상속주택만 있으면 상속개시일부터</small></label>
+        <div class="ctl"><input type="number" id="hold" class="short" min="0" max="80" step="1" placeholder="0"><span class="unit">년</span></div></div>
+      <div class="field"><label>거주 여부 <small>참고용 — 재산세·종부세 계산에는 영향 없음</small></label>
+        <div class="ctl"><label class="check"><input type="checkbox" id="living"> 종전 주택(또는 상속주택)에 실제 거주</label></div></div>
+    </section>
+  </div>
+
+  <section class="result" id="result">
+    <h2>계산 결과</h2>
+    <div class="note" id="r_rule"></div>
+
+    <div class="sec">재산세 (주택별 과세 · 7월·9월 분납 합계)</div>
+    <div class="table-scroll">
+    <table class="dh">
+      <thead><tr><th>주택</th><th class="num">공시가격</th><th>구분</th><th class="num">상속 전</th><th class="num">상속 후</th></tr></thead>
+      <tbody id="r_propRows"></tbody>
+      <tfoot>
+        <tr class="total"><td colspan="3">재산세 합계 (본세)</td><td class="num" id="r_pb_tax">0</td><td class="num" id="r_pa_tax">0</td></tr>
+        <tr class="total"><td colspan="3">도시지역분 (과표 × 0.14%)</td><td class="num" id="r_pb_city">0</td><td class="num" id="r_pa_city">0</td></tr>
+        <tr class="total"><td colspan="3">지방교육세 (재산세 × 20%)</td><td class="num" id="r_pb_edu">0</td><td class="num" id="r_pa_edu">0</td></tr>
+        <tr class="total"><td colspan="3">재산세 총 부담</td><td class="num" id="r_pb_all">0</td><td class="num" id="r_pa_all">0</td></tr>
+      </tfoot>
     </table>
+    </div>
 
-    <script>
-        function calc_property_tax(gongsiBefore, gongsiAfter) {
-            // HTML에서 주택 수 가져오기
-            const owned_houses = parseInt(document.getElementById("owned_houses").value, 10);
+    <div class="sec">종합부동산세 (인별 합산 · 12월 납부)</div>
+    <div class="table-scroll">
+    <table class="dh">
+      <thead><tr><th>항목</th><th class="num">상속 전</th><th class="num">상속 후</th></tr></thead>
+      <tbody>
+        <tr><td>주택 공시가격 합계</td><td class="num" id="r_cb_sum">0</td><td class="num" id="r_ca_sum">0</td></tr>
+        <tr><td>세율·공제용 주택 수 <span class="lbl">(상속주택 제외 규정 적용)</span></td><td class="num" id="r_cb_n">0</td><td class="num" id="r_ca_n">0</td></tr>
+        <tr><td>공제금액 <span class="lbl">(1세대1주택 12억, 그 외 9억)</span></td><td class="num" id="r_cb_ded">0</td><td class="num" id="r_ca_ded">0</td></tr>
+        <tr><td>과세표준 <span class="lbl">(합계 − 공제) × 60%</span></td><td class="num" id="r_cb_base">0</td><td class="num" id="r_ca_base">0</td></tr>
+        <tr><td>종부세액 <span class="lbl" id="r_rateNote"></span></td><td class="num" id="r_cb_tax">0</td><td class="num" id="r_ca_tax">0</td></tr>
+        <tr><td>− 공제할 재산세액</td><td class="num" id="r_cb_prop">0</td><td class="num" id="r_ca_prop">0</td></tr>
+        <tr><td>= 산출세액</td><td class="num" id="r_cb_calc">0</td><td class="num" id="r_ca_calc">0</td></tr>
+        <tr><td>− 1세대1주택 세액공제 <span class="lbl" id="r_creditNote"></span></td><td class="num" id="r_cb_credit">0</td><td class="num" id="r_ca_credit">0</td></tr>
+        <tr><td>= 납부할 종부세</td><td class="num" id="r_cb_pay">0</td><td class="num" id="r_ca_pay">0</td></tr>
+        <tr><td>+ 농어촌특별세 (20%)</td><td class="num" id="r_cb_ag">0</td><td class="num" id="r_ca_ag">0</td></tr>
+        <tr class="total"><td>종부세 총 부담</td><td class="num" id="r_cb_all">0</td><td class="num" id="r_ca_all">0</td></tr>
+      </tbody>
+    </table>
+    </div>
 
-            // 1세대 1주택 여부에 따른 과세표준 비율 결정
-            let taxBaseRate = 0.6; // 기본값으로 다주택일 경우 세율 적용
-            if (owned_houses <= 1) {
-                if (gongsiBefore <= 300000000) {
-                    taxBaseRate = 0.43; // 3억 이하
-                } else if (gongsiBefore <= 600000000) {
-                    taxBaseRate = 0.44; // 6억 이하
-                } else {
-                    taxBaseRate = 0.45; // 6억 초과
-                }
-            }
+    <div class="kv total"><span>연간 보유세 증가액 (재산세 + 종부세) <span class="sub" id="r_diffNote"></span></span><b id="r_diff">0원</b></div>
+    <div class="note" id="r_note"></div>
+  </section>
 
-            // 과세표준 계산
-            let taxBaseBefore = gongsiBefore * taxBaseRate;
-            let taxBaseAfter = gongsiAfter * taxBaseRate;
+  <details class="dh"><summary>법령 해설 · 계산 방식</summary>
+    <div>
+      <p class="subhead">재산세 (지방세법 §110·§111·§111의2·§112, 시행령 §109·§110의2)</p>
+      <ul>
+        <li>주택별로 과세합니다. 과세표준 = 공시가격 × 공정시장가액비율. 1세대1주택은 공시가격 3억 이하 43%, 6억 이하 44%, 6억 초과 45%, 그 밖의 주택은 60%.</li>
+        <li>표준세율: 과표 6천만 이하 0.1%, 1.5억 이하 6만 원 + 초과분 0.15%, 3억 이하 19.5만 원 + 초과분 0.25%, 3억 초과 57만 원 + 초과분 0.4%.</li>
+        <li>1세대1주택 특례세율(공시가격 9억 이하): 6천만 이하 0.05%, 1.5억 이하 3만 원 + 초과분 0.1%, 3억 이하 12만 원 + 초과분 0.2%, 3억 초과 42만 원 + 초과분 0.35%. 이 특례세율은 2026년 12월 31일까지 연장된 것으로 보고 적용했습니다. 연장 여부는 매년 확인이 필요합니다.</li>
+        <li>도시지역분 = 과세표준 × 0.14% (도시지역 안 주택), 지방교육세 = 재산세액 × 20%. 세부담상한(전년 대비 105~130%)은 반영하지 않습니다.</li>
+        <li><b>상속주택 주택수 제외</b>(시행령 §110의2): 상속개시일부터 5년이 지나지 않은 주택, 또는 소유지분 40% 이하이거나 지분 상당 공시가격이 수도권 6억·그 밖 3억 이하인 주택은 1세대1주택 판정 시 주택 수에서 뺍니다. 따라서 종전 1주택은 계속 1세대1주택 특례를 받고, 상속주택 자체는 60%·표준세율로 따로 과세됩니다(상속주택만 있으면 그 주택이 1세대1주택).</li>
+      </ul>
+      <p class="subhead">종합부동산세 (종부세법 §8·§9, 시행령 §2의3·§4의2·§4의3·§4의4)</p>
+      <ul>
+        <li>개인별로 주택 공시가격을 합산합니다. 공제금액 9억 원(1세대1주택 12억 원). 과세표준 = (합계 − 공제) × 공정시장가액비율 60%.</li>
+        <li>세율 — 2주택 이하: 3억 이하 0.5%, 6억 0.7%, 12억 1.0%, 25억 1.3%, 50억 1.5%, 94억 2.0%, 초과 2.7%. 3주택 이상(과표 12억 초과분부터 중과): 25억 2.0%, 50억 3.0%, 94억 4.0%, 초과 5.0%.</li>
+        <li><b>공제할 재산세액</b> = 주택분 재산세 합계(도시지역분 제외) × [(공시가격 합계 − 공제금액) × 60%(종부세 비율) × 60%(재산세 비율)] ÷ Σ(공시가격 × 적용 재산세 공정시장가액비율). 이 계산기는 분자의 재산세 비율을 60%로 두고 분모는 실제 적용 과표 합계를 씁니다(시행령 §4의3 산식을 단순화한 것으로, 1세대1주택 특례 비율 적용 시 실제 고지액과 차이가 날 수 있습니다 — 확인 필요).</li>
+        <li><b>1세대1주택 세액공제</b>: 고령자 60세 이상 20%, 65세 30%, 70세 40% + 장기보유 5년 이상 20%, 10년 40%, 15년 50%, 합계 80% 한도. 상속주택이 함께 있으면 산출세액 × (종전 1주택 공시가격 ÷ 합계 공시가격)에만 공제율을 곱합니다(§9⑦·⑧).</li>
+        <li><b>상속주택 주택수 제외</b>(시행령 §4의2): 재산세와 같은 기준(5년 미경과, 지분 40% 이하, 지분 공시가 6억·3억 이하)으로 1세대1주택 판정과 세율 적용 주택 수에서 빼지만, 공시가격은 합산합니다.</li>
+        <li>농어촌특별세 = 종부세 납부세액 × 20%. 세부담상한 150%는 반영하지 않습니다.</li>
+      </ul>
+    </div>
+  </details>
+</main>
 
-            // 재산세 계산 로직
-            let propertyTaxBefore, propertyTaxAfter;
-            if (gongsiBefore <= 900000000) { // 9억 이하 공시가격 구간
-                if (taxBaseBefore <= 60000000) {
-                    propertyTaxBefore = taxBaseBefore * 0.0005;
-                } else if (taxBaseBefore <= 150000000) {
-                    propertyTaxBefore = 30000 + (taxBaseBefore - 60000000) * 0.001;
-                } else if (taxBaseBefore <= 300000000) {
-                    propertyTaxBefore = 120000 + (taxBaseBefore - 150000000) * 0.002;
-                } else {
-                    propertyTaxBefore = 420000 + (taxBaseBefore - 300000000) * 0.0035;
-                }
-            } else { // 9억 초과 공시가격 구간
-                if (taxBaseBefore <= 60000000) {
-                    propertyTaxBefore = taxBaseBefore * 0.001;
-                } else if (taxBaseBefore <= 150000000) {
-                    propertyTaxBefore = 60000 + (taxBaseBefore - 60000000) * 0.0015;
-                } else if (taxBaseBefore <= 300000000) {
-                    propertyTaxBefore = 195000 + (taxBaseBefore - 150000000) * 0.0025;
-                } else {
-                    propertyTaxBefore = 570000 + (taxBaseBefore - 300000000) * 0.004;
-                }
-            }
+<script src="js/dh.js"></script>
+<script>
+  // ---- 재산세 ----
+  const PROP_STD = [[0,.001,0],[6e7,.0015,6e4],[1.5e8,.0025,1.95e5],[3e8,.004,5.7e5]];       // [하한, 세율, 하한까지 세액]
+  const PROP_SPC = [[0,.0005,0],[6e7,.001,3e4],[1.5e8,.002,1.2e5],[3e8,.0035,4.2e5]];
+  function prog(base, tbl){ let r=tbl[0]; for (const b of tbl) if (base>b[0]) r=b; return Math.floor(r[2] + (base-r[0])*r[1]); }
+  function propRatio(value, one){ return one ? (value<=3e8?.43: value<=6e8?.44:.45) : .6; }
+  function propTax(value, one){
+    const ratio = propRatio(value, one), base = Math.floor(value*ratio);
+    const special = one && value<=9e8;
+    const tax = prog(base, special?PROP_SPC:PROP_STD);
+    return { ratio, base, special, tax, city: Math.floor(base*.0014), edu: Math.floor(tax*.2) };
+  }
+  // ---- 종부세 ----
+  const CT_2 = [[3e8,.005,0],[6e8,.007,6e5],[1.2e9,.01,2.4e6],[2.5e9,.013,6e6],[5e9,.015,1.1e7],[9.4e9,.02,3.6e7],[Infinity,.027,1.018e8]];
+  const CT_3 = [[3e8,.005,0],[6e8,.007,6e5],[1.2e9,.01,2.4e6],[2.5e9,.02,1.44e7],[5e9,.03,3.94e7],[9.4e9,.04,8.94e7],[Infinity,.05,1.834e8]];
+  function ctax(base, heavy){ for (const [cap,rate,ded] of (heavy?CT_3:CT_2)) if (base<=cap) return Math.floor(base*rate-ded); return 0; }
+  function ageRate(a){ return a>=70?.4: a>=65?.3: a>=60?.2: 0; }
+  function holdRate(y){ return y>=15?.5: y>=10?.4: y>=5?.2: 0; }
+  function radio(name){ const el=document.querySelector('input[name="'+name+'"]:checked'); return el?el.value:''; }
+  function txt(id,s){ document.getElementById(id).textContent=s; }
+  function setN(id,n){ DH.set(id,n,{won:false}); }
 
-            if (gongsiAfter <= 900000000) { // 9억 이하 공시가격 구간
-                if (taxBaseAfter <= 60000000) {
-                    propertyTaxAfter = taxBaseAfter * 0.0005;
-                } else if (taxBaseAfter <= 150000000) {
-                    propertyTaxAfter = 30000 + (taxBaseAfter - 60000000) * 0.001;
-                } else if (taxBaseAfter <= 300000000) {
-                    propertyTaxAfter = 120000 + (taxBaseAfter - 150000000) * 0.002;
-                } else {
-                    propertyTaxAfter = 420000 + (taxBaseAfter - 300000000) * 0.0035;
-                }
-            } else { // 9억 초과 공시가격 구간
-                if (taxBaseAfter <= 60000000) {
-                    propertyTaxAfter = taxBaseAfter * 0.001;
-                } else if (taxBaseAfter <= 150000000) {
-                    propertyTaxAfter = 60000 + (taxBaseAfter - 60000000) * 0.0015;
-                } else if (taxBaseAfter <= 300000000) {
-                    propertyTaxAfter = 195000 + (taxBaseAfter - 150000000) * 0.0025;
-                } else {
-                    propertyTaxAfter = 570000 + (taxBaseAfter - 300000000) * 0.004;
-                }
-            }
+  // 인별 종부세. houses: [{value, one(1세대1주택 특례 대상 주택), prop:{tax,base}}], nRate: 세율용 주택수, oneHome: 1세대1주택 여부, creditShare: 세액공제 적용 비율(1주택 공시가/합계)
+  function compTax(houses, nRate, oneHome, age, hold, creditShare){
+    const sum = houses.reduce((s,h)=>s+h.value,0);
+    const ded = oneHome ? 1.2e9 : 9e8;
+    const base = Math.floor(Math.max(0, sum-ded)*.6);
+    const heavy = nRate>=3 && base>1.2e9;
+    const tax = ctax(base, heavy);
+    const propSum = houses.reduce((s,h)=>s+h.prop.tax,0), propBaseSum = houses.reduce((s,h)=>s+h.prop.base,0);
+    const propCredit = propBaseSum>0 ? Math.min(tax, Math.floor(propSum * (base*.6) / propBaseSum)) : 0;
+    const calc = Math.max(0, tax-propCredit);
+    const rate = oneHome ? Math.min(.8, ageRate(age)+holdRate(hold)) : 0;
+    const credit = Math.floor(calc * (creditShare||0) * rate);
+    const pay = Math.max(0, calc-credit), ag = Math.floor(pay*.2);
+    return { sum, n:nRate, ded, base, heavy, tax, propCredit, calc, credit, rate, pay, ag, all: pay+ag };
+  }
 
-            // 도시계획세 계산
-            let dosiTaxBefore = taxBaseBefore * 0.0014;
-            let dosiTaxAfter = taxBaseAfter * 0.0014;
+  function recalc(){
+    const prior = ['h1','h2','h3','h4'].map(id=>DH.val(id)).filter(v=>v>0);
+    const n0 = prior.length;
+    const ihFull = DH.val('ihValue'), share = Math.min(100, Math.max(0, DH.num(document.getElementById('ihShare').value)||0));
+    const ihValue = Math.floor(ihFull*share/100);
+    const hasIH = ihValue>0;
+    const metro = radio('region')==='metro';
+    const dateStr = document.getElementById('ihDate').value;
+    let within5 = true, yearsSince = 0;
+    if (dateStr){ const d=new Date(dateStr+'T00:00:00'), now=new Date(); const lim=new Date(d.getFullYear()+5, d.getMonth(), d.getDate()); within5 = now < lim; yearsSince = Math.max(0, Math.floor((now-d)/(365.25*864e5))); }
+    const minorShare = share<=40, smallValue = ihValue <= (metro?6e8:3e8);
+    const exclude = hasIH && (within5 || minorShare || smallValue);
+    const age = DH.num(document.getElementById('age').value)||0;
+    const holdIn = DH.num(document.getElementById('hold').value)||0;
+    txt('countNote', n0 ? '상속 전 보유 주택 '+n0+'채'+(n0===1?' → 1세대1주택':' → 다주택(60%·표준세율)') : '상속 전 무주택 → 상속주택이 유일한 주택이 됩니다');
 
-            // 지방교육세 계산
-            let eduTaxBefore = propertyTaxBefore * 0.2;
-            let eduTaxAfter = propertyTaxAfter * 0.2;
+    // 주택 수 (1세대1주택 판정·세율용)
+    const nAfter = hasIH ? (n0===0 ? 1 : n0 + (exclude?0:1)) : n0;   // 유일한 주택이면 제외 규정과 무관하게 1주택
+    const oneBefore = n0===1;
+    const oneAfter = hasIH ? (n0===0 ? true : (n0===1 && exclude)) : oneBefore;
 
-            // 계산된 세금 값들을 배열로 반환, 세금을 정수로 반올림
-            return [
-                Math.floor(propertyTaxBefore), Math.floor(dosiTaxBefore), Math.floor(eduTaxBefore),
-                Math.floor(propertyTaxAfter), Math.floor(dosiTaxAfter), Math.floor(eduTaxAfter)
-            ];
-        }
+    // 재산세 — 상속 전
+    const before = prior.map((v,i)=>({ name:'주택 '+(i+1), value:v, prop: propTax(v, oneBefore) }));
+    // 재산세 — 상속 후: 종전주택은 oneAfter 로, 상속주택은 (무주택이었으면 1주택 특례) 아니면 60%·표준
+    const after = prior.map((v,i)=>({ name:'주택 '+(i+1), value:v, prop: propTax(v, oneAfter && n0===1) }));
+    if (hasIH) after.push({ name:'상속주택'+(share<100?' (지분 '+share+'%)':''), value:ihValue, ih:true, prop: propTax(ihValue, n0===0) });
 
-        function comparePropertyTax() {
-            // HTML에서 주택 공시가격 정보 가져오기
-            const gongsi_1 = parseFloat(document.getElementById("gongsi_1").value) || 0;
-            const gongsi_2 = parseFloat(document.getElementById("gongsi_2").value) || 0;
+    const rows=[]; const sumB={tax:0,city:0,edu:0}, sumA={tax:0,city:0,edu:0};
+    before.forEach(h=>{ sumB.tax+=h.prop.tax; sumB.city+=h.prop.city; sumB.edu+=h.prop.edu; });
+    after.forEach(h=>{ sumA.tax+=h.prop.tax; sumA.city+=h.prop.city; sumA.edu+=h.prop.edu; });
+    after.forEach((h,i)=>{
+      const b = h.ih ? null : before[i];
+      const desc = p => (p.ratio*100)+'% → 과표 '+DH.fmt(p.base)+' · '+(p.special?'특례세율':'표준세율');
+      rows.push('<tr><td rowspan="2">'+h.name+'</td><td rowspan="2" class="num">'+DH.fmt(h.value)+'</td><td class="lbl">과표비율·세율</td><td class="lbl num">'+(b?desc(b.prop):'—')+'</td><td class="lbl num">'+desc(h.prop)+'</td></tr>'+
+        '<tr><td>재산세</td><td class="num">'+(b?DH.fmt(b.prop.tax):'—')+'</td><td class="num">'+DH.fmt(h.prop.tax)+'</td></tr>');
+    });
+    document.getElementById('r_propRows').innerHTML = rows.join('') || '<tr><td colspan="5" class="c muted">주택 공시가격을 입력하세요</td></tr>';
+    setN('r_pb_tax',sumB.tax); setN('r_pa_tax',sumA.tax); setN('r_pb_city',sumB.city); setN('r_pa_city',sumA.city);
+    setN('r_pb_edu',sumB.edu); setN('r_pa_edu',sumA.edu);
+    const pbAll = sumB.tax+sumB.city+sumB.edu, paAll = sumA.tax+sumA.city+sumA.edu;
+    setN('r_pb_all',pbAll); setN('r_pa_all',paAll);
 
-            // 상속 전후의 주택 공시가격 합산
-            const gongsiBefore = gongsi_1;
-            const gongsiAfter = gongsi_1 + gongsi_2;
+    // 종부세
+    const holdAfter = (n0===0 && hasIH) ? (dateStr ? yearsSince : 0) : holdIn;
+    const cb = compTax(before, n0, oneBefore, age, holdIn, 1);
+    const sumAfter = after.reduce((s,h)=>s+h.value,0);
+    const creditShare = (oneAfter && hasIH && n0===1) ? prior[0]/sumAfter : 1;
+    const ca = compTax(after, nAfter, oneAfter, age, holdAfter, creditShare);
+    const put = (p, r) => { setN('r_'+p+'_sum',r.sum); txt('r_'+p+'_n', r.n+'주택'); setN('r_'+p+'_ded',r.ded); setN('r_'+p+'_base',r.base); setN('r_'+p+'_tax',r.tax);
+      setN('r_'+p+'_prop',r.propCredit); setN('r_'+p+'_calc',r.calc); setN('r_'+p+'_credit',r.credit); setN('r_'+p+'_pay',r.pay); setN('r_'+p+'_ag',r.ag); setN('r_'+p+'_all',r.all); };
+    put('cb',cb); put('ca',ca);
+    txt('r_rateNote', ca.heavy ? '(3주택 이상 중과세율)' : '(2주택 이하 세율)');
+    txt('r_creditNote', oneAfter ? '(공제율 '+Math.round(ca.rate*100)+'%'+(creditShare<1?' × 1주택분 '+Math.round(creditShare*1000)/10+'%':'')+')' : '(1세대1주택 아님)');
 
-            // 상속 전 후의 재산세 계산
-            const taxes = calc_property_tax(gongsiBefore, gongsiAfter);
+    const diff = (paAll+ca.all) - (pbAll+cb.all);
+    DH.set('r_diff', Math.max(0,diff)); txt('r_diffNote', diff<0 ? '(감소 '+DH.kor(-diff)+')' : '');
 
-            // 결과 표시 설정
-            document.getElementById("resultTableProperty").style.display = "table";
-            document.getElementById("property_tax_1").textContent = taxes[0].toLocaleString() + "원";
-            document.getElementById("dosi_tax_1").textContent = taxes[1].toLocaleString() + "원";
-            document.getElementById("p_edu_tax_1").textContent = taxes[2].toLocaleString() + "원";
-            document.getElementById("property_tax_2").textContent = taxes[3].toLocaleString() + "원";
-            document.getElementById("dosi_tax_2").textContent = taxes[4].toLocaleString() + "원";
-            document.getElementById("p_edu_tax_2").textContent = taxes[5].toLocaleString() + "원";
-        }
-    </script>
+    // 규정 적용 설명
+    let rule = '';
+    if (!hasIH) rule = '상속주택 공시가격을 입력하면 상속 후 보유세를 비교합니다.';
+    else if (n0===0) rule = '상속 전 무주택이므로 상속주택이 1세대1주택이 됩니다. 재산세 특례 과표비율'+(ihValue<=9e8?'·특례세율':'')+'과 종부세 12억 공제를 적용했습니다.';
+    else {
+      const why = within5 ? '상속개시일부터 5년 이내' : minorShare ? '지분 40% 이하' : smallValue ? '지분 상당 공시가격 '+(metro?'6억':'3억')+' 이하' : '';
+      rule = exclude ? '상속주택은 '+why+'이므로 주택 수에서 제외됩니다. 종전 주택 '+(n0===1?'1채는 1세대1주택 특례를 유지하고,':'은 다주택 과세 그대로이며,')+' 상속주택은 60%·표준세율로 따로 과세됩니다.'
+                     : '상속주택이 5년을 넘겼고 소수지분 요건에도 해당하지 않아 주택 수에 포함됩니다 → '+nAfter+'주택으로 과세됩니다.';
+    }
+    txt('r_rule', rule);
+    const notes=[];
+    if (hasIH && !dateStr && n0>0) notes.push('상속개시일을 비워 두어 5년 이내로 보았습니다.');
+    if (ca.heavy) notes.push('3주택 이상으로 과표 12억 초과분에 중과세율이 적용됩니다.');
+    if (hasIH && exclude && within5 && n0>0 && !minorShare && !smallValue) notes.push('5년이 지나면 상속주택이 주택 수에 포함되어 '+(n0+1)+'주택이 됩니다. 그 전에 처분·증여 등을 검토하세요.');
+    if (oneAfter && age<60 && holdAfter<5) notes.push('고령자(60세 이상)·장기보유(5년 이상) 요건을 충족하면 종부세 세액공제를 받을 수 있습니다.');
+    notes.push('재산세 세부담상한, 종부세 세부담상한(150%), 공동명의 1주택 특례는 반영하지 않았습니다. 실제 고지액과 다를 수 있습니다.');
+    txt('r_note', notes.join(' '));
+  }
+  window.DH_recalc = recalc;
+  document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('DOMContentLoaded', recalc);
+</script>
 </body>
 </html>

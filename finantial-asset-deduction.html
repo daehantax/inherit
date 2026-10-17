@@ -1,484 +1,265 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>금융자산 및 채무 계산기</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.4;
-            margin: 0;
-            padding: 30px;
-            font-size: 16px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom:0px;
-            margin-top: -10px;
-
-        }
-        td, th {
-        padding: 2px; /* 패딩을 2px로 설정 */
-        font-size: 16px; /* 폰트 크기 조정 */
-        }
-
-        td {
-            border: 1px solid;
-            padding: 0px;
-            text-align: left;
-        }
-
-        /*  위쪽과 아래쪽 굵은 테두리 */
-        table tr:first-child {
-            border-top: 2px solid #000;
-        }
-        table tr:last-child {
-            border-bottom: 2px solid #000;
-        }
-        /* 옆쪽 테두리 제거 */
-        table, th, td {
-            border-left: none;
-            border-right: none;
-        }
-
-
-
-        input[type="text"] {
-            width: 100%;
-            height: 100%;
-            padding: 2px;
-            box-sizing: border-box;
-            font-size: 16px;
-            text-align: center;
-        }
-
-        input[type="text"].amount {
-        text-align: right;
-        }
-
-
-        .result {
-            font-weight: bold;
-            text-align: right;
-            font-size: 16px;
-        }
-
-        .amount,
-        .total-row td,
-        #netAsset,
-        #inheritanceLimit,
-        #inheritanceDeduction {
-            text-align: right;
-        }
-
-        @media print {
-        /* Set the page size to A4 */
-        @page {
-            size: A4;
-            margin: 15mm; /* Adjust margins as needed */
-        }
-
-        p, h4,  td, th {
-            font-size: 9pt;
-        }
-
-        input[type="text"] {
-        font-size: 8pt;
-        padding: 0;
-        }
-
-        /* Hide elements that shouldn't appear in print */
-         /* 인쇄 시 숨기고 싶은 요소 */
-        #saveButton, #loadButton, #deleteButton, #printButton {
-            display: none;
-        }
-
-        /* Adjust table styles for printing */
-        table {
-            width: 100%;
-            font-size: 9pt; /* Adjust font size for print */
-        }
-
-        td, th {
-            padding: 2px; /* Reduce padding to fit more content */
-        }
-
-        /* Additional print-specific styles if needed */
-    }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>금융재산 상속공제 신고서 · 대한세무법인</title>
+<meta name="description" content="예금·보험·주식 등 금융재산과 금융기관 채무를 적으면 순금융재산과 금융재산상속공제액(최대 2억원)이 바로 계산되는 별지 제5호서식 작성 도구. 2026년 시행 세법 기준.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  .form-sheet table.dh{margin:0 0 4px}
+  .form-sheet table.dh th.grp{width:12%;background:#fbf8f9}
+  .form-sheet table.dh td.k{width:14%;font-size:12.5px;color:var(--muted);background:#fdfbfb}
+  .form-sheet td input{max-width:none}
+  .form-sheet td b.calc{display:block;text-align:right;font-variant-numeric:tabular-nums}
+  .form-sheet td.final b.calc{font-size:17px;color:var(--main)}
+  table.rows td.del{width:34px;text-align:center;padding:2px}
+  table.rows td.del button{font:inherit;font-size:12px;border:1px solid var(--line-strong);background:#fff;color:var(--muted);border-radius:6px;padding:3px 7px;cursor:pointer}
+  table.rows td.del button:hover{color:var(--bad);border-color:var(--bad)}
+  table.rows td.no{color:var(--muted);font-size:12px}
+  table.rows input[data-money]{text-align:right}
+  table.rows input.qty{text-align:right}
+  .sec-row{display:flex;justify-content:space-between;align-items:center}
+  .sec-row .btn{padding:4px 12px;font-size:12px}
+  col.w6{width:6%}col.w10{width:10%}col.w14{width:14%}col.w18{width:18%}col.w22{width:22%}col.w26{width:26%}col.w30{width:30%}
+  .sign-row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .sign-row input{max-width:160px;display:inline-block;width:auto}
+  .sign-row input.d{max-width:60px;text-align:center}
+  .form-sheet .to input{display:inline-block;width:auto;max-width:90px}
+  @page{margin:10mm 12mm}
+  @media print{
+    .dh-head{display:none}
+    .form-sheet{break-inside:auto;font-size:9pt}
+    .form-sheet .sheet-title{font-size:14pt}
+    .form-sheet .sheet-sub{margin-bottom:2.5mm}
+    .form-sheet table.dh th,.form-sheet table.dh td{padding:0.8mm 1.5mm;font-size:8.5pt}
+    .form-sheet table.dh th.grp,.form-sheet table.dh td.k{background:#f3f3f3!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .form-sheet td.final b.calc{color:#000;font-size:11pt}
+    .form-sheet .sec{margin:2mm 0 1mm;font-size:9.5pt}
+    .form-sheet p{margin:2mm 0 1mm}
+    table.rows td.del,table.rows th.del{display:none}
+    .sign-row{margin-top:3mm}
+    .form-sheet .to{margin-top:1.5mm}
+  }
+</style>
 </head>
-<body>
-    <p style="font-size: 10px; color: #2b2a2a; text-align: left; margin-bottom:-10px;">[별지 제5호서식] (2020.03.13 개정)</p>
-    <h2 style="text-align: center; color: #333; margin-bottom: 0px;">금융재산 상속공제 신고서 </h2>
-    <p style="font-size: 10px; color: #2b2a2a; text-align: left; margin-bottom: 0px;">፠ 뒤쪽의 작성방법을 읽고 작성하시기 바랍니다.</p>
-    <div  style="text-align: right; margin-top: 0px;">
-        <button id="saveButton" style="padding: 10px 20px;">저장</button>
-        <button id="loadButton"style="padding: 10px 20px;">불러오기</button>
-        <button id="deleteButton"style="padding: 10px 20px;">삭제</button>
-        <button id="printButton"style="padding: 10px 20px;">인쇄</button>
+<body data-store="finantial-asset-deduction" data-subject="금융재산 상속공제" data-autoload="1">
+
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 상속공제 명세서</div>
+    <span class="form-no">별지 제5호서식</span>
+    <h1>금융재산 상속공제 신고서</h1>
+    <p>예금·보험·주식·펀드 등 금융재산과 금융기관 채무를 적으면 순금융재산과 공제액(최대 2억원)이 바로 계산됩니다. 상속세 신고서 2단계 ㉗에 옮겨 적으세요.</p>
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
+
+  <div data-save>
+    <div class="form-sheet">
+      <div class="sheet-no">[상속세 및 증여세법 시행규칙 별지 제5호서식] 〈개정 2020. 3. 13.〉</div>
+      <div class="sheet-title">금융재산 상속공제 신고서</div>
+      <div class="sheet-sub">「상속세 및 증여세법」 제22조 · 같은 법 시행령 제19조</div>
+
+      <div class="sec">1. 피상속인 및 신고인(상속인) 인적사항</div>
+      <table class="dh">
+        <tbody>
+          <tr><th class="grp">피상속인</th><td class="k">성명</td><td><input type="text" id="deceasedName"></td><td class="k">주민등록번호</td><td><input type="text" id="deceasedId" placeholder="000000-0000000"></td></tr>
+          <tr><th class="grp">신고인(상속인)</th><td class="k">성명</td><td><input type="text" id="heirName"></td><td class="k">주민등록번호</td><td><input type="text" id="heirId" placeholder="000000-0000000"></td></tr>
+        </tbody>
+      </table>
+
+      <div class="sec sec-row"><span>2. 금융재산 및 금융채무 &nbsp;—&nbsp; 가. 금융재산</span><button type="button" class="btn ghost no-print" id="addAsset">+ 행 추가</button></div>
+      <table class="dh rows" id="assetTable">
+        <colgroup><col class="w6"><col class="w26"><col class="w30"><col class="w14"><col class="w22"><col class="del"></colgroup>
+        <thead><tr><th>번호</th><th>금융기관(상호)</th><th>계좌번호·종류 <small>(예금·보험·주식·펀드)</small></th><th>수량</th><th>평가액(원)</th><th class="del"></th></tr></thead>
+        <tbody id="assetBody"></tbody>
+        <tfoot><tr class="total"><td colspan="4" class="c">① 금융재산 합계</td><td class="num"><b class="calc" id="assetTotal">0</b></td><td class="del"></td></tr></tfoot>
+      </table>
+
+      <div class="sec sec-row"><span>나. 금융채무 <small class="muted">(금융기관에 대한 채무만)</small></span><button type="button" class="btn ghost no-print" id="addDebt">+ 행 추가</button></div>
+      <table class="dh rows" id="debtTable">
+        <colgroup><col class="w6"><col class="w30"><col class="w30"><col class="w30"><col class="del"></colgroup>
+        <thead><tr><th>번호</th><th>금융기관(상호)</th><th>채무 종류 <small>(대출·신용카드 등)</small></th><th>금액(원)</th><th class="del"></th></tr></thead>
+        <tbody id="debtBody"></tbody>
+        <tfoot><tr class="total"><td colspan="3" class="c">② 금융채무 합계</td><td class="num"><b class="calc" id="debtTotal">0</b></td><td class="del"></td></tr></tfoot>
+      </table>
+
+      <div class="sec">3. 금융재산 상속공제금액</div>
+      <table class="dh">
+        <tbody>
+          <tr><td>③ 순금융재산가액 (① − ②, 0 미만이면 0)</td><td class="num"><b class="calc" id="netAsset">0</b></td></tr>
+          <tr><td>④ 금융재산 상속공제 한도액</td><td class="num"><b class="calc">200,000,000</b></td></tr>
+          <tr class="total"><td>⑤ 금융재산 상속공제금액 <span class="muted" id="dedNote"></span><br><small>2천만원 이하: 전액 · 2천만원 초과 1억원 이하: 2천만원 · 1억원 초과: 순금융재산의 20% (한도 2억원)</small></td><td class="num final"><b class="calc" id="deduction">0</b></td></tr>
+        </tbody>
+      </table>
+
+      <p>「상속세 및 증여세법」 제22조 및 같은 법 시행령 제19조제3항에 따라 금융재산 상속공제 신고서를 제출합니다.</p>
+      <div class="sign-row">
+        <div><input type="text" id="signY" class="d" placeholder="년">년 <input type="text" id="signM" class="d" placeholder="월">월 <input type="text" id="signD" class="d" placeholder="일">일</div>
+        <div>신고인 <input type="text" id="signName" placeholder="성명"> (서명 또는 인)</div>
+      </div>
+      <div class="to"><input type="text" id="taxOffice" class="short" placeholder="○○"> 세무서장 귀하</div>
+
+      <table class="dh">
+        <tbody><tr><th class="grp">신고인 제출서류</th><td>금융재산 보유 및 금융채무 사실을 확인할 수 있는 서류 (잔액증명서, 금융거래내역, 부채증명서 등)</td><th class="grp">수수료 없음</th></tr></tbody>
+      </table>
     </div>
-    <p><strong>1.피상속인 및 신고인 ( 상속인) 인적사항</strong> <p>
+  </div>
 
-    <table id="inheritance-table">
-        <tr id="deceased-row">
-            <td>피상속인</td>
-            <td>성명</td>
-            <td><input type="text" id="deceased-name"></td>
-            <td>주민등록번호</td>
-            <td><input type="text" id="deceased-id-number"></td>
-        </tr>
-        <tr id="heir-row">
-            <td>상속인</td>
-            <td>성명</td>
-            <td><input type="text" id="heir-name"></td>
-            <td>주민등록번호</td>
-            <td><input type="text" id="heir-id-number"></td>
-        </tr>
-    </table>
+  <section class="result no-print">
+    <h2>계산 요약</h2>
+    <div class="kv"><span>① 금융재산 합계</span><b id="rAsset">0원</b></div>
+    <div class="kv"><span>② 금융채무 합계</span><b id="rDebt">0원</b></div>
+    <div class="kv"><span>③ 순금융재산가액</span><b id="rNet">0원</b></div>
+    <div class="kv total"><span>⑤ 금융재산상속공제액</span><b id="rDed">0원</b></div>
+    <div class="note" id="rNote"></div>
+  </section>
 
-    <p><strong>2.금융재산 및 금융채무</strong> </p>
-    <p><strong>가-1. 금융재산</strong> </p>
-    <table id="financeAssetTable">
-        <tr>
-            <th>종류</th>
-            <th style="width: 20%;">계좌번호 등</th>
-            <th>상호</th>
-            <th>사업자등록번호</th>
-            <th>단가</th>
-            <th>금액</th>
-        </tr>
+  <div class="actions no-print">
+    <a class="btn" href="inherit-tax-report.html">상속세 신고서로 돌아가기 →</a>
+    <a class="btn ghost" href="cal_Inherit_simple.html">단순 계산기</a>
+  </div>
 
-        <tr>
-            <td><input type="text" name="assetType1"></td>
-            <td><input type="text" name="assetAccount1"></td>
-            <td><input type="text" name="assetCompany1"></td>
-            <td><input type="text" name="assetBusinessNumber1"></td>
-            <td><input type="text" name="assetUnitPrice1"></td>
-            <td><input type="text" name="assetAmount1" class="amount" data-type="asset"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="assetType2"></td>
-            <td><input type="text" name="assetAccount2"></td>
-            <td><input type="text" name="assetCompany2"></td>
-            <td><input type="text" name="assetBusinessNumber2"></td>
-            <td><input type="text" name="assetUnitPrice2"></td>
-            <td><input type="text" name="assetAmount2" class="amount" data-type="asset"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="assetType3"></td>
-            <td><input type="text" name="assetAccount3"></td>
-            <td><input type="text" name="assetCompany3"></td>
-            <td><input type="text" name="assetBusinessNumber3"></td>
-            <td><input type="text" name="assetUnitPrice3"></td>
-            <td><input type="text" name="assetAmount3" class="amount" data-type="asset"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="assetType4"></td>
-            <td><input type="text" name="assetAccount4"></td>
-            <td><input type="text" name="assetCompany4"></td>
-            <td><input type="text" name="assetBusinessNumber4"></td>
-            <td><input type="text" name="assetUnitPrice4"></td>
-            <td><input type="text" name="assetAmount4" class="amount" data-type="asset"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="assetType5"></td>
-            <td><input type="text" name="assetAccount5"></td>
-            <td><input type="text" name="assetCompany5"></td>
-            <td><input type="text" name="assetBusinessNumber5"></td>
-            <td><input type="text" name="assetUnitPrice5"></td>
-            <td><input type="text" name="assetAmount5" class="amount" data-type="asset"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="assetType6"></td>
-            <td><input type="text" name="assetAccount6"></td>
-            <td><input type="text" name="assetCompany6"></td>
-            <td><input type="text" name="assetBusinessNumber6"></td>
-            <td><input type="text" name="assetUnitPrice6"></td>
-            <td><input type="text" name="assetAmount6" class="amount" data-type="asset"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="assetType7"></td>
-            <td><input type="text" name="assetAccount7"></td>
-            <td><input type="text" name="assetCompany7"></td>
-            <td><input type="text" name="assetBusinessNumber7"></td>
-            <td><input type="text" name="assetUnitPrice7"></td>
-            <td><input type="text" name="assetAmount7" class="amount" data-type="asset"></td>
-        </tr>
+  <details class="dh no-print"><summary>작성 시 주의사항 (상증법 §22 · 시행령 §19)</summary>
+    <ul>
+      <li><b>금융재산</b>: 금융회사등이 취급하는 예금·적금·부금·출자금·금전신탁·보험금·공제금·주식·채권·수익증권·출자지분·어음 등. 현금은 금융재산이 아닙니다.</li>
+      <li><b>제외되는 금융재산</b>: ① 최대주주 또는 최대출자자가 보유한 주식·출자지분 (특수관계인 지분 합산 기준), ② 상속세 과세표준 신고기한까지 신고하지 않은 타인 명의의 금융재산.</li>
+      <li><b>금융채무</b>: 금융회사등에 대한 채무만 뺍니다. 개인 사채·임대보증금·미지급금은 여기서 빼지 않습니다 (채무공제에서는 공제됩니다).</li>
+      <li>공제액: 순금융재산이 2천만원 이하면 전액, 2천만원 초과 1억원 이하면 2천만원, 1억원 초과면 20% (한도 2억원). 원 단위 미만은 버립니다.</li>
+      <li>이 신고서는 상속세 신고기한까지 제출해야 공제받을 수 있습니다. 금융재산은 상속개시일 현재 잔액(보험은 해약환급금·보험금 등 평가액)으로 적습니다.</li>
+    </ul>
+  </details>
+</main>
 
-        <tr>
-            <td><input type="text" name="assetType8"></td>
-            <td><input type="text" name="assetAccount8"></td>
-            <td><input type="text" name="assetCompany8"></td>
-            <td><input type="text" name="assetBusinessNumber8"></td>
-            <td><input type="text" name="assetUnitPrice8"></td>
-            <td><input type="text" name="assetAmount8" class="amount" data-type="asset"></td>
-        </tr>
-
-
-
-        <tr class="total-row">
-            <td colspan="5">합계</td>
-            <td id="assetTotal" style="font-weight: bold;">0</td>
-        </tr>
-    </table>
-
-    <p><strong>가-2.금융채무</strong> </p>
-    <table id="financeDebtTable">
-        <tr>
-            <th>종류</th>
-            <th style="width: 20%;">계좌번호 등</th>
-            <th>상호</th>
-            <th>사업자등록번호</th>
-            <th>단가</th>
-            <th>금액</th>
-        </tr>
-
-        <tr></tr>
-            <td><input type="text" name="debtType1"></td>
-            <td><input type="text" name="debtAccount1"></td>
-            <td><input type="text" name="debtCompany1"></td>
-            <td><input type="text" name="debtBusinessNumber1"></td>
-            <td><input type="text" name="debtUnitPrice1"></td>
-            <td><input type="text" name="debtAmount1" class="amount" data-type="debt"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="debtType2"></td>
-            <td><input type="text" name="debtAccount2"></td>
-            <td><input type="text" name="debtCompany2"></td>
-            <td><input type="text" name="debtBusinessNumber2"></td>
-            <td><input type="text" name="debtUnitPrice2"></td>
-            <td><input type="text" name="debtAmount2" class="amount" data-type="debt"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="debtType3"></td>
-            <td><input type="text" name="debtAccount3"></td>
-            <td><input type="text" name="debtCompany3"></td>
-            <td><input type="text" name="debtBusinessNumber3"></td>
-            <td><input type="text" name="debtUnitPrice3"></td>
-            <td><input type="text" name="debtAmount3" class="amount" data-type="debt"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="debtType4"></td>
-            <td><input type="text" name="debtAccount4"></td>
-            <td><input type="text" name="debtCompany4"></td>
-            <td><input type="text" name="debtBusinessNumber4"></td>
-            <td><input type="text" name="debtUnitPrice4"></td>
-            <td><input type="text" name="debtAmount4" class="amount" data-type="debt"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="debtType5"></td>
-            <td><input type="text" name="debtAccount5"></td>
-            <td><input type="text" name="debtCompany5"></td>
-            <td><input type="text" name="debtBusinessNumber5"></td>
-            <td><input type="text" name="debtUnitPrice5"></td>
-            <td><input type="text" name="debtAmount5" class="amount" data-type="debt"></td>
-        </tr>
-
-        <tr>
-            <td><input type="text" name="debtType6"></td>
-            <td><input type="text" name="debtAccount6"></td>
-            <td><input type="text" name="debtCompany6"></td>
-            <td><input type="text" name="debtBusinessNumber6"></td>
-            <td><input type="text" name="debtUnitPrice6"></td>
-            <td><input type="text" name="debtAmount6" class="amount" data-type="debt"></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="debtType7"></td>
-            <td><input type="text" name="debtAccount7"></td>
-            <td><input type="text" name="debtCompany7"></td>
-            <td><input type="text" name="debtBusinessNumber7"></td>
-            <td><input type="text" name="debtUnitPrice7"></td>
-            <td><input type="text" name="debtAmount7" class="amount" data-type="debt"></td>
-        </tr>
-
-        <tr class="total-row">
-            <td colspan="5">합계</td>
-            <td id="debtTotal" style="font-weight: bold;">0</td>
-        </tr>
-    </table>
-
-    <p><strong>3.금융재산 상속공제금액</strong> </p>
-    <table>
-        <tr>
-            <td>③ 순금융재산가액 (① -② )</td>
-            <td id="netAsset">0</td>
-        </tr>
-        <tr>
-            <td >④금융재산 상속공제 한도액</td>
-            <td id="inheritanceLimit">0</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;"> ⑤ 금융재산 상속공제금액</td>
-            <td style="font-weight: bold;" id="inheritanceDeduction">0</td>
-        </tr>
-    </table>
-    <!-- 날짜 입력 필드 추가 및 기본값 설정 -->
-        <p>  「상속세 및 증여세법」 제22조 및 같은 법 시행령 제19조제3항에 따라 금융재산 상속공제 신고서를 제출합니다. </p>
-
-        <p>
-            <input type="text" id="inputYear" placeholder="년" style="width: 50px;">년
-            <input type="text" id="inputMonth" placeholder="월" style="width: 30px;">월
-            <input type="text" id="inputDay" placeholder="일" style="width: 30px;">일.
-            신고인 <span id="declarerName" style="font-weight: bold;">(서명 또는 인)</span>
-         </p>
-         <p> <input type="text"  style="width: 50px;">세무서장  귀하</p>
-
-         <table>
-            <tr>
-                <td>신고인제출서류</td><td>금융재산보유 및 금융채무 사실을 확인할수 있는 서류 </td> <td> 수수료 없음</td>
-        </table>
-
-
-
+<script src="js/dh.js"></script>
 <script>
-    // 상수 정의
-    const LIMIT_1 = 20000000;
-    const LIMIT_2 = 100000000;
-    const LIMIT_3 = 1000000000;
-    const MAX_DEDUCTION = 200000000;
+  DH.migrate('formData', function (d) { return d && ('assetAmount1' in d); });
+  const MIN_ASSET = 8, MIN_DEBT = 7;
 
-    function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
+  function cell(parent, cls) { const td = document.createElement('td'); if (cls) td.className = cls; parent.appendChild(td); return td; }
+  function input(td, cls, opt) {
+    const i = document.createElement('input'); i.type = 'text'; if (cls) i.className = cls;
+    if (opt && opt.money) i.setAttribute('data-money', '');
+    if (opt && opt.ph) i.placeholder = opt.ph;
+    if (opt && opt.value != null) i.value = opt.value;
+    td.appendChild(i); return i;
+  }
+  function delBtn(td) { const b = document.createElement('button'); b.type = 'button'; b.textContent = '×'; b.title = '행 삭제'; b.className = 'row-del'; td.appendChild(b); }
 
-    function unformatNumber(str) {
-        return parseInt(str.replace(/,/g, '')) || 0;
-    }
-
-    function calculateDeductionLimit(netAsset) {
-        if (netAsset <= LIMIT_1) return netAsset;
-        if (netAsset <= LIMIT_2) return LIMIT_1;
-        if (netAsset <= LIMIT_3) return netAsset * 0.2;
-        return MAX_DEDUCTION;
-    }
-
-    function updateResults() {
-        const assetInputs = document.querySelectorAll('#financeAssetTable .amount');
-        const debtInputs = document.querySelectorAll('#financeDebtTable .amount');
-
-        const totalAssets = Array.from(assetInputs).reduce((sum, input) => sum + unformatNumber(input.value), 0);
-        const totalDebts = Array.from(debtInputs).reduce((sum, input) => sum + unformatNumber(input.value), 0);
-
-        document.getElementById('assetTotal').textContent = formatNumber(totalAssets);
-        document.getElementById('debtTotal').textContent = formatNumber(totalDebts);
-
-        const netAsset = Math.max(totalAssets - totalDebts, 0);  // 음수 방지
-        document.getElementById('netAsset').textContent = formatNumber(netAsset);
-
-        const deductionLimit = calculateDeductionLimit(netAsset);
-        document.getElementById('inheritanceLimit').textContent = formatNumber(deductionLimit);
-
-        const actualDeduction = Math.min(netAsset, deductionLimit);
-        document.getElementById('inheritanceDeduction').textContent = formatNumber(actualDeduction);
-    }
-
-    // 이벤트 리스너 등록
-    document.querySelectorAll('.amount').forEach(input => {
-        input.addEventListener('input', function() {
-            this.value = formatNumber(unformatNumber(this.value));
-            updateResults();
-        });
+  function addAssetRow(d) {
+    d = d || {};
+    const tr = document.createElement('tr');
+    cell(tr, 'no c');
+    input(cell(tr), 'bank', { value: d.bank, ph: '예: ○○은행' });
+    input(cell(tr), 'acct', { value: d.acct, ph: '계좌번호 / 종류' });
+    input(cell(tr), 'qty', { value: d.qty, ph: '' });
+    input(cell(tr), 'amt', { money: true, value: d.amt ? DH.fmt(d.amt) : '', ph: '0' });
+    delBtn(cell(tr, 'del'));
+    document.getElementById('assetBody').appendChild(tr);
+    DH.bindMoney(tr); renumber();
+  }
+  function addDebtRow(d) {
+    d = d || {};
+    const tr = document.createElement('tr');
+    cell(tr, 'no c');
+    input(cell(tr), 'bank', { value: d.bank, ph: '예: ○○은행' });
+    input(cell(tr), 'kind', { value: d.kind, ph: '대출·카드 등' });
+    input(cell(tr), 'amt', { money: true, value: d.amt ? DH.fmt(d.amt) : '', ph: '0' });
+    delBtn(cell(tr, 'del'));
+    document.getElementById('debtBody').appendChild(tr);
+    DH.bindMoney(tr); renumber();
+  }
+  function renumber() {
+    ['assetBody', 'debtBody'].forEach(function (id) {
+      document.querySelectorAll('#' + id + ' tr').forEach(function (tr, i) { tr.querySelector('.no').textContent = i + 1; });
     });
+  }
+  function rowsData(bodyId, keys) {
+    return Array.from(document.querySelectorAll('#' + bodyId + ' tr')).map(function (tr) {
+      const o = {};
+      keys.forEach(function (k) { const el = tr.querySelector('.' + k); o[k] = k === 'amt' ? DH.num(el.value) : el.value; });
+      return o;
+    });
+  }
+  function buildRows(assets, debts) {
+    document.getElementById('assetBody').textContent = '';
+    document.getElementById('debtBody').textContent = '';
+    (assets || []).forEach(addAssetRow); while (document.querySelectorAll('#assetBody tr').length < MIN_ASSET) addAssetRow();
+    (debts || []).forEach(addDebtRow); while (document.querySelectorAll('#debtBody tr').length < MIN_DEBT) addDebtRow();
+  }
 
-    // 페이지 로드 시 함수 호출
-    window.onload = function() {
-        // 현재 날짜로 날짜 입력 필드 초기화
-        const today = new Date();
-        document.getElementById('inputYear').value = today.getFullYear();
-        document.getElementById('inputMonth').value = today.getMonth() + 1; // 월은 0부터 시작하므로 +1 필요
-        document.getElementById('inputDay').value = today.getDate();
-
-        updateDate();
-        updateDeclarerName();
-        updateResults(); // 기존에 있던 함수 호출
+  // 저장/불러오기: 행 데이터를 함께 다룬다
+  const _collect = DH.collect, _apply = DH.apply;
+  DH.collect = function () {
+    const o = _collect();
+    o.assets = rowsData('assetBody', ['bank', 'acct', 'qty', 'amt']);
+    o.debts = rowsData('debtBody', ['bank', 'kind', 'amt']);
+    return o;
+  };
+  DH.apply = function (data) {
+    if (!data) return;
+    if (data.assets || data.debts) buildRows(data.assets, data.debts);
+    else if ('assetAmount1' in data) { // 옛 저장 형식(formData) 이관
+      const a = [], d = [];
+      for (let i = 1; i <= 8; i++) a.push({ bank: data['assetCompany' + i] || '', acct: [data['assetType' + i], data['assetAccount' + i]].filter(Boolean).join(' '), qty: data['assetUnitPrice' + i] || '', amt: DH.num(data['assetAmount' + i]) });
+      for (let i = 1; i <= 7; i++) d.push({ bank: data['debtCompany' + i] || '', kind: data['debtType' + i] || '', amt: DH.num(data['debtAmount' + i]) });
+      buildRows(a, d);
+      data = Object.assign({}, data, { deceasedName: data['deceased-name'], deceasedId: data['deceased-id-number'], heirName: data['heir-name'], heirId: data['heir-id-number'] });
     }
+    _apply(data);
+  };
+  DH.clear = function () {
+    if (!confirm('이 페이지의 저장 내용과 입력값을 모두 지울까요?')) return;
+    try { localStorage.removeItem(DH.storeKey()); } catch (e) { }
+    document.querySelectorAll('[data-save] input, [data-save] select').forEach(function (el) { if (el.id) el.value = el.defaultValue || ''; });
+    buildRows([], []); DH.toast('지웠습니다.');
+  };
 
-    // 저장 기능 구현
-    function saveData() {
-        const inputs = document.querySelectorAll('input');
-        const data = {};
-        inputs.forEach(input => {
-            if (input.name || input.id) {
-                data[input.name || input.id] = input.value;
-            }
-        });
-        localStorage.setItem('formData', JSON.stringify(data));
-        alert('데이터가 저장되었습니다.');
-    }
+  function recalc() {
+    const assets = rowsData('assetBody', ['amt']), debts = rowsData('debtBody', ['amt']);
+    const a = assets.reduce(function (s, r) { return s + r.amt; }, 0);
+    const d = debts.reduce(function (s, r) { return s + r.amt; }, 0);
+    const net = Math.max(0, a - d);
+    const ded = DH.finDeduction(net);   // 2천만 이하 전액 / 1억 이하 2천만 / 20%, 한도 2억, 절사
+    DH.set('assetTotal', a, { won: false }); DH.set('debtTotal', d, { won: false });
+    DH.set('netAsset', net, { won: false }); DH.set('deduction', ded, { won: false });
+    document.getElementById('dedNote').textContent = net > 1e9 ? '→ 2억 한도' : (net > 1e8 ? '→ 20%' : (net > 2e7 ? '→ 2천만원' : (net > 0 ? '→ 전액' : '')));
+    DH.set('rAsset', a); DH.set('rDebt', d); DH.set('rNet', net); DH.set('rDed', ded);
+    const notes = [];
+    if (d > a) notes.push('금융채무가 금융재산보다 커서 순금융재산은 0원, 공제액도 0원입니다.');
+    if (ded > 0) notes.push('공제액 ' + DH.kor(ded) + '을 상속세 신고서 2단계 ㉗ 금융재산상속공제에 옮겨 적으세요.');
+    notes.push('최대주주 주식과 신고기한까지 신고하지 않은 타인 명의 금융재산은 제외됩니다.');
+    document.getElementById('rNote').textContent = notes.join(' ');
+    const nm = document.getElementById('heirName').value, sn = document.getElementById('signName'); if (!sn.value && nm) sn.value = nm;
+  }
+  window.DH_recalc = recalc;
 
-    // 불러오기 기능 구현
-    function loadData() {
-        const data = JSON.parse(localStorage.getItem('formData'));
-        if (data) {
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                if ((input.name && data[input.name] !== undefined) || (input.id && data[input.id] !== undefined)) {
-                    input.value = data[input.name || input.id];
-                }
-            });
-            updateResults();  // 계산 결과 업데이트
-            updateDeclarerName(); // 신고인 이름 업데이트
-            updateDate(); // 날짜 업데이트
-            alert('데이터가 불러와졌습니다.');
-        } else {
-            alert('저장된 데이터가 없습니다.');
-        }
-    }
+  document.getElementById('addAsset').addEventListener('click', function () { addAssetRow(); });
+  document.getElementById('addDebt').addEventListener('click', function () { addDebtRow(); });
+  document.addEventListener('click', function (e) {
+    const b = e.target.closest('button.row-del'); if (!b) return;
+    const tr = b.closest('tr'), body = tr.parentElement;
+    const min = body.id === 'assetBody' ? MIN_ASSET : MIN_DEBT;
+    if (body.querySelectorAll('tr').length <= min) { tr.querySelectorAll('input').forEach(function (i) { i.value = ''; }); }
+    else tr.remove();
+    renumber(); recalc();
+  });
+  document.addEventListener('input', function (e) { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('change', function (e) { if (e.target.closest('[data-save]')) recalc(); });
 
-    // 삭제 기능 구현
-    function deleteData() {
-        localStorage.removeItem('formData');
-        alert('저장된 데이터가 삭제되었습니다.');
-    }
-
-    // 버튼에 이벤트 리스너 추가
-    document.getElementById('saveButton').addEventListener('click', saveData);
-    document.getElementById('loadButton').addEventListener('click', loadData);
-    document.getElementById('deleteButton').addEventListener('click', deleteData);
-
-    // 초기 실행
-    updateResults();
-
-    // 날짜를 업데이트하는 함수
-    function updateDate() {
-        const yearInput = document.getElementById('inputYear');
-        const monthInput = document.getElementById('inputMonth');
-        const dayInput = document.getElementById('inputDay');
-
-        // 필요한 경우 날짜 형식 검증 가능
-
-        // 날짜를 표시하는 요소가 필요하다면 추가
-        // 현재는 입력 필드 자체에 값이 표시되므로 추가 작업은 필요 없음
-    }
-
-    // 신고인 이름을 업데이트하는 함수
-    function updateDeclarerName() {
-        const heirName = document.getElementById('heir-name').value;
-        const declarerNameElement = document.getElementById('declarerName');
-        declarerNameElement.textContent = heirName || '';
-        declarerNameElement.innerHTML += '(서명 또는 인) '; // '(서명 또는 인)' 추가
-    }
-
-    // '상속인' 이름 입력 필드에 이벤트 리스너 추가
-    document.getElementById('heir-name').addEventListener('input', updateDeclarerName);
-
-    // 날짜 입력 필드에 이벤트 리스너 추가
-    document.getElementById('inputYear').addEventListener('input', updateDate);
-    document.getElementById('inputMonth').addEventListener('input', updateDate);
-    document.getElementById('inputDay').addEventListener('input', updateDate);
-
-
-
-    // 인쇄 기능 구현
-document.getElementById('printButton').addEventListener('click', function() {
-    window.print();
-});
-
-
+  buildRows([], []);
+  document.addEventListener('DOMContentLoaded', function () {
+    const t = new Date(); ['signY', 'signM', 'signD'].forEach(function (id, i) { const el = document.getElementById(id); if (!el.value) el.value = [t.getFullYear(), t.getMonth() + 1, t.getDate()][i]; });
+    recalc();
+  });
 </script>
 </body>
 </html>

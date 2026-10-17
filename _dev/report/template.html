@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}} · 대한세무법인</title>
+<meta name="description" content="{{DESC}}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<link rel="stylesheet" href="css/report.css">
+<link data-tier="gold,goldAnswer" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+</head>
+<body data-store="inherit-report" data-subject="상속세" data-wide="1" data-autoload="1" data-tier="{{TIER}}">
+
+<main class="wrap wide">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 절세 보고서</div>
+    <span class="form-no">{{TIER_LABEL}}</span>
+    <h1>{{TITLE}}</h1>
+    <p>입력한 재산·채무·가족 구성으로 예상 상속세를 계산하고, 상황별 절세 방법을 단계별로 살펴봅니다.</p>
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">입력 데이터 불러오기</button>
+    <button class="btn ghost sm" data-action="save" data-tier="premium,gold,goldAnswer,royal">입력 데이터 저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print" data-tier="premium,gold,goldAnswer,royal">인쇄 / PDF 저장</button>
+  </div>
+
+  <section class="card">
+    <h2>◈ 기본사항</h2>
+    <ol class="tips">
+      <li>부모님중 한분이 먼저 돌아가신 경우.</li>
+      <li>피상속인(돌아가신분)이 1주택과 그외 자산을 소유.</li>
+      <li>자산과 부채는 사망일 당시금액. 사망신고일이 아님 유의.</li>
+    </ol>
+  </section>
+
+  <div data-save>
+
+  <div class="wiz-progress no-print" id="wizProgress"></div>
+
+  <!-- ================= 1~10 단계 : 입력 ================= -->
+  <section class="card step input-step on" id="step1">
+    <span class="step-no">1 / 10</span>
+    <h2 class="title">주택가격</h2>
+    <div class="field"><label for="houseValue">주택가격 <small>상속개시일 현재 시가</small></label>
+      <div class="ctl"><input type="text" id="houseValue" data-money placeholder="주택가격"><span class="unit">원</span><span class="won"></span></div></div>
+    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+      <li>시가평가 원칙.</li>
+      <li>시가는 이 주택의 감정평가액 또는 매매사례가액.</li>
+      <li>시가가 없는 경우 기준시가 평가.</li>
+    </ul>
+    <div class="links no-print" data-tier="premium,gold,goldAnswer,royal">
+      <a class="hot" href="https://tuzaga.com/%ec%83%81%ec%86%8d%ec%8b%9c-%ec%95%84%ed%8c%8c%ed%8a%b8-%ed%8f%89%ea%b0%80/" target="_blank" rel="noopener">⚠️ 상속주택 평가교실 바로가기 꼭 ~~ 클릭 !!! ⚠️</a>
+      <ul>
+        <li><a href="https://www.hometax.go.kr/" target="_blank" rel="noopener">🏠 홈텍스 실거래가</a></li>
+        <li><a href="https://rt.molit.go.kr/" target="_blank" rel="noopener">🏢 국토교통부 실거래가</a></li>
+        <li><a href="https://www.realtyprice.kr/" target="_blank" rel="noopener">📈 국토교통부 공시가격</a></li>
+      </ul>
+    </div>
+    <div class="actions"><button class="btn" data-go="2">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step2">
+    <span class="step-no">2 / 10</span>
+    <h2 class="title">비주거용건물(대지 포함)</h2>
+    <div class="field"><label for="buildingValue">비주거용 건물 <small>대지 포함</small></label>
+      <div class="ctl"><input type="text" id="buildingValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+      <li>시가 평가 원칙.</li>
+      <li>감정평가가액이 있는 경우 감정가액.</li>
+      <li>시가가 없는 경우 기준시가로 평가.</li>
+      <li>고가의 건물의 경우, 2020년부터 기준시가로 과세하는 것에 대한 과세 형평성 문제가 제기되었습니다.</li>
+      <li>국세청은 자체 감정평가예산을 배정하여 예상감정가와 시가의 차액이 10억을 넘거나, 10%이상 차이가 나는 경우 감정평가를 하여 과세하고 있습니다.</li>
+    </ul>
+    <div class="links no-print" data-tier="premium,gold,goldAnswer,royal">
+      <a class="hot" href="https://tuzaga.com/%ea%b1%b4%eb%ac%bc%ec%9d%98-%ea%b0%90%ec%a0%95%ed%8f%89%ea%b0%80%ec%99%80-%eb%b3%b4%ec%b6%a9%ec%a0%81-%ed%8f%89%ea%b0%80%eb%b0%a9%eb%b2%95/" target="_blank" rel="noopener">⚠️ 상속 건물평가 교실 꼭 ~~ 클릭 !!! ⚠️</a>
+      <ul><li><a href="https://www.hometax.go.kr/" target="_blank" rel="noopener">🏢 비주거용 건물평가하러 가기 : 홈텍스</a></li></ul>
+    </div>
+    <div class="actions"><button class="btn ghost" data-go="1">뒤로가기</button><button class="btn" data-go="3">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step3">
+    <span class="step-no">3 / 10</span>
+    <h2 class="title">농지</h2>
+    <div class="field"><label for="agriculturalLandValue">농지</label>
+      <div class="ctl"><input type="text" id="agriculturalLandValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+      <li>시가로 평가.</li>
+      <li>감정평가로 평가 할수 있음</li>
+      <li>시가가 없는 경우 기준시가로 평가.</li>
+    </ul>
+    <div class="links no-print" data-tier="premium,gold,goldAnswer,royal">
+      <a class="hot" href="https://tuzaga.com/%ec%83%81%ec%86%8d%eb%86%8d%ec%a7%80-%ed%8f%89%ea%b0%80/" target="_blank" rel="noopener">⚠️ 상속농지 평가 교실 바로가기 중요 ⚠️</a>
+      <ul><li><a href="https://www.realtyprice.kr/" target="_blank" rel="noopener">🏢 상속농지 평가하러 가기 : 국토교통부 공시가격</a></li></ul>
+    </div>
+    <div class="actions"><button class="btn ghost" data-go="2">뒤로가기</button><button class="btn" data-go="4">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step4">
+    <span class="step-no">4 / 10</span>
+    <h2 class="title">임야(산)</h2>
+    <div class="field"><label for="forestLandValue">임야</label>
+      <div class="ctl"><input type="text" id="forestLandValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+      <li>시가로 평가.</li>
+      <li>감정평가로 평가 할수 있음</li>
+      <li>시가가 없는 경우 기준시가로 평가.</li>
+    </ul>
+    <div class="links no-print" data-tier="premium,gold,goldAnswer,royal">
+      <a class="hot" href="https://tuzaga.com/%ec%83%81%ec%86%8d%eb%86%8d%ec%a7%80-%ed%8f%89%ea%b0%80/" target="_blank" rel="noopener">⚠️ 상속임야 평가 교실 바로가기 중요 ⚠️</a>
+      <ul><li><a href="https://www.realtyprice.kr/" target="_blank" rel="noopener">🏢 임야 평가하러 가기 : 국토교통부 공시가격</a></li></ul>
+    </div>
+    <div class="actions"><button class="btn ghost" data-go="3">뒤로가기</button><button class="btn" data-go="5">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step5">
+    <span class="step-no">5 / 10</span>
+    <h2 class="title">금융자산 등 그외상속재산</h2>
+    <div class="field"><label for="otherProperty">금융자산 등 그외 상속재산 <small>예금·보험·주식·차량 등</small></label>
+      <div class="ctl"><input type="text" id="otherProperty" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="actions"><button class="btn ghost" data-go="4">뒤로가기</button><button class="btn" data-go="6">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step6">
+    <span class="step-no">6 / 10</span>
+    <h2 class="title">채무 및 공과금</h2>
+    <div class="field"><label for="debts">채무 및 공과금 <small>대출·임대보증금·미납세금 등</small></label>
+      <div class="ctl"><input type="text" id="debts" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="actions"><button class="btn ghost" data-go="5">뒤로가기</button><button class="btn" data-go="7">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step7">
+    <span class="step-no">7 / 10</span>
+    <h2 class="title">장례비용</h2>
+    <div class="field"><label for="funeralExpense">일반 장례비용 <small>봉안시설·자연장지 제외</small></label>
+      <div class="ctl"><input type="text" id="funeralExpense" data-money placeholder="5백만원 미만이면 비워두셔도 5백만원 공제"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="funeralEnshrine">봉안시설·자연장지 비용</label>
+      <div class="ctl"><input type="text" id="funeralEnshrine" data-money placeholder="없으면 비워두세요 (5백만원 한도)"><span class="unit">원</span><span class="won"></span></div></div>
+    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+      <li>장례비(봉안시설비 제외) : 5백만원 미만시 최소 5백만원 공제. 1천만원 초과시 1천만원까지만 공제.</li>
+      <li>봉안시설, 자연장지에 사용된 금액 : 별도로 5백만원을 한도로 공제.</li>
+      <li>합계 1천5백만원까지 한도</li>
+    </ul>
+    <div class="actions"><button class="btn ghost" data-go="6">뒤로가기</button><button class="btn" data-go="8">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step8">
+    <span class="step-no">8 / 10</span>
+    <h2 class="title">사전증여재산</h2>
+    <div class="field"><label for="giftFromMother">10년내 배우자 증여 금액</label>
+      <div class="ctl"><input type="text" id="giftFromMother" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="giftToChildren">10년내 자녀(상속인) 증여 금액</label>
+      <div class="ctl"><input type="text" id="giftToChildren" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="giftToOthers">5년내 상속인 외 증여 금액 <small>예) 손자 손녀</small></label>
+      <div class="ctl"><input type="text" id="giftToOthers" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="giftTaxDeduction">위 증여시 산출된 증여세 합계</label>
+      <div class="ctl"><input type="text" id="giftTaxDeduction" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="priorGiftTaxBase">위 증여의 증여세 과세표준 합계 <small>모르면 비워두세요</small></label>
+      <div class="ctl"><input type="text" id="priorGiftTaxBase" data-money placeholder="비워두면 증여가액 전액으로 계산"><span class="unit">원</span><span class="won"></span></div></div>
+    <p class="subtle">※ 상속공제 종합한도와 증여세액공제 한도 계산에 씁니다. 비워두면 증여가액 전액을 과세표준으로 보아 보수적으로(세금이 많게) 계산합니다. 과세가액이 5억 이하이면 종합한도에서 사전증여분을 빼지 않습니다(상증법 24조).</p>
+    <div class="actions"><button class="btn ghost" data-go="7">뒤로가기</button><button class="btn" data-go="9">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step9">
+    <span class="step-no">9 / 10</span>
+    <h2 class="title">상속공제</h2>
+    <div class="field"><label for="inheritanceDeduction">상속공제 <small>기본값: 일괄공제 5억 + 배우자공제 5억</small></label>
+      <div class="ctl"><input type="number" id="inheritanceDeduction" value="1000000000" readonly><span class="unit">원</span></div></div>
+    <ul class="tips">
+      <li>배우자가 생존해 있는 경우 최소 10억원.</li>
+      <li>사전증여가 많은 경우 상속공제 종합한도 때문에 10억이 안될 수 있음 (계산에 자동 반영).</li>
+      <li>그외 금융상속공제, 동거주택상속공제 등이 있음.</li>
+    </ul>
+    <div class="actions"><button class="btn ghost" data-go="8">뒤로가기</button><button class="btn" data-go="10">다음</button></div>
+  </section>
+
+  <section class="card step input-step" id="step10">
+    <span class="step-no">10 / 10</span>
+    <h2 class="title">감정평가수수료 · 세대생략 상속</h2>
+    <div class="field"><label for="appraisalFee">부동산 감정평가수수료 <small>5백만원 한도</small></label>
+      <div class="ctl"><input type="text" id="appraisalFee" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="appraisalFeeStock">비상장주식 평가수수료 <small>1천만원 한도 (평가심의위원회 신용평가전문기관 수수료)</small></label>
+      <div class="ctl"><input type="text" id="appraisalFeeStock" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="skipGenRatio">세대를 건너뛴 상속 비율 <small>손자녀 등이 받는 재산 ÷ 전체 상속재산 (%). 해당 없으면 0</small></label>
+      <div class="ctl"><input type="number" id="skipGenRatio" class="short" min="0" max="100" value="0"><span class="unit">%</span>
+        <label class="check"><input type="checkbox" id="skipGenMinorBig"> 미성년 손자녀가 20억 초과 상속 (40% 할증)</label></div></div>
+    <ul class="tips">
+      <li>감정평가수수료는 부동산 5백만원, 비상장주식 1천만원 한도로 과세가액에서 뺍니다 (상증령 20조의3).</li>
+      <li>자녀가 아닌 손자녀 등이 상속받으면 그 비율만큼 산출세액에 30%(미성년자가 20억 초과 시 40%)를 더합니다. 자녀가 먼저 사망하여 대습상속하는 경우는 할증하지 않습니다 (상증법 27조).</li>
+    </ul>
+    <div class="actions"><button class="btn ghost" data-go="9">뒤로가기</button><button class="btn" id="btnCalc" data-go="11">상속세계산</button></div>
+  </section>
+
+  <!-- 인쇄용 입력 요약 (화면에서는 숨김, 인쇄 시 1~10단계 대신 표시) -->
+  <section class="print-only" id="printSummaryWrap">
+    <h2 class="subhead">입력 요약</h2>
+    <table class="dh" id="printSummary">
+      <tbody>
+        <tr><td class="lab">주택가격</td><td class="num" data-ps="houseValue"></td><td class="lab">비주거용건물</td><td class="num" data-ps="buildingValue"></td></tr>
+        <tr><td class="lab">농지</td><td class="num" data-ps="agriculturalLandValue"></td><td class="lab">임야</td><td class="num" data-ps="forestLandValue"></td></tr>
+        <tr><td class="lab">금융자산 등 그외</td><td class="num" data-ps="otherProperty"></td><td class="lab">채무 및 공과금</td><td class="num" data-ps="debts"></td></tr>
+        <tr><td class="lab">장례비용</td><td class="num" data-ps="funeralExpense"></td><td class="lab">봉안시설·자연장지</td><td class="num" data-ps="funeralEnshrine"></td></tr>
+        <tr><td class="lab">배우자 증여(10년)</td><td class="num" data-ps="giftFromMother"></td><td class="lab">자녀 증여(10년)</td><td class="num" data-ps="giftToChildren"></td></tr>
+        <tr><td class="lab">상속인 외 증여(5년)</td><td class="num" data-ps="giftToOthers"></td><td class="lab">증여세 산출세액</td><td class="num" data-ps="giftTaxDeduction"></td></tr>
+        <tr><td class="lab">증여 과세표준</td><td class="num" data-ps="priorGiftTaxBase"></td><td class="lab">상속공제(기본)</td><td class="num" data-ps="inheritanceDeduction"></td></tr>
+        <tr><td class="lab">감정평가수수료(부동산)</td><td class="num" data-ps="appraisalFee"></td><td class="lab">평가수수료(비상장주식)</td><td class="num" data-ps="appraisalFeeStock"></td></tr>
+        <tr><td class="lab">세대생략 상속 비율</td><td class="num" data-ps="skipGenRatio" data-unit="%"></td><td class="lab">자녀 수</td><td class="num" data-ps="childrensNumber" data-unit="명"></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ================= 11 단계 : 결과 ================= -->
+  <section class="result step" id="step11">
+    <h2>상속세 계산 결과</h2>
+    <table class="dh" id="resultTable">
+      <thead><tr><th>구분</th><th>금액</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td class="lab">(1) 총상속재산가액</td><td class="num" id="totalPropertyValueCell"></td><td class="rem">상속재산 총합</td></tr>
+        <tr><td class="lab">(2) 채무 및 공과금</td><td class="num" id="debtsValueCell"></td><td class="rem"></td></tr>
+        <tr><td class="lab">(3) 장례비용</td><td class="num" id="funeralExpenseValueCell"></td><td class="rem">일반 5백~1천만 + 봉안시설 5백만 한도</td></tr>
+        <tr><td class="lab">(4) 사전증여재산</td><td class="num" id="priorGiftsValueCell"></td><td class="rem">상속인 10년, 상속인 외 5년 이내</td></tr>
+        <tr><td class="lab">(5) 상속세 과세가액</td><td class="num" id="taxableAmountValueCell"></td><td class="rem">(1) - (2) - (3) + (4)</td></tr>
+        <tr><td class="lab">(6) 상속공제</td><td class="num" id="inheritanceDeductionValueCell"></td><td class="rem" id="inheritanceDeductionNoteCell">배우자 생존시 최소 10억, 종합한도 이내</td></tr>
+        <tr><td class="lab">(7) 감정평가수수료</td><td class="num" id="appraisalFeeValueCell"></td><td class="rem">부동산 5백만, 비상장주식 1천만 한도</td></tr>
+        <tr><td class="lab">(8) 상속세 과세표준</td><td class="num" id="taxBaseValueCell"></td><td class="rem">(5) - (6) - (7), 50만원 미만은 0</td></tr>
+        <tr><td class="lab">(9) 세율</td><td class="num" id="taxRateValueCell">10%~50%</td><td class="rem">누진세율</td></tr>
+        <tr><td class="lab">(10) 산출세액</td><td class="num" id="calculatedTaxValueCell"></td><td class="rem">(8) × (9)</td></tr>
+        <tr><td class="lab">(10-1) 세대생략 할증</td><td class="num" id="surchargeValueCell"></td><td class="rem">손자녀 등 상속분 × 30% (40%)</td></tr>
+        <tr><td class="lab">(11) 세액공제</td><td class="num" id="taxDeductionValueCell"></td><td class="rem">증여세액공제 + 신고세액공제 3%<br>(3%는 산출세액에서 증여세액공제를 뺀 금액에 적용)</td></tr>
+        <tr class="total"><td class="lab">(12) 자진납부할세액</td><td class="num" id="payableTaxValueCell"></td><td class="rem">(10) + (10-1) - (11)</td></tr>
+      </tbody>
+    </table>
+    <div class="note" id="resultNote" hidden></div>
+    <div class="actions no-print"><button class="btn ghost" data-go="10">뒤로가기</button><button class="btn" data-go="12">세금 줄이기 !</button></div>
+  </section>
+
+  <!-- ================= 12 단계 : 절세 목록 ================= -->
+  <section class="card step menu-step no-print" id="step12">
+    <h2 class="title">상속세 신고시 반드시 알아야 할 절세 목록</h2>
+    <div class="tax-tips">
+      <button class="tip" data-go="13"><span class="n">1</span>상속세 ! 확실히 줄일 수 있습니다.</button>
+      <button class="tip" data-go="14"><span class="n">2</span>취득세! 70% 까지 줄일 수 있습니다.</button>
+      <button class="tip" data-go="15"><span class="n">3</span>종부세 ! 피할수 있습니다.</button>
+      <button class="tip" data-go="16"><span class="n">4</span>상속 받은 주택과 농지, 임야 매도할때 ! 세금 " 0 " 만들수 있습니다.</button>
+      <button class="tip" data-go="17"><span class="n">5</span>상속 받은 주택 외 가지고 있던 주택 양도시 ! 1세대 1주택 비과세 만들수 있습니다.</button>
+      <button class="tip" data-go="18"><span class="n">6</span>주택 상속으로 2주택인 경우, 청약기회 사라진 건 아닐까요 ?</button>
+      <button class="tip" data-go="19"><span class="n">7</span>부모님 기초연금 받게 할 순 없을까요 ?</button>
+      <button class="tip" data-go="20" data-tier="premium"><span class="n">8</span>주의사항. 저장하기 . 인쇄하기</button>
+      <button class="tip" data-go="20" data-tier="gold,goldAnswer,royal"><span class="n">8</span>유의사항. 저장하기 . 인쇄하기</button>
+      <button class="tip" data-go="20" data-tier="free"><span class="n">8</span>안내말씀</button>
+    </div>
+    <h3>뒤로 가기</h3>
+    <div class="back-links">
+      <button class="back-link" data-go="1">주택가격</button>
+      <button class="back-link" data-go="2">비주거용건물(대지 포함)</button>
+      <button class="back-link" data-go="3">농지</button>
+      <button class="back-link" data-go="4">임야(산)</button>
+      <button class="back-link" data-go="5">금융자산 등 그외상속재산</button>
+      <button class="back-link" data-go="6">채무 및 공과금</button>
+      <button class="back-link" data-go="7">장례비용</button>
+      <button class="back-link" data-go="8">사전증여재산</button>
+      <button class="back-link" data-go="9">상속공제</button>
+      <button class="back-link" data-go="10">감정평가수수료</button>
+      <button class="back-link" data-go="11">상속세 계산 결과</button>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" data-go="11">뒤로가기</button>
+      <button class="btn" data-go="13" data-tier="premium,gold,goldAnswer,royal">상속세 줄이러 가기</button>
+      <button class="btn" data-go="20" data-tier="free">안내 보기</button>
+    </div>
+  </section>
+
+  <!-- ================= 13 단계 : 상속세 절세 ================= -->
+  <section class="card step page-break print-section" id="step13" data-tier="premium,gold,goldAnswer,royal">
+    <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section13-checkbox" checked> 이 부분 인쇄</label>
+    <h2 class="title">상속세 절세 방법</h2>
+
+    <h3>▶ 배우자상속공제 한도까지 최대로 받기!</h3>
+    <div class="field"><label for="childrensNumber">상속인이 되는 자녀수</label>
+      <div class="ctl"><input type="number" id="childrensNumber" class="short" min="0" placeholder="자녀 명"><span class="unit">명</span></div></div>
+    <div class="actions no-print"><button class="btn" id="btnSpouse">배우자 상속공제 한도</button></div>
+    <table class="dh">
+      <thead><tr><th>구분</th><th>금액</th><th>비고</th></tr></thead>
+      <tbody><tr><td class="lab">배우자 상속공제 한도</td><td class="num" id="spouseInheritanceDeductionCell"></td><td class="rem" id="spouseNoteCell">한도</td></tr></tbody>
+    </table>
+
+    <details class="dh"><summary>배우자공제 받으면서 반드시 해야 할 일</summary>
+      <ul>
+        <li>배우자상속공제를 높이면 5억원 이상 공제를 받을 수 있습니다. 배우자 공제는 30억까지 가능한데 다만, 실제 상속받은 금액과 법정상속분을 한도로 하고 있습니다.</li>
+        <li>상속세 조사과정에서 배우자에게 사전 증여한 것이 있다면, 한도가 줄어들 수 있어 법정상속분보다 좀 더 상속받은 것이 좋습니다.</li>
+        <li>배우자 상속공제는 상속세과세표준신고기한의 다음날부터 9개월이 되는 날까지 배우자 몫으로 상속재산을 분할한 경우에 적용합니다. 이때 등기 등록이 필요한 부동산 등이 있는 경우는 <strong>반드시 등기 등록을 해야 합니다.</strong></li>
+        <li>상속인은 상속재산의 분할사실을 <strong>상속세과세표준신고기한의 다음날부터 9개월이 되는 날까지 납세지 관할세무서장에게 반드시 신고해야 합니다.</strong></li>
+      </ul>
+    </details>
+    <details class="dh"><summary>배우자상속공제 한도 계산</summary>
+      <div>
+        <p>배우자상속공제 한도 = max [ min (1, 2, 3), 5억원 ]</p>
+        <ol>
+          <li>거주자의 사망으로 상속이 개시되어 배우자가 실제 상속받은 금액</li>
+          <li>(상속재산가액* × 배우자의 법정상속분) - 상속재산에 가산한 배우자가 사전증여받은 재산의 증여세 과세표준 ( = 사전증여재산 - 6억)</li>
+          <li>30억원</li>
+        </ol>
+        <p>* 상속재산가액 = (본래+간주+추정)상속재산가액 + 사망일 전 10년 이내 상속인에게 증여한 재산가액 - 상속인이 아닌 수유자가 유증·사인증여 받은 재산가액 - 비과세 재산가액 - 공과금 및 채무 - 과세가액 불산입 재산가액</p>
+        <p>* 법정상속분: 배우자 1.5 : 자녀 각 1. 자녀가 없으면 배우자는 피상속인의 직계존속(부모)과 공동상속(배우자 1.5 : 직계존속 각 1)하고, 직계존속도 없으면 배우자가 단독상속합니다(민법 1003조). 이 계산기는 직계존속이 없는 것으로 봅니다.</p>
+      </div>
+    </details>
+    <details class="dh"><summary>배우자의 실제 상속받은 금액 계산</summary>
+      <div>
+        <p><strong>배우자상속공제를 최대로 높이기 위해서 배우자가 상속받아야 할 순상속재산</strong> 은 다음과 같습니다:</p>
+        <ul>
+          <li>배우자가 상속받은 상속재산가액(사전증여재산가액 및 추정상속재산가액 제외)</li>
+          <li>(-) 배우자가 승계하기로 한 공과금 및 채무액</li>
+          <li>(-) 배우자 상속재산 중 비과세 재산가액</li>
+          <li>(-) 배우자 상속재산 중 과세가액 불산입액</li>
+          <li>(=) 배우자가 실제 상속받은 금액</li>
+        </ul>
+      </div>
+    </details>
+
+    <h3>▶ 동거주택상속공제를 받기 !</h3>
+    <p class="subtle"><a href="https://tuzaga.com/%eb%8b%b9%ec%8b%a0%ec%9d%98-%ec%84%b8%eb%ac%b4%ec%82%ac-%eb%b8%94%eb%a1%9c%ea%b7%b8-%eb%8f%99%ea%b1%b0%ec%a3%bc%ed%83%9d%ec%83%81%ec%86%8d%ea%b3%b5%ec%a0%9c%ec%9d%98-%eb%aa%a8%eb%93%a0-%ea%b2%83/" target="_blank" rel="noopener">동거주택상속공제 상세 →</a></p>
+    <div class="actions no-print"><button class="btn ghost" id="btnCohabOpen">동거상속공제 계산</button></div>
+    <div class="modal" id="cohabitationModal">
+      <div class="box">
+        <h3>동거상속공제 계산</h3>
+        <p class="subtle">(주택가격 - 주택에 담보된 채무)의 100%를 6억원 한도로 공제합니다. 다음 요건을 모두 충족해야 합니다(상증법 23조의2).</p>
+        <ul>
+          <li>피상속인과 상속인이 상속개시일부터 소급하여 10년 이상 계속 하나의 주택에서 동거할 것 (상속인이 미성년자였던 기간은 제외)</li>
+          <li>그 10년 이상 계속하여 1세대를 구성하면서 1세대 1주택일 것 (일시적 2주택 등 일부 예외 인정)</li>
+          <li>상속개시일 현재 무주택자이거나 피상속인과 공동으로 1세대 1주택을 보유한 상속인(자녀 또는 자녀의 배우자)이 상속받을 것 — 배우자는 해당 없음</li>
+        </ul>
+        <label class="check"><input type="checkbox" id="notApplicableCheckbox"> 해당없음</label>
+        <p><strong>주택 가격: <span id="modalHouseValueCell"></span></strong></p>
+        <label for="houseDebt">주택이 담보하는 채무가액</label>
+        <input type="text" id="houseDebt" data-money placeholder="채무가액을 입력하세요">
+        <div class="out">동거상속공제액: <span id="cohabitationDeduction">0</span></div>
+        <div class="actions"><button class="btn ghost sm" id="btnCohabCalc">계산</button><button class="btn sm" id="btnCohabApply">적용</button><button class="btn ghost sm" data-close>닫기</button></div>
+      </div>
+    </div>
+    <p><strong>동거상속공제액: <span id="cohabitationDeductionAmount">0</span></strong></p>
+
+    <h3>▶ 금융재산상속공제를 받아요!</h3>
+    <p class="subtle"><a href="https://tuzaga.com/%ea%b8%88%ec%9c%b5%ec%9e%ac%ec%82%b0-%ec%83%81%ec%86%8d%ea%b3%b5%ec%a0%9c-2/" target="_blank" rel="noopener">금융재산상속공제 상세 →</a></p>
+    <div class="actions no-print"><button class="btn ghost" id="btnFinOpen">금융재산 공제 계산</button></div>
+    <div class="modal" id="financialModal">
+      <div class="box">
+        <h3>금융재산 공제 계산</h3>
+        <p class="subtle">순금융재산액( 금융재산-금융채무 )에서 다음과 같이 공제</p>
+        <ul>
+          <li>순금융재산액 2천만원 초과 : 순금융재산 가액의 20% 혹은 2천만원 중 더 큰 금액이 공제, 최대 2억원 한도.</li>
+          <li>순금융재산액 2천만원 이하 : 순금융재산의 전액 공제 .</li>
+        </ul>
+        <label for="financialAssets">금융재산</label>
+        <input type="text" id="financialAssets" data-money placeholder="0">
+        <label for="financialDebts">금융채무</label>
+        <input type="text" id="financialDebts" data-money placeholder="0">
+        <div class="out">공제액: <span id="financialDeductionResult">0</span></div>
+        <div class="actions"><button class="btn ghost sm" id="btnFinCalc">계산</button><button class="btn sm" id="btnFinApply">적용</button><button class="btn ghost sm" data-close>닫기</button></div>
+      </div>
+    </div>
+    <p><strong>금융재산 공제액: <span id="finalFinancialDeductionAmount">0</span></strong></p>
+
+    <h3>▶ 일괄공제 5억보다 클수 있어요 !</h3>
+    <div class="actions no-print"><button class="btn ghost" id="btnPersonalOpen">인적공제 계산</button></div>
+    <div class="modal" id="inheritanceModal">
+      <div class="box">
+        <h3>기초+인적공제 계산</h3>
+        <form id="deductionForm">
+          <label for="children">자녀 수</label>
+          <input type="number" id="children" min="0" value="0">
+          <label for="minors">상속인 및 동거가족 중 미성년자 명</label>
+          <input type="number" id="minors" min="0" value="0">
+          <label for="minorYears">미성년자의 19세까지 남은 연 수 (모든 미성년자의 합)</label>
+          <input type="number" id="minorYears" min="0" value="0">
+          <label for="seniors">상속인 및 동거가족 중 65세 이상자 명 (배우자 제외)</label>
+          <input type="number" id="seniors" min="0" value="0">
+          <label for="disabledYears">장애인의 기대여명 연수 (모든 장애인의 합, 배우자 포함)</label>
+          <input type="number" id="disabledYears" min="0" value="0">
+          <p class="subtle">※ 배우자가 단독으로 상속받는 경우에는 일괄공제(5억)를 적용할 수 없고 기초공제+인적공제만 가능합니다. 연로자공제는 배우자에게 적용되지 않습니다(배우자는 배우자상속공제).</p>
+          <div class="actions"><button type="submit" class="btn ghost sm">계산하기</button><button type="button" class="btn sm" id="applyButton">적용</button><button type="button" class="btn ghost sm" data-close>닫기</button></div>
+        </form>
+        <div id="deductionResult"></div>
+      </div>
+    </div>
+    <p><strong>max (기초 + 인적공제 , 일괄공제 ) 금액 : <span id="finalDeductionAmount">0</span>원</strong></p>
+
+    <div class="ded-total"><span>⏹ 총 상속공제 합계</span><b><span id="totalDeductionResult">0</span>원</b></div>
+
+    <h3>▶ 상속공제에 따른 비교</h3>
+    <div class="field"><label for="inheritanceDeduction1">상속공제가 10억일 경우 <small>일괄공제 5억 + 배우자공제 5억</small></label>
+      <div class="ctl"><input type="number" id="inheritanceDeduction1" value="1000000000" readonly><span class="unit">원</span></div></div>
+    <div class="field"><label for="inheritanceDeduction2">상속공제 모두 받을경우 상속공제 합계액</label>
+      <div class="ctl"><input type="text" id="inheritanceDeduction2" readonly><span class="unit">원</span></div></div>
+    <div class="actions no-print"><button class="btn" id="btnCompare">계산</button></div>
+    <div id="result"></div>
+
+    <h3>▶ 평가액을 높여 향후 양도세를 줄여요 !</h3>
+    <details class="dh"><summary>취득가를 높이세요 !!</summary>
+      <ul>
+        <li>주택, 빌딩, 그 외 자산의 가치가 10억원 미만인 경우, 상속 주택을 가능한 한 높게 평가하여 상속세 신고를 하는 것이 양도소득세를 절감하는 데 도움이 됩니다. 상속세 신고 시 평가된 가액이 양도세의 취득가액으로 적용되기 때문입니다. 아파트와 달리 단독주택 등 매매 사례가 없는 경우에는 감정평가를 통해 신고할 수 있습니다.</li>
+        <li>상속 재산의 가치가 10억원을 초과하는 경우에도, 상속세와 양도세를 비교하여 양도세 절감 효과가 크다면, 감정평가 등을 통해 시가로 신고하는 것을 고려해야 합니다.</li>
+      </ul>
+    </details>
+    <div class="actions no-print"><button class="btn ghost" data-go="12">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="14">취득세 줄이러 가기</button></div>
+  </section>
+
+  <!-- ================= 14 단계 : 취득세 ================= -->
+  <section class="card step page-break print-section" id="step14" data-tier="premium,gold,goldAnswer,royal">
+    <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section14-checkbox" checked> 이 부분 인쇄</label>
+    <h2 class="title">◈ 배우자와 자녀의 취득세는 얼마일까요 ?</h2>
+    <ul class="tips">
+      <li>사망일(상속개시일)이 속하는 달의 말일부터 6개월 이내에 취득세를 신고·납부해야 합니다. (상속인 중 외국 거주자가 있으면 9개월)</li>
+      <li>취득세의 과세표준은 시가로 계산하지 않고 모두 시가표준액으로 계산합니다. 주택는 공시가격, 농지와 임야는 개별공시지가, 건물은 시가표준액으로 계산합니다.</li>
+    </ul>
+    <h3>내가 받은 주택 또는 건물 또는 임야 농지의 취득세</h3>
+    <div class="field"><label for="houseValue1">주택 공시가격</label>
+      <div class="ctl"><input type="text" id="houseValue1" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="houseType">주택 규모</label>
+      <div class="ctl"><select id="houseType"><option value="small">국민주택규모 이하</option><option value="big">국민주택규모 초과</option></select></div></div>
+    <div class="field"><label for="houseSpecial">주택 상속 특례</label>
+      <div class="ctl"><select id="houseSpecial"><option value="normal">일반 상속 (2.8%)</option><option value="special">무주택 1가구가 상속으로 1가구 1주택이 되는 경우 (0.8%)</option></select></div></div>
+    <div class="field"><label for="buildingValue1">건물 공시가격</label>
+      <div class="ctl"><input type="text" id="buildingValue1" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="landValue">임야 공시가격</label>
+      <div class="ctl"><input type="text" id="landValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="farmlandValue">농지 공시가격</label>
+      <div class="ctl"><input type="text" id="farmlandValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="actions no-print"><button class="btn" id="btnAcq">취득세 계산</button></div>
+    <h3>계산 결과</h3>
+    <table class="dh">
+      <thead><tr><th>구분</th><th>취득세</th><th>농어촌특별세</th><th>지방교육세</th><th>합계</th></tr></thead>
+      <tbody>
+        <tr><td class="lab">주택</td><td class="num" id="houseAcquisitionTax"></td><td class="num" id="houseAgtax"></td><td class="num" id="houseEduTax"></td><td class="num" id="houseTotalTax"></td></tr>
+        <tr><td class="lab">건물</td><td class="num" id="buildingAcquisitionTax"></td><td class="num" id="buildingAgtax"></td><td class="num" id="buildingEduTax"></td><td class="num" id="buildingTotalTax"></td></tr>
+        <tr><td class="lab">임야</td><td class="num" id="landAcquisitionTax"></td><td class="num" id="landAgtax"></td><td class="num" id="landEduTax"></td><td class="num" id="landTotalTax"></td></tr>
+        <tr><td class="lab">농지</td><td class="num" id="farmlandAcquisitionTax"></td><td class="num" id="farmlandAgtax"></td><td class="num" id="farmlandEduTax"></td><td class="num" id="farmlandTotalTax"></td></tr>
+        <tr class="total"><td class="lab">합계</td><td class="num" id="totalAcquisitionTax"></td><td class="num" id="totalAgtax"></td><td class="num" id="totalEduTax"></td><td class="num" id="totalTax"></td></tr>
+      </tbody>
+    </table>
+    <h3>▶ 주택관련 취득세 절세 방법이 있습니다.</h3>
+    <details class="dh"><summary>1) 상속 취득세 특례세율을 이용하고, 공동으로 받기 보단 감면되는 한사람이 받아야 합니다.</summary>
+      <ul>
+        <li>상속으로 주택을 취득한 경우 취득세는 2.8%입니다. (지방교육세 0.16% 별도, 국민주택규모 초과 시 농특세 0.2% 별도)</li>
+        <li>무주택 1가구가 상속으로 인하여 1가구 1주택이 된 경우에는 2.8%에서 2%를 뺀 0.8%만 냅니다. (지방교육세 0.16%, 농특세 없음 → 합계 0.96%)</li>
+        <li>1주택을 공동으로 상속받는 경우, 공동상속받은 사람 모두를 공제해 주지 않고, 지분이 가장 큰 사람 1인만 공제 해줍니다. 지분이 동일한 경우 거주하는 사람, 같이 거주했으면 연장자만 공제 해줍니다.</li>
+        <li>예) 아버지가 돌아가셔서 아버지 소유주택 1개를 어머니와 아들이 50%씩 상속받았음. 돌아가시기 전 어머니와 자녀는 같이 그 집에 거주하고 있었고, 그때 당시 어머니와 자녀 모두 다른 소유주택은 없는 경우 : 한사람만 공제가 되는데, 판단순서는 먼저 지분으로 판단, 50% 로 동일하기 때문에, 다음으로 상속당시 거주하는 사람, 둘다 거주하고 있었기 때문에, 그 다음은 연장자 순, 따라서 어머니만 0.8% 취득세율을 적용하고 아들은 2.8% 를 내야 함.</li>
+      </ul>
+    </details>
+    <details class="dh"><summary>2) 사망일전에 세대분리를 분리하여 무주택세대를 만듭니다.</summary>
+      <ul>
+        <li>상속받을 세대는 무주택세대가 받아야 특례를 받을수 있습니다.</li>
+        <li>어머니가 상속받는 경우, 주택이 있는 자녀가 주민등록표상에 같이 있다면 세대분리를 하는 것이 좋습니다.</li>
+        <li>무주택 자녀가 상속받는 경우, 같이 사는 30세 이상인 세대원이 주택을 소유하고 있다면 그 세대원을 세대분리 해야 합니다.</li>
+        <li>즉, 주택상속받을 사람을 사망일 전에 무주택자로 만드는 것입니다.</li>
+      </ul>
+    </details>
+    <div class="actions no-print"><button class="btn ghost" data-go="13">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="15">종부세 줄이러 가기</button></div>
+  </section>
+
+  <!-- ================= 15 단계 : 종부세·재산세 ================= -->
+  <section class="card step page-break print-section" id="step15" data-tier="premium,gold,goldAnswer,royal">
+    <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section1-checkbox" checked> 이 부분 인쇄</label>
+    <h2 class="title">◈ 종부세 절세 방법이 있을까요 ?</h2>
+    <h4>1) 상속주택 특례를 이용합니다.</h4>
+    <p>상속받은 주택도 종부세 과세합니다. 다만, 1세대 1주택자가 상속으로 인하여 2주택(공동상속지분 포함)이 되는 경우라도 다음 어느 하나에 해당하는 경우 1세대 1주택으로 보고 12억공제, 보유기간별, 연령별세액공제를 적용받을 수 있습니다. 또한, 중과세율 적용시 주택수 판단할 때 상속주택은 없는 것으로 보고 세율적용을 합니다.</p>
+    <ul class="tips">
+      <li>상속일로부터 5년 이내</li>
+      <li>공동상속의 경우 40% 이하의 소수지분</li>
+      <li>소수지분의 공시가격이 6억원 이하(수도권 밖 3억원 이하)</li>
+    </ul>
+    <p class="subtle">※ 이 특례는 납세의무자가 매년 9월 16일~30일에 관할 세무서에 <strong>신청</strong>해야 적용됩니다. 1세대 1주택자로 보더라도 상속주택 공시가격은 과세표준에 합산되고, 고령자·장기보유 세액공제는 상속주택분을 제외하고 계산합니다.</p>
+    <h4>2) 일부지분을 줄여 요건에 맞게 할수 있습니다.</h4>
+    <p>시간이 지남에 따라서 소수지분이 기준시가가 처음엔 6억원이하 였다가, 6억원이 넘는 경우가 있을 수 있습니다. 이런 경우 일부지분을 증여 또는 양도를 통해서 6억이하로 만들어 종부세를 줄일 수 있습니다.</p>
+
+    <h3>◈ 나의 재산세와 종부세를 계산해 볼까요 ?</h3>
+    <h4>상속 후 재산세 비교</h4>
+    <div class="field"><label for="owned_houses">상속 전 나의 소유주택 수</label>
+      <div class="ctl"><input type="number" id="owned_houses" class="short" min="0" max="4" placeholder="0"><span class="unit">채 (최대 4채까지 주택별 입력)</span></div></div>
+    <div class="field" data-house="1"><label for="gongsi_1">상속전 나의 주택 ① 공시가격</label>
+      <div class="ctl"><input type="text" id="gongsi_1" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field" data-house="2"><label for="gongsi_1_2">상속전 나의 주택 ② 공시가격</label>
+      <div class="ctl"><input type="text" id="gongsi_1_2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field" data-house="3"><label for="gongsi_1_3">상속전 나의 주택 ③ 공시가격</label>
+      <div class="ctl"><input type="text" id="gongsi_1_3" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field" data-house="4"><label for="gongsi_1_4">상속전 나의 주택 ④ 공시가격</label>
+      <div class="ctl"><input type="text" id="gongsi_1_4" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="ownedHousesAfter">상속 후 나의 소유주택 수</label>
+      <div class="ctl"><input type="text" id="ownedHousesAfter" class="short" readonly placeholder="자동 (상속 전 + 1)"><span class="unit">채</span></div></div>
+    <div class="field"><label for="gongsi_2">상속주택분 공시가격 <small>지분 상속이면 내 지분만큼</small></label>
+      <div class="ctl"><input type="text" id="gongsi_2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <p class="subtle">※ 재산세는 주택별로 따로 계산합니다(물건별 과세). 상속주택은 상속개시일부터 5년간 1세대1주택 판정 시 주택수에서 제외되므로, 상속 전 1주택이면 상속 후에도 기존 주택의 1세대1주택 특례(공정시장가액비율 43~45%, 9억 이하 특례세율)가 유지됩니다.</p>
+    <div class="actions no-print"><button class="btn" id="btnPropTax">재산세 비교 계산하기</button></div>
+    <table class="dh" id="resultTableProperty" hidden>
+      <thead><tr><th>구분</th><th>종전주택만 있는 경우</th><th>상속주택 추가된 경우</th></tr></thead>
+      <tbody>
+        <tr><td class="lab">재산세</td><td class="num" id="property_tax_1"></td><td class="num" id="property_tax_2"></td></tr>
+        <tr><td class="lab">도시지역분</td><td class="num" id="dosi_tax_1"></td><td class="num" id="dosi_tax_2"></td></tr>
+        <tr><td class="lab">지방교육세</td><td class="num" id="p_edu_tax_1"></td><td class="num" id="p_edu_tax_2"></td></tr>
+        <tr class="total"><td class="lab">총 세금</td><td class="num" id="total_tax_1"></td><td class="num" id="total_tax_2"></td></tr>
+      </tbody>
+    </table>
+    <div id="propertyTaxDetail"></div>
+
+    <h4>상속후 종부세비교하기</h4>
+    <div class="field"><label for="age">상속받는 나의 연령(만)</label>
+      <div class="ctl"><input type="number" id="age" class="short" min="0" placeholder="세"><span class="unit">세</span></div></div>
+    <div class="field"><label for="period">상속전 나의 주택 보유기간(년)</label>
+      <div class="ctl"><input type="number" id="period" class="short" min="0" placeholder="년"><span class="unit">년</span></div></div>
+    <div class="actions no-print"><button class="btn" id="btnCompTax">종부세 비교 계산하기</button></div>
+    <div id="resultComprehensiveTax"></div>
+    <div class="actions no-print"><button class="btn ghost" data-go="14">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="16">상속부동산 양도세 줄이기</button></div>
+  </section>
+
+  <!-- ================= 16 단계 : 상속부동산 양도 ================= -->
+  <section class="card step page-break print-section" id="step16" data-tier="premium,gold,goldAnswer,royal">
+    <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section16-checkbox" checked> 이 부분 인쇄</label>
+    <h2 class="title">◈ 상속받은 부동산을 매도하는 경우 양도세는 어떻게 되나요 ?</h2>
+    <details class="dh"><summary>반드시 ! 상속세뿐만 아니라 양도세까지 검토하여 부동산을 평가해야</summary>
+      <ul>
+        <li>상속받은 부동산의 취득가격은 상속세 신고시 시가로 평가하여 신고한 가액입니다.</li>
+        <li>상속부동산의 시가평가는 사망일 전후 6개월이내의 이 상속주택의 매매가액,감정가액 또는 이 상속주택과 유사한 매매사례가액순으로 시가로 평가하여 신고하도록 되어 있습니다.</li>
+        <li>상속세 신고는 사망일이 속한 달의 말일 부터 6월이 되는날까지 신고하게 되어 있습니다. 신고 기한까지 타인에게 매매 계약을 체결한 경우는 매매가액이 취득가액이 됩니다. 따라서 이러한 경우 취득가액과 양도가액이 동일하여 양도세가 없습니다.</li>
+        <li>상속세를 신고하지 않으면, 취득가액이 기준시가로 결정되는 경우도 있고, 취득가액 자체를 결정하지 않는 경우도 많습니다. 이렇게 되면, 사망일 당시의 시가를 취득가액으로 인정받을 수 없어 향후 양도시 양도세를 많이 납부하게 됩니다.</li>
+        <li>사망일 당시 시가를 다시 인정받으려면, 기한후 신고를 해서 세무서로부터 조사결정을 받아야 하거나, 그래도 받아 들이지 않으면 조세불복등 아주 어려운 과정을 거쳐 취득가액을 인정받아야 합니다. 제척기간이 지난 경우는 아예 그 당시 시가가 명백하더라도 시가를 인정받을 수 없습니다.</li>
+        <li>따라서 상속세뿐만 아니라 양도세까지 검토하여 상속세가 나오지 않는다 하더라도 신고하는것이 좋습니다.</li>
+      </ul>
+    </details>
+    <h4>▶ 양도세 시뮬레이션 : 매도시기와 취득가액를 고려하여 경우마다 각각의 사례를 볼까요 ?</h4>
+    <ul class="tips">
+      <li>상속인이 농사짓지 않는 "비사업용 토지"는 사망일로부터 5년 이후 양도하는 경우 기본세율에 10% 추가합니다.</li>
+      <li>보유기간 : 사망일 ~ 양도일 (만, 년) — 장기보유특별공제는 이 기간으로 계산합니다.</li>
+      <li>세율 적용 시 보유기간은 피상속인이 취득한 날부터 계산하므로 단기 중과세율은 보통 적용되지 않습니다(소득세법 104조②).</li>
+      <li>1세대 1주택(양도일 현재 1주택, 2년 이상 보유·조정대상지역은 2년 거주)이면 양도가액 12억까지 비과세, 12억 초과분만 과세합니다. 보유 3년·거주 2년 이상이면 장기보유특별공제를 보유 4%/년 + 거주 4%/년(최대 80%)으로, 그 외에는 2%/년(최대 30%)으로 계산합니다.</li>
+      <li>조정대상지역의 다주택자가 주택을 양도하면 기본세율에 2주택 +20%p, 3주택 이상 +30%p 중과하고 장기보유특별공제를 받지 못합니다. 이 중과 배제(유예)는 2026.5.9.까지였으므로, 그 뒤 양도는 중과 적용 여부를 반드시 확인하세요. 아래 계산은 중과를 반영하지 않습니다.</li>
+    </ul>
+
+    <div class="case" id="calculator-1">
+      <h4>1) 6개월 이내 양도시</h4>
+      <p class="subtle">※ 양도가액과 취득가액이 동일하여 양도차익이 없습니다. 감정을 받을 필요없습니다.</p>
+      <div class="field"><label for="transferPrice1">양도가액</label><div class="ctl"><input type="text" id="transferPrice1" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="acquisitionPrice1">취득가액(=양도가액)</label><div class="ctl"><input type="text" id="acquisitionPrice1" readonly><span class="unit">원</span></div></div>
+    </div>
+    <div class="case" id="calculator-2">
+      <h4>2) 시가 신고후 미래 양도시</h4>
+      <p class="subtle">※ 상속세 신고후 몇년이 지난후를 예상한 경우입니다. 상속세 신고한 가격이 취득가액이 됩니다.</p>
+      <div class="field"><label for="transferPrice2">양도가액</label><div class="ctl"><input type="text" id="transferPrice2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="acquisitionPrice2">취득가액 <small>상속세신고시 신고한 가액</small></label><div class="ctl"><input type="text" id="acquisitionPrice2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="holdingPeriod2">보유기간(년)</label><div class="ctl"><input type="number" id="holdingPeriod2" class="short" step="0.1" min="0"><span class="unit">년</span></div></div>
+      <div class="field"><label>1세대 1주택 비과세 대상</label><div class="ctl"><label class="check"><input type="checkbox" id="oneHouse2"> 양도일 현재 1세대 1주택 (12억 초과분만 과세)</label></div></div>
+      <div class="field"><label for="residencePeriod2">거주기간(년) <small>1세대1주택 장기보유특별공제 계산용</small></label><div class="ctl"><input type="number" id="residencePeriod2" class="short" step="0.1" min="0"><span class="unit">년</span></div></div>
+      <div class="field"><label>비사업용 토지 여부</label><div class="ctl"><label class="check"><input type="checkbox" id="nonBusinessUse2"> 비사업용 (5년이내 항상 사업용으로 봄)</label></div></div>
+    </div>
+    <div class="case" id="calculator-3">
+      <h4>3) 기준시가 신고후 미래 양도시</h4>
+      <p class="subtle">※ 기준시가로 신고하거나 무신고한 경우입니다. 취득가액이 기준시가가 됩니다. (양도가액·보유기간 등은 2)와 같게 자동 입력)</p>
+      <div class="field"><label for="transferPrice3">양도가액</label><div class="ctl"><input type="text" id="transferPrice3" readonly><span class="unit">원</span></div></div>
+      <div class="field"><label for="acquisitionPrice3">취득가액 <small>상속당시 기준시가</small></label><div class="ctl"><input type="text" id="acquisitionPrice3" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="holdingPeriod3">보유기간(년)</label><div class="ctl"><input type="number" id="holdingPeriod3" class="short" step="0.1" min="0" readonly><span class="unit">년</span></div></div>
+      <div class="field"><label>1세대 1주택 비과세 대상</label><div class="ctl"><label class="check"><input type="checkbox" id="oneHouse3" disabled> 2)와 동일</label></div></div>
+      <div class="field"><label for="residencePeriod3">거주기간(년)</label><div class="ctl"><input type="number" id="residencePeriod3" class="short" step="0.1" min="0" readonly><span class="unit">년</span></div></div>
+      <div class="field"><label>비사업용 토지 여부</label><div class="ctl"><label class="check"><input type="checkbox" id="nonBusinessUse3" disabled> 2)와 동일</label></div></div>
+    </div>
+    <div class="actions no-print"><button class="btn" id="btnTransfer">모두 계산하기</button></div>
+    <div id="resultTableTrance" hidden></div>
+    <div class="actions no-print"><button class="btn ghost" data-go="15">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="17">일반주택 양도시 1세대 1주택 만들기</button></div>
+  </section>
+
+  <!-- ================= 17 단계 : 일반주택 1세대1주택 ================= -->
+  <section class="card step page-break print-section" id="step17" data-tier="premium,gold,goldAnswer,royal">
+    <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section2-checkbox" checked> 이 부분 인쇄</label>
+    <h2 class="title">◈ 주택을 상속받고 나서 종전 일반주택 양도하는 경우 비과세를 받을수 있나요 ?</h2>
+    <ul class="tips">
+      <li>상속받은 주택외에 상속받기 전부터 가지고 있던 일반주택을 양도하는 경우입니다. 이 일반주택이 양도당시에 1세대1주택 비과세 요건을 만족한다면, 상속주택을 가지고 있다고 하더라도 비과세에 해당합니다</li>
+      <li>상속일 이후에 취득한 일반주택은 이러한 비과세를 받을 수 없습니다.</li>
+      <li>1주택을 여러 사람이 공동으로 소유한 경우 주택 수를 계산할 때 공동 소유자 각자가 그 주택을 소유한 것으로 봅니다.(소령154조의2)<br>
+        그러나 상속으로 인해 1주택을 공동으로 상속받았다면, 이 공동상속주택은 일반주택 양도시 주택으로 보지 않습니다. 다만, 다음에 해당하는 사람은 공동상속주택을 자기 주택으로 봅니다. 이 경우에도 그 주택은 '상속받은 주택'이므로 상속주택 특례(소득세법 시행령 155조②)가 적용되어, 상속 전부터 보유한 일반주택을 양도할 때 비과세를 받을 수 있습니다(상속개시 당시 피상속인과 같은 세대원이었던 경우는 제외).
+        <ol><li>지분이 가장 많은 사람</li><li>지분이 모두 동일하다면 다음순서 — 가. 상속주택에 거주하고 있는 사람, 나. 상속인 중 최연장자</li></ol>
+      </li>
+    </ul>
+    <h3>▶ 남은 배우자(어머니 혹은 아버지) 경우</h3>
+    <table class="dh">
+      <thead><tr><th>구 분</th><th>상속전 무주택</th><th>상속전 1주택소유</th><th>상속전 2주택소유</th></tr></thead>
+      <tbody>
+        <tr><td class="lab">단독으로 상속받은 경우</td><td class="c">해당없음(참고1.)</td><td class="c">과세 (참고2.)</td><td class="c">과세</td></tr>
+        <tr><td class="lab">최대지분으로 상속</td><td class="c">상동</td><td class="c">과세(참고2)</td><td class="c">과세</td></tr>
+        <tr><td class="lab">동일지분으로 상속</td><td class="c">상동</td><td class="c">과세(참고2)</td><td class="c">과세</td></tr>
+        <tr><td class="lab">소수지분으로 상속</td><td class="c">상동</td><td class="c">과세(참고2)</td><td class="c">과세</td></tr>
+      </tbody>
+    </table>
+    <details class="dh"><summary>참고1.</summary>
+      <div>상속받은 주택외에 다른 주택이 없기 때문에 해당사항이 없습니다. 그런데 만일 어머니가 상속주택을 양도하는 경우는 어떨까요?<br>
+        이 경우는 어머니는 사망일 전부터 아버지와 1세대 1주택을 소유하고 있는 것으로 보아 사망일 전에 아버지가 2년이상 거주 및 보유 했다면 상속주택도 1세대 1주택 비과세에 해당합니다.</div>
+    </details>
+    <details class="dh"><summary>참고2.</summary>
+      <div>아버지가 1주택 소유하고 있고, 어머니가 또 1주택을 소유한 상태에서 아버지가 사망한 경우입니다.<br>
+        상속전 어머니와 아버지는 동일세대이고, 2주택을 소유한 것이 됩니다.<br>
+        이 특례는 아버지가 사망으로 인하여 부득이하게 주택을 소유한 경우로서 일반주택을 양도 할 때 비과세를 인정하는 것이지, 동일 세대원인 어머니가 상속받는 경우, 상속받은 주택으로 볼수 없어 과세합니다. [소득세법 시행령 155조② 괄호: 상속개시 당시 동일세대원으로부터 상속받은 주택 제외, 대법2009두9772]</div>
+    </details>
+    <h3>▶ 자녀의 경우</h3>
+    <p class="subtle">※ 자녀가 상속개시 당시 피상속인과 따로 세대를 구성한 경우입니다. 같은 세대원이었다면 상속주택 특례가 적용되지 않습니다(동거봉양 합가는 예외).</p>
+    <table class="dh">
+      <thead><tr><th>상속전 각 자녀 소유주택</th><th>상속전 무주택</th><th>상속전 1주택</th><th>상속전 2주택</th></tr></thead>
+      <tbody>
+        <tr><td class="lab">단독으로 상속받은 경우</td><td class="c">해당없음.</td><td class="c">비과세</td><td class="c">과세</td></tr>
+        <tr><td class="lab">최대지분으로 상속</td><td class="c">상동</td><td class="c">비과세 (상속주택 특례, 참고1)</td><td class="c">과세</td></tr>
+        <tr><td class="lab">동일지분으로 상속</td><td class="c">상동</td><td class="c">비과세 (참고1)</td><td class="c">과세</td></tr>
+        <tr><td class="lab">소수지분으로 상속</td><td class="c">상동</td><td class="c">비과세</td><td class="c">과세</td></tr>
+      </tbody>
+    </table>
+    <details class="dh"><summary>참고1.</summary>
+      <div>
+        <p>1주택을 공동으로 상속받았다면, 소수지분자에게 이 공동상속주택은 일반주택 양도시 주택으로 보지 않습니다(소득세법 시행령 155조③). 다만, 아래 사람은 공동상속주택을 자기 주택으로 봅니다. 이 경우에도 상속받은 주택이므로 상속주택 특례(155조②)가 적용되어 상속 전부터 보유한 일반주택을 양도할 때 비과세가 가능합니다.</p>
+        <ol><li>지분이 가장 많은 사람</li><li>지분이 모두 동일하다면 다음 순서 — 가. 상속주택에 거주하고 있는 사람, 나. 상속인 중 최연장자</li></ol>
+      </div>
+    </details>
+    <div class="actions no-print"><button class="btn ghost" data-go="16">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="18">상속주택 때문에 주택청약 이상 없을까 ?</button></div>
+  </section>
+
+  <!-- ================= 18 단계 : 주택청약 ================= -->
+  <section class="card step page-break print-section" id="step18" data-tier="premium,gold,goldAnswer,royal">
+    <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section3-checkbox" checked> 이 부분 인쇄</label>
+    <h2 class="title">◈ 상속주택때문에 아파트 청약을 받을수 없나요 ?</h2>
+    <p>주택청약시 주택소유 여부를 판단할때, 주택을 단독 또는 공유지분으로 소유하고 있는 경우도 주택을 소유하고 있는 것으로 봅니다.<br>그러나 다음의 상속주택은 없는 것으로 봅니다.</p>
+    <ol class="tips">
+      <li>상속으로 주택의 공유지분을 취득한 사실이 판명되어 사업주체로부터 부적격자로 통보받은날부터 <strong>3개월 이내에 그 지분을 처분한 경우.</strong> (공급규칙 53조1호)</li>
+      <li>도시지역이 아닌지역 또는 면의 행정구역(수도권은 제외)에 건축되어 있는 주택으로서 다음 각목의 어느 하나에 해당하는 주택의 소유자가 해당 주택건설지역에 거주<strong>(상속으로 주택을 취득한 경우에는 피상속인이 거주한 것을 상속인이 거주한 것으로 본다) 하다가 다른 주택건설지역으로 이주한 경우 (공급규칙 53조2호)</strong>
+        <ul>
+          <li>가. 사용승인 후 20년 이상 경과된 단독주택</li>
+          <li>나. 85제곱미터 이하의 단독주택</li>
+          <li>다. 소유자의 「가족관계의 등록등에 관한 법률」에 따른 최초 등록기준지에 건축되어 있는 주택으로서 직계존속 또는 배우자로부터 상속등에 의하여 이전받은 단독주택</li>
+        </ul>
+      </li>
+    </ol>
+    <h3>위 내용을 구체적으로 살펴볼까요 ?</h3>
+    <details class="dh"><summary>Q : 단독으로 주택의 공유지분을 상속받은 경우도 가능한가요 ?</summary><div>A : 적용가능합니다. 예) 주택의 공유지분을 10%를 소유하고 있는 부친의 사망으로 자녀가 그 공유지분 10%를 단독으로 상속받은 경우 해당 공유지분 처분시 처음부터 주택을 소유하지 않는 것으로 인정 가능</div></details>
+    <details class="dh"><summary>Q : 증여로 공유지분을 소유하게 된 경우는 ?</summary><div>A : 증여로 취득한 경우 주택을 소유한 것으로 보아 53조1호를 적용 할 수 없습니다.</div></details>
+    <details class="dh"><summary>Q : 도시지역이란 ?</summary><div>A : 토지의 용도가 도시지역(주거 상업 공업 녹지)인 지역을 말하며, 도시지역 여부는 토지이용계획확인원을 통해 확인이 가능합니다.</div></details>
+    <details class="dh"><summary>Q : 피상속인이 거주한 것 ?</summary><div>A : 피상속인이 거주하였던 주택을 상속받은 경우 상속인이 입주자모집공고일 현재 다른 주택건설지역에 거주하고 있다면 제 53조 제 2호의 “ 해당 주택의 소유자가 해당 주택건설지역에 거주하다가 다른 주택건설지역으로 이주한 경우”에 해당합니다.</div></details>
+    <details class="dh"><summary>Q : 사용승인후 20년 경과 ?</summary><div>A : 사용승인일은 건축물 대장을 통하여 확인하여야 하나, 건축물 대장이 없는 경우 해당 지자체를 통해 건축일자를 확인하거나 등기부등본상의 소유권보존등기일을 사용승인일로 보아 기간을 계산하여야 할것으로 판단됩니다.</div></details>
+    <details class="dh"><summary>Q : 85제곱미터 이하의 단독주택 면적 산정시 단독주택과 분리된 창고, 화장실 등의 면적도 포함되는지 ?</summary><div>A : 85제곱미터 이하의 면적은 주택법시행규칙 제 2조 1호에 따른 주거전용면적을 의미합니다. 따라서 면적산정시 주택과 분리된 창고 차고 및 화장실의 면적은 포함되지 않습니다.</div></details>
+    <details class="dh"><summary>Q : 단독주택이 아닌 공동주택도 53조2호의 적용이 가능한지 ?</summary><div>A : 53조 2호의 가~다항은 모두 단독주택일 것을 요건으로 하고 있습니다. 따라서 공동주택은 제 53조 2호를 적용할수 없습니다.</div></details>
+    <details class="dh"><summary>Q : 53조2호의 다항의 상속등에 증여도 포함되는지 ?</summary><div>A : 상속등에 의하여 이전받은 단독주택은 상속의 경우에만 인정되고 있으며 증여는 포함되지 않습니다.</div></details>
+    <div class="actions no-print"><button class="btn ghost" data-go="17">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="19">부모님 기초연금 받으려면 ?</button></div>
+  </section>
+
+  <!-- ================= 19 단계 : 기초연금 ================= -->
+  <section class="card step page-break print-section" id="step19" data-tier="premium,gold,goldAnswer,royal">
+    <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section4-checkbox" checked> 이 부분 인쇄</label>
+    <h2 class="title">◈ 홀로 남은 배우자가 기초연금을 받기 위해서 재산과 소득이 얼마 이하여야 하나요 ?</h2>
+    <details class="dh"><summary>기초연금 대상자</summary>
+      <div>
+        <h4>▶ 대상자</h4>
+        <p>기초연금은 만 65세 이상이고, 대한민국 국적을 가지고 국내에 거주하며, 소득인정액이 선정기준액(2026년 단독가구 월 247만원, 부부가구 월 395만 2천원) 이하여야 합니다.</p>
+        <h4>▶ 소득인정액계산</h4>
+        <p>매월 벌어들이는 소득과 소유하고 있는 재산을 소득으로 환산. 즉, 소득평가액 + 재산의 소득환산액으로 계산합니다.</p>
+        <h4>▶ 소득평가액</h4>
+        <p>소득평가액 = {0.7 x (월근로수입 - 116만원)}(A) + 기타소득(B) ※ 공제액은 매년 바뀜 (2026년 116만원)</p>
+        <p>A: 일용근로소득, 공공일자리소득, 자활근로소득은 근로소득에서 제외됩니다.</p>
+        <p>B: 기타소득: 사업소득, 금융소득, 공적이전소득, 무료임차소득</p>
+        <h4>▶ 재산의 소득환산액</h4>
+        <p>재산의 월 소득환산액 = [{(일반재산 - 기본재산액) + (금융재산 - 2,000만원) - 부채} x 0.04 ÷ 12개월] + 고급자동차 및 회원권의 가액</p>
+        <p>고급자동차(3,000cc 이상 또는 4천만원 이상) 및 회원권은 그 가액을 그대로 적용합니다.</p>
+        <h4>▶ 지역별 기본재산액</h4>
+        <table class="dh">
+          <thead><tr><th>구분</th><th>공제액</th></tr></thead>
+          <tbody>
+            <tr><td>대도시 (특별시, 광역시의 "구" 포함) 및 특례시 예) 서울 관악구, 부산 해운대구, 대구 달성군</td><td class="num">1억 3,500만원</td></tr>
+            <tr><td>중소도시 (도의 '시', 세종특별자치시) 예) 경기 성남시, 경북 안동시, 충남 천안시</td><td class="num">8,500만원</td></tr>
+            <tr><td>농어촌 (도의 '군') 예) 전남 고흥, 강원 영월, 충북 음성</td><td class="num">7,250만원</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <h3>소득인정액 계산해 보기</h3>
+    <h4>▶ 소득평가액</h4>
+    <div class="field"><label for="monthlyWorkIncome">월근로소득 <small>직장가입자의 보수 월액. 상시근로소득(3개월 이상 고용, 월정액 급여)만. 일용근로소득(3개월 미만, 건설공사·하역작업 종사자)과 공공일자리 소득(노인일자리·장애인일자리·자활근로·공공근로 등)은 제외</small></label>
+      <div class="ctl"><input type="text" id="monthlyWorkIncome" data-money placeholder="보수 월액"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="monthlyBusinessIncome">월 사업소득 <small>수입 − 경비. 임대소득 포함. 연사업소득/12</small></label>
+      <div class="ctl"><input type="text" id="monthlyBusinessIncome" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="monthlyFinancialIncome">월 금융소득(이자+배당) <small>이자소득의 경우 소득에서 월 4만원 제외한 금액. 0보다 적은 경우 없는 것으로 함.</small></label>
+      <div class="ctl"><input type="text" id="monthlyFinancialIncome" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="houseStandardPrice">자녀주택의 시가표준액 <small>자녀주택에서 사는 경우. 무료임차소득 = 시가표준액 × 지분율 × 0.0078 / 12</small></label>
+      <div class="ctl"><input type="text" id="houseStandardPrice" data-money placeholder="시가표준액을 넣으세요"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="shareRatio">지분율 <small>자녀와 제3자가 공동하고 있는 경우 자녀의 지분율 (0~1)</small></label>
+      <div class="ctl"><input type="number" id="shareRatio" class="short" step="0.1" min="0" max="1" value="1"></div></div>
+    <div class="field"><label for="monthlyPublicTransferIncome">월 공적이전소득 <small>국민연금·공무원연금·군인연금·사학연금·별정우체국 연금 등 법령에 의해 정기적으로 지급되는 연금. 일시금은 금융재산으로 산정</small></label>
+      <div class="ctl"><input type="text" id="monthlyPublicTransferIncome" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+
+    <h4>▶ 재산 소득 환산액</h4>
+    <div class="field"><label for="realEstate">부동산등 <small>부동산. 분양권. 재건축입주권.</small></label>
+      <div class="ctl"><input type="text" id="realEstate" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="leaseDeposit">임차보증금 <small>임차보증금이 있는 경우 95%만 반영</small></label>
+      <div class="ctl"><input type="text" id="leaseDeposit" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="financialProperty">금융재산</label>
+      <div class="ctl"><input type="text" id="financialProperty" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="debt">부채</label>
+      <div class="ctl"><input type="text" id="debt" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="luxuryCarOver4000">4천만원 이상 고급자동차 <small>보험개발원의 차량기준액으로 평가 — <a href="https://www.kidi.or.kr/user/car/carprice.do" target="_blank" rel="noopener">확인하러 가기</a></small></label>
+      <div class="ctl"><input type="text" id="luxuryCarOver4000" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="membershipRight">회원권 <small>시가표준액으로 평가</small></label>
+      <div class="ctl"><input type="text" id="membershipRight" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="region">지역 <small>지역마다 일정액공제</small></label>
+      <div class="ctl"><select id="region">
+        <option value="대도시">대도시(특별시･광역시의 ‘구’(도･농복합군 포함), 특례시)</option>
+        <option value="중소도시">중소도시(특별자치도･도의 ‘시’, 세종특별자치시)</option>
+        <option value="농어촌">농어촌(특별자치도･도의 ‘군’)</option>
+      </select></div></div>
+    <div class="actions no-print"><button class="btn" id="btnPension">계산하기</button></div>
+    <div id="resultPention"></div>
+    <div class="actions no-print"><button class="btn ghost" data-go="18">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="20" data-tier="premium">주의사항 !</button><button class="btn" data-go="20" data-tier="gold,goldAnswer">질문하기 !</button><button class="btn" data-go="20" data-tier="royal">대면상담신청 !</button></div>
+  </section>
+
+  <!-- ================= 20 단계 : 유의사항 · 질문 · 상담 · 안내 ================= -->
+  <section class="card step page-break" id="step20">
+    <div data-tier="free">
+      <h2 class="title">안내 말씀</h2>
+      <p>상속세에 대한 궁금한 점이나, 상속세 계산에 대한 질문이 있으시면 아래의 보고서를 이용해 주세요.</p>
+      <div class="upgrade">
+        <a href="inheritPremium.html" class="p"><span class="tag">P</span><strong>셀프절세방법 (P)</strong><span>상속세·취득세·종부세·양도세·청약·기초연금 절세 방법을 직접 계산해 봅니다.</span></a>
+        <a href="inheritGold.html" class="g"><span class="tag">G</span><strong>서면상담 (G)</strong><span>절세 보고서에 질문을 적어 보내면 세무사가 서면으로 답변합니다.</span></a>
+        <a href="inheritRoyal.html" class="r"><span class="tag">R</span><strong>대면상담 (R)</strong><span>보고서를 바탕으로 여러 세무사·전문가가 대면으로 심층 상담합니다.</span></a>
+      </div>
+      <div class="actions no-print"><button class="btn ghost" data-go="12">뒤로가기</button><button class="btn" data-go="1">처음으로 가기</button></div>
+    </div>
+
+    <div data-tier="premium,gold,goldAnswer,royal">
+      <h2 class="title" data-tier="premium">주의사항</h2>
+      <h2 class="title" data-tier="gold,goldAnswer,royal">유의사항</h2>
+      <ul class="tips" data-tier="premium">
+        <li>본 내용은 세법과 위의 기본사항 요건에 한정하여 본인이 입력한 데이터로 산출한 “상황별 예상세금 모의계산”으로서 예상세금 단순비교를 위한 평가내용입니다.</li>
+        <li>이용자의 개별적인 의사결정에 대한 법적 책임은 없습니다.</li>
+        <li>따라서 실제 의사결정 및 관련 세무신고는 사전에 세무사와 반드시 상담하시기 바랍니다.</li>
+      </ul>
+      <ul class="tips" data-tier="gold">
+        <li>이 보고서와 아래의 내용은 고객님이 입력한 데이터를 바탕으로 한 “상황별 예상세금 모의계산 보고서” 입니다.</li>
+        <li>고객님의 개별적인 판단에 따른 의사결정에 대한 법적 책임은 없습니다.</li>
+        <li>따라서 중요한 실제 의사결정 및 관련 세무신고는 사전에 세무사와 반드시 대면 상담하시기 바랍니다.</li>
+        <li>"대면상담"은 여러세무사와 전문가가 심층적으로 대응합니다.</li>
+      </ul>
+      <ul class="tips" data-tier="goldAnswer,royal">
+        <li>이 보고서와 아래의 내용은 고객님이 입력한 데이터에 추가로 질문한 내용을 반영한 “상황별 예상세금 모의계산 보고서” 입니다.</li>
+        <li>고객님의 질문 외 고객님의 개별적인 판단에 따른 의사결정에 대한 법적 책임은 없습니다.</li>
+        <li>따라서 중요한 실제 의사결정 및 관련 세무신고는 사전에 세무사와 반드시 대면 상담하시기 바랍니다.</li>
+        <li>"대면상담"은 여러세무사와 전문가가 심층적으로 대응합니다.</li>
+      </ul>
+
+      <div data-tier="premium">
+        <div class="actions no-print"><button class="btn ghost" data-action="save">입력 데이터 저장</button><button class="btn" data-action="print">인쇄 / PDF 저장</button></div>
+        <p class="subtle">፠ 입력한 데이터는 사용자의 컴퓨터 웹브라우저에서만 저장되며, 외부로 유출되지 않습니다.
+          <a class="no-print" href="https://tuzaga.com/%eb%a1%9c%ec%bb%ac-%ec%8a%a4%ed%86%a0%eb%a6%ac%ec%a7%80-%eb%b8%8c%eb%9d%bc%ec%9a%b0%ec%a0%80%ec%97%90-%ec%a0%80%ec%9e%a5%ed%95%9c%eb%8b%a4%eb%8a%94-%ea%b2%83%ec%9d%98-%ec%9d%98%eb%af%b8/" target="_blank" rel="noopener">자세히 알아보기</a></p>
+      </div>
+
+      <!-- 골드: 고객 질문 -->
+      <div class="qa" data-tier="gold">
+        <h3>▶ 질문하기</h3>
+        <p class="subtle">궁금한 점을 적어 저장하고, 이메일로 보내거나 파일로 내려받아 함께 전달하세요. 질문에는 재산 합계·공제·예상세액 요약이 자동으로 붙습니다.</p>
+        <div class="field"><label for="customerName">이름</label><div class="ctl"><input type="text" id="customerName" class="mid" placeholder="홍길동"></div></div>
+        <div class="actions no-print"><button class="btn ghost" id="btnQaToggle">질문 작성</button></div>
+        <div class="qa-form" id="qaForm" hidden>
+          <div class="editor-container" id="qaEditor"></div>
+          <div class="actions no-print">
+            <button class="btn ghost sm" id="btnQaSave">저장</button>
+            <button class="btn ghost sm" id="btnQaLoad">불러오기</button>
+            <button class="btn sm" id="btnQaMail">이메일로 보내기</button>
+            <button class="btn ghost sm" id="btnQaFile">질문 내용 파일로 저장</button>
+          </div>
+        </div>
+        <div class="qa-content" id="qaContent"></div>
+      </div>
+
+      <!-- 골드 답변서: 세무사 답변 -->
+      <div class="qa" data-tier="goldAnswer">
+        <h3>▶ 고객 질문</h3>
+        <div class="qa-content" id="qaContent"></div>
+        <h3>▶ 답변 달기</h3>
+        <div class="actions no-print"><button class="btn ghost" id="btnAnsToggle">답변 작성</button></div>
+        <div class="qa-form" id="ansForm" hidden>
+          <div class="editor-container" id="ansEditor"></div>
+          <div class="actions no-print">
+            <button class="btn ghost sm" id="btnAnsSave">저장</button>
+            <button class="btn ghost sm" id="btnAnsLoad">불러오기</button>
+            <button class="btn ghost sm" id="btnAnsFile">답변 내용 파일로 저장</button>
+          </div>
+        </div>
+        <div class="qa-content" id="ansContent"></div>
+      </div>
+
+      <!-- 로얄: 대면상담 신청 -->
+      <div class="qa consult" data-tier="royal">
+        <h3>▶ 대면상담신청</h3>
+        <p class="subtle">이름 이메일 전화번호 문의사항등을 입력해 주세요. 이 보고서의 기본적인 내용들을 실행해 보시고, PDF 저장후 이메일에 첨부해 주시면 더욱 풍부한 상담이 됩니다. 담당자가 대면면담 일정을 잡기 위해 직접 연락드리겠습니다.</p>
+        <form id="consultForm">
+          <div class="field"><label for="consultName">이름</label><div class="ctl"><input type="text" id="consultName" class="mid" required></div></div>
+          <div class="field"><label for="consultPhone">연락처</label><div class="ctl"><input type="tel" id="consultPhone" class="mid" placeholder="010-0000-0000" required></div></div>
+          <div class="field"><label for="consultEmail">이메일</label><div class="ctl"><input type="email" id="consultEmail" placeholder="example@email.com"></div></div>
+          <div class="field"><label for="consultWhen">희망 일시</label><div class="ctl"><input type="text" id="consultWhen" placeholder="예) 10월 25일 오후 2시"></div></div>
+          <div class="field"><label for="consultMemo">메모</label><div class="ctl"><textarea id="consultMemo" placeholder="문의사항"></textarea></div></div>
+          <div class="actions no-print"><button type="submit" class="btn" id="btnConsultMail">이메일로 신청하기</button><button type="button" class="btn ghost" id="btnConsultFile">신청 내용 파일로 저장</button></div>
+        </form>
+        <div class="qa-content" id="consultContent"></div>
+      </div>
+
+      <div class="actions no-print"><button class="btn ghost" data-go="19">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-action="print" data-tier="gold,goldAnswer,royal">인쇄 / PDF 저장</button></div>
+    </div>
+  </section>
+
+  </div><!-- /data-save -->
+</main>
+
+<script data-tier="gold,goldAnswer" src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script src="js/dh.js"></script>
+<script src="js/report-tiers.js"></script>
+<script src="js/report-engine.js"></script>
+</body>
+</html>

@@ -1,398 +1,215 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>상속세 계산기</title>
-    <style>
-        table {
-            width: 90%;
-            margin: auto;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        input[type="text"] {
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .currency-input {
-            text-align: right;
-        }
-        /* 모달 스타일 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto; padding: 20px;
-            border: 1px solid #888;
-            width: 40%;
-        }
-        .close {
-            color: #aaa; float: right;
-            font-size: 28px; font-weight: bold;
-        }
-        .close:hover, .close:focus {
-            color: black; text-decoration: none; cursor: pointer;
-        }
-        /* 커서 스타일 */
-        td[onclick] {
-            cursor: pointer;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속세 과세표준 신고 및 자진납부 계산서 · 대한세무법인</title>
+<meta name="description" content="별지 제9호서식 상속세 과세표준신고 및 자진납부계산서의 세액계산 부분(⑰~㊹)을 자동 계산합니다. 세대생략 할증, 신고세액공제 3%, 분납·연부연납 한도 검증. 2026년 기준.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  .form-sheet table.dh td.no{width:44px;font-size:14px;color:var(--ink);font-weight:500}
+  .form-sheet table.dh td.amt{width:220px;text-align:right;font-variant-numeric:tabular-nums}
+  .form-sheet table.dh td.amt b{font-weight:600}
+  .form-sheet table.dh td.item small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+  .form-sheet table.dh tr.sec td{background:var(--main-soft);color:var(--main);font-weight:700;font-size:13px}
+  .form-sheet table.dh tr.calc td{background:var(--main-tint)}
+  .form-sheet table.dh tr.key td{background:var(--main-tint);font-weight:700}
+  .form-sheet table.dh tr.key td.amt b{color:var(--main);font-size:16px}
+  .form-sheet .opts{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:8px 0 12px;font-size:13.5px}
+  .form-sheet .sub-in{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:4px;font-size:12.5px;color:var(--muted)}
+  .form-sheet .sub-in input{max-width:150px;min-height:32px;padding:4px 8px;font-size:13px}
+  .form-sheet .sub-in input.short{max-width:90px}
+  .form-sheet .sub-in label{white-space:nowrap}
+  .form-sheet .warn{color:var(--bad);font-size:12px;display:block}
+  .form-sheet .ok{color:var(--muted);font-size:12px;display:block}
+  @media (max-width:720px){.form-sheet table.dh td.amt{width:150px}}
+  @media print{
+    .form-sheet table.dh td{padding:1mm 2mm}
+    .form-sheet table.dh td.amt{width:48mm}
+    .form-sheet .sub-in input{font-size:9pt!important}
+    .form-sheet table.dh tr.sec td,.form-sheet table.dh tr.key td{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .form-sheet table.dh tr.calc td{background:#fff}
+  }
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
 </head>
-<body>
+<body data-store="inherit-self-assessment" data-subject="상속세 신고" data-autoload="1">
 
-<h2 style="text-align:center;">상속세 계산기</h2>
-
-<table>
-    <tr>
-        <th>항목</th>
-        <th>금액</th>
-    </tr>
-    <tr>
-        <td>⑰ 상속세 과세가액</td>
-        <td><input type="text" id="taxableInheritanceAmount" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td>⑱ 상속공제액</td>
-        <td><input type="text" id="inheritanceDeductionAmount" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td>⑲ 감정평가 수수료</td>
-        <td><input type="text" id="appraisalFee" class="currency-input" placeholder="5백초과시 5백만원 한도"></td>
-    </tr>
-    <tr>
-        <td>⑳ 과세표준 (⑰-⑱-⑲)</td>
-        <td><input type="text" id="taxableBase" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td>㉑ 세율 (%)</td>
-        <td><input type="text" id="taxRate" readonly></td>
-    </tr>
-    <tr>
-        <td>㉒ 산출세액</td>
-        <td><input type="text" id="calculatedTax" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://tuzaga.com/%ec%84%b8%eb%8c%80%eb%a5%bc-%ea%b1%b4%eb%84%88%eb%9b%b4-%ec%83%81%ec%86%8d%ec%9d%98-%ed%95%a0%ec%a6%9d%ea%b3%bc%ec%84%b8/" target="_blank">㉓ 세대생략가산액</a>
-            <button id="openModal1">입력</button>
-        </td>
-        <td><input type="text" id="generationSkippingSurtax" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td>㉔ 총산출세액</td>
-        <td><input type="text" id="totalCalculatedTax" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td onclick="alert('가업상속공제와 영농상속공제에 대한 이행을 하지 못한 경우 이자상당액입니다.');" style="cursor: pointer;">㉕ 이자상당액</td>
-        <td><input type="text" id="interestAmount" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td>㉖ 문화재 등 징수유예세액 <button id="openModal2">입력</button></td>
-        <td><input type="text" id="culturalHeritageDeferredTax" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td>㉘ 소계 (㉙ + ㉚)</td>
-        <td><input type="text" id="subtotal" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td onclick="alert('10년(5년)이내 상속인(상속인 외의 자)에게 증여 시 증여세 산출세액입니다.');" style="cursor: pointer;">㉙ 상증법 증여세액</td>
-        <td><input type="text" id="giftTaxInheritanceAct" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td onclick="alert('창업자에 대한 증여세 과세특례, 가업승계 증여세 특례 적용 시 증여세액 공제액입니다.');" style="cursor: pointer;">㉚ 조특법 증여세액</td>
-        <td><input type="text" id="giftTaxSpecialAct" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td>계 (㉘ + ㉛ + ㉜ + ㉝ + ㉞)</td>
-        <td><input type="text" id="totalDeductions" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td onclick="alert('외국에 있는 상속재산에 대하여 외국법령에 의해 상속세를 부과받은 경우 일정액을 공제합니다.');" style="cursor: pointer;">㉛ 외국납부세액공제</td>
-        <td><input type="text" id="foreignTaxCredit" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td>㉜ 단기세액공제</td>
-        <td><input type="text" id="shortTermTaxCredit" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td>㉝ 신고세액공제 <button id="openModal3">입력</button></td>
-        <td><input type="text" id="reportedTaxCredit" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td onclick="alert('그 외 해당 사항이 있는 경우 입력합니다.');" style="cursor: pointer;">㉞ 그 밖의 공제</td>
-        <td><input type="text" id="otherDeductions" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td onclick="alert('영리법인에게 유증한 경우로서 특수관계자가 있는 경우 일정액을 입력합니다.');" style="cursor: pointer;">㉟ 영리법인면제분납부세액 <button id="openModal4">입력</button></td>
-        <td><input type="text" id="profitCorpTaxExemption" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td>㊱ 공제면제후 납부할 세액</td>
-        <td><input type="text" id="amountAfterDeductions" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td onclick="alert('가업상속이 있는 경우 유예세액입니다.');" style="cursor: pointer;">㊲ 가업상속납부유예세액</td>
-        <td><input type="text" id="deferredBusinessInheritanceTax" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td onclick="alert('신고기한 내 신고하지 못한 경우입니다.');" style="cursor: pointer;">㊳ 신고불성실가산세</td>
-        <td><input type="text" id="underReportingPenalty" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td onclick="alert('신고기한 내 납부하지 못한 경우입니다.');" style="cursor: pointer;">㊴ 납부지연가산세</td>
-        <td><input type="text" id="delayedPaymentPenalty" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td>㊵ 납부할 세액</td>
-        <td><input type="text" id="amountToBePaid" class="currency-input" readonly></td>
-    </tr>
-    <tr>
-        <td onclick="alert('상속세 연부연납입니다.');" style="cursor: pointer;">㊶ 연부연납</td>
-        <td><input type="text" id="installmentPayment" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td onclick="alert('상속받은 재산으로 물납하는 경우입니다.');" style="cursor: pointer;">㊷ 물납</td>
-        <td><input type="text" id="paymentInKind" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td onclick="alert('분납 2개월입니다.');" style="cursor: pointer;">㊸ 분납</td>
-        <td><input type="text" id="partialPayment" class="currency-input" placeholder="금액을 입력하세요"></td>
-    </tr>
-    <tr>
-        <td>㊹ 신고납부</td>
-        <td><input type="text" id="finalPaymentAmount" class="currency-input" readonly></td>
-    </tr>
-</table>
-
-<!-- 모달 창들 -->
-<!-- 세대생략가산액 입력 모달 -->
-<div id="modal1" class="modal">
-  <div class="modal-content">
-    <span class="close" data-modal="modal1">&times;</span>
-    <h3>㉓ 세대생략가산액 입력</h3>
-    <p>자녀를 제외한 직계비속이 상속받은 경우 적용됩니다.<br>
-    산출세액 × (피상속인의 자녀를 제외한 직계비속이 상속받은 재산가액 / 총상속재산가액) × 30%(미성년자의 경우 40%)</p>
-    <input type="text" id="modalGenerationSkippingSurtax" class="currency-input" placeholder="금액을 입력하세요">
-    <br><br>
-    <button data-apply="generationSkippingSurtax">반영</button>
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 서식</div>
+    <span class="form-no">별지 제9호서식 · 세액계산 ⑰~㊹</span>
+    <h1>상속세 과세표준 신고 및 자진납부 계산서</h1>
+    <p>과세가액과 상속공제액을 넣으면 산출세액, 세액공제, 가산세, 납부 방법(연부연납·물납·분납)까지 서식 번호 순서대로 계산됩니다. 신고세액공제와 세대생략 할증은 자동으로 계산합니다.</p>
   </div>
-</div>
 
-<!-- 문화재 등 징수유예세액 입력 모달 -->
-<div id="modal2" class="modal">
-  <div class="modal-content">
-    <span class="close" data-modal="modal2">&times;</span>
-    <h3>㉖ 문화재 등 징수유예세액 입력</h3>
-    <p>문화재 보호법에 따라 문화재를 상속받은 경우 상속세를 징수 유예합니다.<br>
-    징수유예세액 = 상속세 산출세액 × (해당 문화재 재산가액 / 상속재산)</p>
-    <input type="text" id="modalCulturalHeritageDeferredTax" class="currency-input" placeholder="금액을 입력하세요">
-    <br><br>
-    <button data-apply="culturalHeritageDeferredTax">반영</button>
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
   </div>
-</div>
 
-<!-- 신고세액공제 입력 모달 -->
-<div id="modal3" class="modal">
-  <div class="modal-content">
-    <span class="close" data-modal="modal3">&times;</span>
-    <h3>㉝ 신고세액공제 계산 결과</h3>
-    <p>신고세액공제는 다음과 같이 계산됩니다:</p>
-    <p>신고세액공제 = [총산출세액 - ㉖ 문화재 등 징수유예세액 - (㉘ 소계 + ㉛ 외국납부세액공제 + ㉜ 단기세액공제)] × 3%</p>
-    <p>계산된 금액: <span id="calculatedReportedTaxCredit"></span> 원</p>
-    <br>
-    <button data-apply="reportedTaxCredit">반영</button>
+  <div data-save>
+  <div class="form-sheet">
+    <div class="sheet-no">■ 상속세 및 증여세법 시행규칙 [별지 제9호서식] (세액계산 부분)</div>
+    <div class="sheet-title">상속세 과세표준신고 및 자진납부계산서</div>
+    <div class="sheet-sub">계산 결과는 참고용입니다. 신고 전 세무 전문가의 검토를 권합니다.</div>
+
+    <div class="opts">
+      <span>신고 구분:</span>
+      <label class="check"><input type="radio" name="filing" value="ontime" checked> 기한 내 신고 (신고세액공제 3%)</label>
+      <label class="check"><input type="radio" name="filing" value="late"> 기한 후 신고 (공제 없음)</label>
+    </div>
+
+    <table class="dh">
+      <thead><tr><th>번호</th><th>항목</th><th>금액 (원)</th></tr></thead>
+      <tbody>
+        <tr class="sec"><td colspan="3">과세표준·산출세액</td></tr>
+        <tr><td class="no">⑰</td><td class="item">상속세 과세가액 <small>상속세 과세가액 계산명세서 ㉗</small></td><td class="amt"><input type="text" id="v17" data-money placeholder="0"></td></tr>
+        <tr><td class="no">⑱</td><td class="item">상속공제액 <small>상속공제명세서 합계 (종합한도 적용 후)</small></td><td class="amt"><input type="text" id="v18" data-money placeholder="0"></td></tr>
+        <tr><td class="no">⑲</td><td class="item">감정평가수수료 <small>부동산 감정평가 500만 한도 + 비상장주식 평가 1천만 한도</small>
+            <div class="sub-in"><span>부동산</span><input type="text" id="feeRE" data-money placeholder="0"><span>비상장주식</span><input type="text" id="feeStock" data-money placeholder="0"></div></td>
+          <td class="amt"><b id="v19">0</b></td></tr>
+        <tr class="calc"><td class="no">⑳</td><td class="item">과세표준 <small>⑰ − ⑱ − ⑲ (50만 원 미만이면 과세하지 않음)</small></td><td class="amt"><b id="v20">0</b></td></tr>
+        <tr class="calc"><td class="no">㉑</td><td class="item">세율 <small>10~50% 5단계 누진</small></td><td class="amt"><b id="v21">—</b></td></tr>
+        <tr class="calc"><td class="no">㉒</td><td class="item">산출세액 <small>⑳ × 세율 − 누진공제</small></td><td class="amt"><b id="v22">0</b></td></tr>
+        <tr><td class="no">㉓</td><td class="item">세대생략 가산액 <small>㉒ × (자녀 외 직계비속이 받은 재산 ÷ 총상속재산) × 30% (미성년자가 20억 초과 시 40%)</small>
+            <div class="sub-in"><span>자녀 외 직계비속 상속재산</span><input type="text" id="skipValue" data-money placeholder="0"><span>총상속재산가액</span><input type="text" id="totalValue" data-money placeholder="0"><label class="check"><input type="checkbox" id="skipMinor"> 미성년자</label></div></td>
+          <td class="amt"><b id="v23">0</b></td></tr>
+        <tr class="calc"><td class="no">㉔</td><td class="item">총산출세액 <small>㉒ + ㉓</small></td><td class="amt"><b id="v24">0</b></td></tr>
+        <tr><td class="no">㉕</td><td class="item">이자상당액 <small>가업·영농상속공제 사후관리 위반 시</small></td><td class="amt"><input type="text" id="v25" data-money placeholder="0"></td></tr>
+        <tr><td class="no">㉖</td><td class="item">문화유산 등 징수유예세액 <small>㉔ × 문화유산 등 재산가액 ÷ 상속재산가액</small></td><td class="amt"><input type="text" id="v26" data-money placeholder="0"></td></tr>
+
+        <tr class="sec"><td colspan="3">세액공제</td></tr>
+        <tr><td class="no">㉙</td><td class="item">증여세액공제 — 상증법 <small>사전증여재산에 대해 낸 증여세 산출세액 (한도 내)</small></td><td class="amt"><input type="text" id="v29" data-money placeholder="0"></td></tr>
+        <tr><td class="no">㉚</td><td class="item">증여세액공제 — 조특법 <small>창업자금·가업승계 과세특례 증여세액</small></td><td class="amt"><input type="text" id="v30" data-money placeholder="0"></td></tr>
+        <tr class="calc"><td class="no">㉘</td><td class="item">증여세액공제 소계 <small>㉙ + ㉚</small></td><td class="amt"><b id="v28">0</b></td></tr>
+        <tr><td class="no">㉛</td><td class="item">외국납부세액공제</td><td class="amt"><input type="text" id="v31" data-money placeholder="0"></td></tr>
+        <tr><td class="no">㉜</td><td class="item">단기재상속세액공제 <small>10년 이내 재상속</small></td><td class="amt"><input type="text" id="v32" data-money placeholder="0"></td></tr>
+        <tr><td class="no">㉞</td><td class="item">그 밖의 공제·감면세액</td><td class="amt"><input type="text" id="v34" data-money placeholder="0"></td></tr>
+        <tr class="calc"><td class="no">㉝</td><td class="item">신고세액공제 <small>(㉔ − ㉖ − ㉘ − ㉛ − ㉜ − ㉞) × 3%, 기한 내 신고 시</small></td><td class="amt"><b id="v33">0</b></td></tr>
+        <tr class="calc"><td class="no">㉗</td><td class="item">세액공제 합계 <small>㉘ + ㉛ + ㉜ + ㉝ + ㉞</small></td><td class="amt"><b id="v27">0</b></td></tr>
+        <tr><td class="no">㉟</td><td class="item">영리법인 면제분 납부세액 <small>영리법인에 유증한 경우 상속인(직계비속)이 납부할 세액</small></td><td class="amt"><input type="text" id="v35" data-money placeholder="0"></td></tr>
+        <tr class="key"><td class="no">㊱</td><td class="item">공제·면제 후 납부할 세액 <small>㉔ + ㉕ − ㉖ − ㉗ + ㉟</small></td><td class="amt"><b id="v36">0</b></td></tr>
+
+        <tr class="sec"><td colspan="3">납부유예·가산세</td></tr>
+        <tr><td class="no">㊲</td><td class="item">가업상속 납부유예세액</td><td class="amt"><input type="text" id="v37" data-money placeholder="0"></td></tr>
+        <tr><td class="no">㊳</td><td class="item">신고불성실가산세 <small>무신고 20%, 과소신고 10% (부정 40%)</small></td><td class="amt"><input type="text" id="v38" data-money placeholder="0"></td></tr>
+        <tr><td class="no">㊴</td><td class="item">납부지연가산세 <small>미납세액 × 일수 × 0.022%</small></td><td class="amt"><input type="text" id="v39" data-money placeholder="0"></td></tr>
+        <tr class="key"><td class="no">㊵</td><td class="item">납부할 세액 <small>㊱ − ㊲ + ㊳ + ㊴</small></td><td class="amt"><b id="v40">0</b></td></tr>
+
+        <tr class="sec"><td colspan="3">납부 방법</td></tr>
+        <tr><td class="no">㊶</td><td class="item">연부연납 신청세액 <small>납부세액 2천만 초과 시, 최장 10년(가업 20년). 담보 필요</small><span id="n41"></span></td><td class="amt"><input type="text" id="v41" data-money placeholder="0"></td></tr>
+        <tr><td class="no">㊷</td><td class="item">물납 신청세액 <small>부동산·유가증권 50% 초과 & 납부세액 2천만 초과</small><span id="n42"></span></td><td class="amt"><input type="text" id="v42" data-money placeholder="0"></td></tr>
+        <tr><td class="no">㊸</td><td class="item">분납 신청세액 <small>2개월 내. 2천만 이하: 1천만 초과분, 2천만 초과: 50% 이하. 연부연납과 중복 불가</small><span id="n43"></span></td><td class="amt"><input type="text" id="v43" data-money placeholder="0"></td></tr>
+        <tr class="key"><td class="no">㊹</td><td class="item">신고납부세액 <small>㊵ − ㊶ − ㊷ − ㊸ (신고기한까지 현금 납부)</small></td><td class="amt"><b id="v44">0</b></td></tr>
+      </tbody>
+    </table>
   </div>
-</div>
-
-<!-- 영리법인면제분납부세액 입력 모달 -->
-<div id="modal4" class="modal">
-  <div class="modal-content">
-    <span class="close" data-modal="modal4">&times;</span>
-    <h3>㉟ 영리법인면제분납부세액 입력</h3>
-    <input type="text" id="modalProfitCorpTaxExemption" class="currency-input" placeholder="금액을 입력하세요">
-    <br><br>
-    <button data-apply="profitCorpTaxExemption">반영</button>
   </div>
-</div>
 
+  <section class="result" id="result">
+    <h2>요약</h2>
+    <div class="kv"><span>과세표준 ⑳</span><b id="r_base">0원</b></div>
+    <div class="kv"><span>총산출세액 ㉔ <span class="sub" id="r_rateNote"></span></span><b id="r_calc">0원</b></div>
+    <div class="kv"><span>세액공제 합계 ㉗ <span class="sub" id="r_creditNote"></span></span><b id="r_credit">0원</b></div>
+    <div class="kv"><span>납부할 세액 ㊵</span><b id="r_pay">0원</b></div>
+    <div class="kv total"><span>신고기한까지 낼 금액 ㊹</span><b id="r_now">0원</b></div>
+    <div class="note" id="r_note"></div>
+  </section>
+
+  <div class="actions no-print">
+    <a class="btn ghost" href="상속공제.html">상속공제액(⑱) 계산</a>
+    <a class="btn ghost" href="채무공과금.html">채무·공과금·장례비</a>
+    <a class="btn ghost" href="납부서.html">납부서</a>
+  </div>
+
+  <details class="dh"><summary>법령 해설 (상속세 및 증여세법)</summary>
+    <ul>
+      <li><b>과세표준</b>(§25) = 과세가액 − 상속공제 − 감정평가수수료. 감정평가수수료는 부동산 감정평가법인 수수료 500만 원, 비상장주식 평가심의위원회 평가수수료 1천만 원이 한도(시행령 §20의3). 과세표준이 50만 원 미만이면 상속세를 부과하지 않습니다.</li>
+      <li><b>세율</b>(§26): 1억 이하 10%, 5억 이하 20%(누진공제 1천만), 10억 이하 30%(6천만), 30억 이하 40%(1억 6천만), 30억 초과 50%(4억 6천만).</li>
+      <li><b>세대생략 할증</b>(§27): 상속인이 피상속인의 자녀가 아닌 직계비속(손자녀 등)이면 산출세액 × (그가 받은 재산 ÷ 총상속재산) × 30%. 미성년자이면서 받은 재산가액이 20억 원을 넘으면 40%. 대습상속(자녀가 먼저 사망하여 손자녀가 상속)은 할증하지 않습니다.</li>
+      <li><b>증여세액공제</b>(§28): 과세가액에 가산한 사전증여재산에 대해 낸 증여세 산출세액을 공제하되, 상속세 산출세액 × (증여 과세표준 ÷ 상속세 과세표준)이 한도입니다. <b>외국납부세액공제</b>(§29), <b>단기재상속세액공제</b>(§30: 10년 이내 재상속 시 연 10%씩 체감).</li>
+      <li><b>신고세액공제</b>(§69): 기한 내 신고하면 (총산출세액 − 징수유예 − 증여세액공제 − 외국납부 − 단기재상속 − 그 밖의 공제·감면) × 3%. 납부를 하지 않아도 신고만 하면 적용됩니다.</li>
+      <li><b>가산세</b>(국세기본법 §47의2~§47의4): 무신고 20%(부정 40%), 과소신고 10%(부정 40%), 납부지연 1일 0.022%. 평가 차이로 인한 과소신고는 가산세를 면제합니다.</li>
+      <li><b>연부연납</b>(§71): 납부세액 2천만 원 초과 시 담보를 제공하고 최장 10년(가업상속재산은 최장 20년, 또는 10년 거치 후 10년) 분할 납부. 연 3.5% 가산금(2026년 기준, 확인 필요). <b>물납</b>(§73): 부동산·유가증권이 상속재산의 50%를 넘고 납부세액 2천만 원 초과 & 금융재산가액 초과분. <b>분납</b>(§70②): 납부세액 1천만 원 초과 시 2개월 내 분납 — 2천만 원 이하는 1천만 원 초과분, 2천만 원 초과는 50% 이하. 연부연납을 허가받으면 분납할 수 없습니다.</li>
+    </ul>
+  </details>
+</main>
+
+<script src="js/dh.js"></script>
 <script>
-    // 천 단위 구분자 함수
-    function formatCurrency(input) {
-        let value = input.value.replace(/[^\d]/g, '');
-        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        input.value = value;
-    }
+  const R = DH.RULES;
+  function radio(name){ const el=document.querySelector('input[name="'+name+'"]:checked'); return el?el.value:''; }
+  function N(id,n){ DH.set(id, n, {won:false}); }
+  function txt(id,s){ document.getElementById(id).textContent=s; }
+  function flag(id, msg, bad){ const el=document.getElementById(id); el.textContent = msg||''; el.className = msg ? (bad?'warn':'ok') : ''; }
 
-    // 모든 currency-input 클래스에 이벤트 리스너 추가
-    document.querySelectorAll('.currency-input').forEach(input => {
-        input.addEventListener('input', function() {
-            formatCurrency(this);
-            InheritanceTaxSelfAssessment(); // 값 변경 시 자동 계산
-        });
-    });
+  function recalc(){
+    const late = radio('filing')==='late';
+    const v17 = DH.val('v17'), v18 = DH.val('v18');
+    const v19 = Math.min(DH.val('feeRE'), R.appraisalMax) + Math.min(DH.val('feeStock'), R.appraisalStockMax);
+    let v20 = Math.max(0, v17 - v18 - v19);
+    const underMin = v20 > 0 && v20 < R.minTax;
+    if (underMin) v20 = 0;                                     // §25② 과세최저한
+    const rt = DH.inheritRateOf(v20);
+    const v22 = DH.inheritTax(v20);
+    // §27 세대생략 할증
+    const skip = DH.val('skipValue'), total = DH.val('totalValue'), minor = document.getElementById('skipMinor').checked;
+    const ratio = total>0 ? Math.min(1, skip/total) : 0;
+    const surRate = (minor && skip>2e9) ? R.surchargeMinorBig : R.surcharge;
+    const v23 = Math.floor(v22 * ratio * surRate);
+    const v24 = v22 + v23;
+    const v25 = DH.val('v25'), v26 = Math.min(DH.val('v26'), v24);
+    const v29 = DH.val('v29'), v30 = DH.val('v30'), v28 = v29 + v30;
+    const v31 = DH.val('v31'), v32 = DH.val('v32'), v34 = DH.val('v34');
+    const creditBase = Math.max(0, v24 - v26 - v28 - v31 - v32 - v34);
+    const v33 = late ? 0 : Math.floor(creditBase * R.reportCredit);     // §69 신고세액공제 3%
+    const v27 = v28 + v31 + v32 + v33 + v34;
+    const v35 = DH.val('v35');
+    const v36 = Math.max(0, v24 + v25 - v26 - v27 + v35);
+    const v37 = Math.min(DH.val('v37'), v36), v38 = DH.val('v38'), v39 = DH.val('v39');
+    const v40 = Math.max(0, v36 - v37 + v38 + v39);
 
-    // 모달 제어
-    const modals = {
-        modal1: document.getElementById("modal1"),
-        modal2: document.getElementById("modal2"),
-        modal3: document.getElementById("modal3"),
-        modal4: document.getElementById("modal4"),
-    };
+    // 납부 방법 검증
+    let v41 = DH.val('v41'), v42 = DH.val('v42'), v43 = DH.val('v43');
+    const notes = [];
+    if (v41>0 && v40<=2e7){ flag('n41','납부세액이 2천만 원 이하이면 연부연납을 신청할 수 없습니다.',true); v41=0; }
+    else if (v41>v40){ flag('n41','납부할 세액을 넘을 수 없어 '+DH.fmt(v40)+'원으로 봅니다.',true); v41=v40; }
+    else flag('n41','');
+    if (v42>0 && v40<=2e7){ flag('n42','납부세액이 2천만 원 이하이면 물납을 신청할 수 없습니다.',true); v42=0; }
+    else if (v41+v42>v40){ flag('n42','연부연납과 합쳐 납부할 세액을 넘을 수 없습니다.',true); v42=Math.max(0,v40-v41); }
+    else flag('n42','');
+    const splitLimit = v40<=1e7 ? 0 : v40<=2e7 ? v40-1e7 : Math.floor(v40/2);
+    if (v43>0 && v41>0){ flag('n43','연부연납을 신청하면 분납할 수 없습니다. 분납액을 0으로 봅니다.',true); v43=0; }
+    else if (v43>0 && splitLimit===0){ flag('n43','납부세액이 1천만 원 이하이면 분납할 수 없습니다.',true); v43=0; }
+    else if (v43>splitLimit){ flag('n43','분납 한도 '+DH.fmt(splitLimit)+'원을 넘어 한도로 봅니다.',true); v43=splitLimit; }
+    else if (splitLimit>0) flag('n43','분납 가능 한도 '+DH.fmt(splitLimit)+'원');
+    else flag('n43','');
+    if (v41+v42+v43>v40) v43 = Math.max(0, v40-v41-v42);
+    const v44 = Math.max(0, v40 - v41 - v42 - v43);
 
-    // 모달 열기 버튼
-    document.getElementById("openModal1").onclick = function() { modals.modal1.style.display = "block"; }
-    document.getElementById("openModal2").onclick = function() { modals.modal2.style.display = "block"; }
-    document.getElementById("openModal3").onclick = function() {
-        // 신고세액공제 계산
-        calculateReportedTaxCredit();
-        modals.modal3.style.display = "block";
-    }
-    document.getElementById("openModal4").onclick = function() { modals.modal4.style.display = "block"; }
+    N('v19',v19); N('v20',v20); txt('v21', v20>0 ? (rt.rate*100)+'% (누진공제 '+DH.fmt(rt.ded)+')' : '—');
+    N('v22',v22); N('v23',v23); N('v24',v24); N('v28',v28); N('v33',v33); N('v27',v27); N('v36',v36); N('v40',v40); N('v44',v44);
+    DH.set('r_base',v20); DH.set('r_calc',v24); txt('r_rateNote', v23>0 ? '(세대생략 할증 '+Math.round(surRate*100)+'% 포함)' : '');
+    DH.set('r_credit',v27); txt('r_creditNote', late ? '(기한 후 신고: 신고세액공제 없음)' : v33>0 ? '(신고세액공제 '+DH.kor(v33)+' 포함)' : '');
+    DH.set('r_pay',v40); DH.set('r_now',v44);
 
-    // 모달 닫기 버튼
-    document.querySelectorAll('.close').forEach(span => {
-        span.onclick = function() {
-            modals[span.getAttribute('data-modal')].style.display = "none";
-        }
-    });
-
-    // 모달 반영 버튼
-    document.querySelectorAll('button[data-apply]').forEach(button => {
-        button.onclick = function() {
-            const targetId = button.getAttribute('data-apply');
-            if (targetId === "reportedTaxCredit") {
-                // 신고세액공제는 계산된 값을 사용
-                document.getElementById(targetId).value = parseInt(document.getElementById("calculatedReportedTaxCredit").innerText.replace(/,/g, '')).toLocaleString();
-            } else {
-                const modalInputId = "modal" + targetId.charAt(0).toUpperCase() + targetId.slice(1);
-                document.getElementById(targetId).value = document.getElementById(modalInputId).value;
-            }
-            modals[button.parentElement.parentElement.id].style.display = "none";
-            InheritanceTaxSelfAssessment(); // 모달에서 값 반영 시 자동 계산
-        }
-    });
-
-    // 모달 외부 클릭 시 닫기
-    window.onclick = function(event) {
-        for (const key in modals) {
-            if (event.target == modals[key]) {
-                modals[key].style.display = "none";
-            }
-        }
-    }
-
-    // 숫자 변환 함수
-    function unformatCurrency(value) {
-        return parseInt(value.replace(/,/g, '')) || 0;
-    }
-
-    // 세율 및 누진공제 계산 함수
-    function getTaxRate(taxableBase) {
-        if (taxableBase <= 100000000) {
-            return { rate: 0.10, deduction: 0 };
-        } else if (taxableBase <= 500000000) {
-            return { rate: 0.20, deduction: 10000000 };
-        } else if (taxableBase <= 1000000000) {
-            return { rate: 0.30, deduction: 60000000 };
-        } else if (taxableBase <= 3000000000) {
-            return { rate: 0.40, deduction: 160000000 };
-        } else {
-            return { rate: 0.50, deduction: 460000000 };
-        }
-    }
-
-    // 신고세액공제 계산 함수
-    function calculateReportedTaxCredit() {
-        const totalCalculatedTax = unformatCurrency(document.getElementById("totalCalculatedTax").value);
-        const culturalHeritageDeferredTax = unformatCurrency(document.getElementById("culturalHeritageDeferredTax").value);
-        const subtotal = unformatCurrency(document.getElementById("subtotal").value);
-        const foreignTaxCredit = unformatCurrency(document.getElementById("foreignTaxCredit").value);
-        const shortTermTaxCredit = unformatCurrency(document.getElementById("shortTermTaxCredit").value);
-
-        const baseForCredit = totalCalculatedTax - culturalHeritageDeferredTax - (subtotal + foreignTaxCredit + shortTermTaxCredit);
-        let reportedTaxCredit = Math.floor(baseForCredit * 0.03);
-        if (reportedTaxCredit < 0) reportedTaxCredit = 0;
-
-        document.getElementById("calculatedReportedTaxCredit").innerText = reportedTaxCredit.toLocaleString();
-    }
-
-    // 계산 함수
-    function InheritanceTaxSelfAssessment() {
-        const taxableInheritanceAmount = unformatCurrency(document.getElementById("taxableInheritanceAmount").value);
-        const inheritanceDeductionAmount = unformatCurrency(document.getElementById("inheritanceDeductionAmount").value);
-
-        // 감정평가 수수료 최대 500만 원으로 제한
-        let appraisalFee = unformatCurrency(document.getElementById("appraisalFee").value);
-        if (appraisalFee > 5000000) {
-            appraisalFee = 5000000;
-            document.getElementById("appraisalFee").value = appraisalFee.toLocaleString();
-        }
-
-        let taxableBase = taxableInheritanceAmount - inheritanceDeductionAmount - appraisalFee;
-        if (taxableBase <= 0) taxableBase = 0;
-        document.getElementById("taxableBase").value = taxableBase.toLocaleString();
-
-        // 세율 및 누진공제 계산
-        const { rate, deduction } = getTaxRate(taxableBase);
-        document.getElementById("taxRate").value = (rate * 100).toFixed(0) + "%";
-
-        const calculatedTax = taxableBase * rate - deduction;
-        document.getElementById("calculatedTax").value = Math.round(calculatedTax).toLocaleString();
-
-        const generationSkippingSurtax = unformatCurrency(document.getElementById("generationSkippingSurtax").value);
-        const totalCalculatedTax = calculatedTax + generationSkippingSurtax;
-        document.getElementById("totalCalculatedTax").value = Math.round(totalCalculatedTax).toLocaleString();
-
-        const interestAmount = unformatCurrency(document.getElementById("interestAmount").value);
-        const culturalHeritageDeferredTax = unformatCurrency(document.getElementById("culturalHeritageDeferredTax").value);
-
-        const giftTaxInheritanceAct = unformatCurrency(document.getElementById("giftTaxInheritanceAct").value);
-        const giftTaxSpecialAct = unformatCurrency(document.getElementById("giftTaxSpecialAct").value);
-        // 소계 계산 (㉘ = ㉙ + ㉚)
-        const subtotal = giftTaxInheritanceAct + giftTaxSpecialAct;
-        document.getElementById("subtotal").value = subtotal.toLocaleString();
-
-        const foreignTaxCredit = unformatCurrency(document.getElementById("foreignTaxCredit").value);
-        const shortTermTaxCredit = unformatCurrency(document.getElementById("shortTermTaxCredit").value);
-        const reportedTaxCredit = unformatCurrency(document.getElementById("reportedTaxCredit").value);
-        const otherDeductions = unformatCurrency(document.getElementById("otherDeductions").value);
-
-        // 계 계산 (계 = ㉘ + ㉛ + ㉜ + ㉝ + ㉞)
-        const totalDeductions = subtotal + foreignTaxCredit + shortTermTaxCredit + reportedTaxCredit + otherDeductions;
-        document.getElementById("totalDeductions").value = totalDeductions.toLocaleString();
-
-        const profitCorpTaxExemption = unformatCurrency(document.getElementById("profitCorpTaxExemption").value);
-
-        let amountAfterDeductions = totalCalculatedTax + interestAmount - culturalHeritageDeferredTax - totalDeductions + profitCorpTaxExemption;
-        if (amountAfterDeductions <= 0) amountAfterDeductions = 0;
-        document.getElementById("amountAfterDeductions").value = Math.round(amountAfterDeductions).toLocaleString();
-
-        const deferredBusinessInheritanceTax = unformatCurrency(document.getElementById("deferredBusinessInheritanceTax").value);
-        const underReportingPenalty = unformatCurrency(document.getElementById("underReportingPenalty").value);
-        const delayedPaymentPenalty = unformatCurrency(document.getElementById("delayedPaymentPenalty").value);
-
-        const amountToBePaid = amountAfterDeductions - deferredBusinessInheritanceTax + underReportingPenalty + delayedPaymentPenalty;
-        document.getElementById("amountToBePaid").value = Math.round(amountToBePaid).toLocaleString();
-
-        const installmentPayment = unformatCurrency(document.getElementById("installmentPayment").value);
-        const paymentInKind = unformatCurrency(document.getElementById("paymentInKind").value);
-        const partialPayment = unformatCurrency(document.getElementById("partialPayment").value);
-
-        const finalPaymentAmount = amountToBePaid - installmentPayment - paymentInKind - partialPayment;
-        document.getElementById("finalPaymentAmount").value = Math.round(finalPaymentAmount).toLocaleString();
-    }
+    if (underMin) notes.push('과세표준이 50만 원 미만이라 상속세를 부과하지 않습니다(§25②).');
+    if (v17>0 && v20===0 && !underMin) notes.push('과세표준이 0원입니다. 상속세는 없지만 신고하면 취득가액이 인정되어 유리합니다.');
+    if (v23>0) notes.push('세대생략 할증은 대습상속에는 적용되지 않습니다. 손자녀가 대습상속인이면 ㉓의 입력을 비우세요.');
+    if (v40>2e7 && v41===0 && v42===0 && v43===0) notes.push('납부세액이 2천만 원을 넘어 연부연납(최장 10년)·물납·분납을 검토할 수 있습니다.');
+    if (v41>0) notes.push('연부연납은 신고기한까지 신청하고 납세담보를 제공해야 하며, 각 회분에 가산금이 붙습니다.');
+    if (!notes.length) notes.push('신고·납부 기한은 상속개시일이 속한 달의 말일부터 6개월(피상속인·상속인 전원이 외국 거주 시 9개월)입니다.');
+    txt('r_note', notes.join(' '));
+  }
+  window.DH_recalc = recalc;
+  document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('DOMContentLoaded', recalc);
 </script>
-
 </body>
 </html>

@@ -1,268 +1,226 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>상속 공제 계산기</title>
-  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    table, th, td {
-      border: 1px solid black;
-    }
-
-    th, td {
-      padding: 10px;
-      text-align: left;
-    }
-
-    .input-field {
-      width: 150px;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: white;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    }
-
-    .modal.open {
-      display: block;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속공제 계산기 · 대한세무법인</title>
+<meta name="description" content="기초·인적공제와 일괄공제, 배우자상속공제, 금융재산·동거주택·가업·영농상속공제를 한 번에 계산하고 공제 종합한도까지 적용합니다. 2026년 시행 세법 기준.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  .fam{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .fam label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .fam input{max-width:none}
+  .kv .sub{display:block;font-weight:400}
+  .is-off{opacity:.45}
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
 </head>
-<body>
-  <h4>라.상속 공제</h4>
+<body data-store="inherit-deduction" data-subject="상속공제" data-autoload="1">
 
-  <table>
-    
-    <tbody>
-        
-      <tr>
-        <td rowspan="5"> 기초공제 및 <br> 그 밖의 인적공제 </td>
-        <td>1. 기초공제</td>
-        <td><input type="text" id="baseDeduction" class="input-field" value="200,000,000" readonly></td>
-       
-      </tr>
-      <tr>
-        <td>2. 자녀공제 <button onclick="openModal('child')">계산</button></td>
-        <td><input type="text" id="childDeduction" class="input-field" value="0" readonly></td>
-       
-      </tr>
-      <tr>
-        <td>3. 미성년자공제 <button onclick="openModal('minor')">계산</button></td>
-        <td><input type="text" id="minorDeduction" class="input-field" value="0" readonly></td>
-       
-      </tr>
-      <tr>
-        <td>4. 연로자공제 <button onclick="openModal('elder')">계산</button></td>
-        <td><input type="text" id="elderDeduction" class="input-field" value="0" readonly></td>
-       
-      </tr>
-      <tr>
-        <td>5. 장애인공제 <button onclick="openModal('disabled')">계산</button></td>
-        <td><input type="text" id="disabledDeduction" class="input-field" value="0" readonly></td>
-        
-      </tr>
-      <tr>
-        <td colspan="2">6. 일괄공제</td>
-        <td><input type="text" id="totalDeduction" class="input-field" value="500,000,000" readonly></td>
-       
-      </tr>
-      <tr>
-        <td rowspan="2">추가 상속공제 </td>
-        <td>7. 가업상속공제</td>
-        <td><input type="text" id="businessInheritance" class="input-field" value="0" oninput="formatAndCalculate()"></td>
-       
-      </tr>
-      <tr>
-        <td>8. 영농상속공제</td>
-        <td><input type="text" id="farmingInheritance" class="input-field" value="0" oninput="formatAndCalculate()"></td>
-       
-      </tr>
-      <tr>
-        <td colspan="2">9. 배우자상속공제</td>
-        <td><input type="text" id="spouseInheritance" class="input-field" value="0" oninput="formatAndCalculate()"></td>
-       
-      </tr>
-      <tr>
-        <td colspan="2">10. 금융재산상속공제</td>
-        <td><input type="text" id="financialInheritance" class="input-field" value="0" oninput="formatAndCalculate()"></td>
-       
-      </tr>
-      <tr>
-        <td colspan="2">11. 재해손실세액공제</td>
-        <td><input type="text" id="disasterTaxDeduction" class="input-field" value="0" oninput="formatAndCalculate()"></td>
-        
-      </tr>
-      <tr>
-        <td colspan="2">12. 동거주택상속공제</td>
-        <td><input type="text" id="cohabitationDeduction" class="input-field" value="0" oninput="formatAndCalculate()"></td>
-       
-      </tr>
-      <tr>
-        <td colspan="2">13. 공제적용한도액</td>
-        <td><input type="text" id="deductionLimit" class="input-field" value="0" oninput="formatAndCalculate()"></td>
-      
-      </tr>
-
-      <tr>
-        <td colspan="2"><strong>14. 상속 공제 금액 합계</strong></td>
-        <td><input type="text" id="totalDeductionSum" class="input-field" value="0" readonly></td>
-      
-      </tr>
-    </tbody>
-  </table>
-  <table>
-    <tr>
-      <td>신청(신고)인 제출서류 </td>
-      <td> 1. 채부부담 및 공과금.  장례비. 감정평가수수료 지급 입증서류 </td>
-    </tr>   
-  </table>
-
-  <!-- Modal Template -->
-  <div id="modal" class="modal">
-    <label id="modalTitle"></label><br>
-    <label id="modalDescription"></label><br>
-    <input type="number" id="modalInput1" class="input-field" placeholder="입력값"><br>
-    <input type="number" id="modalInput2" class="input-field" placeholder="추가 입력값" style="display:none;"><br>
-    <button onclick="applyModal()">반영</button><br>
-    <button onclick="closeModal()">닫기</button>
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 계산기</div>
+    <span class="form-no">별지 제9호서식 부표3 "라. 상속공제" 작성 보조</span>
+    <h1>상속공제 계산기</h1>
+    <p>가족 구성과 재산 내용을 넣으면 각 공제액과 공제 합계, 그리고 공제 종합한도를 적용한 최종 상속공제액이 바로 계산됩니다.</p>
   </div>
 
-  <script>
-    let currentModal = '';
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
 
-    function openModal(type) {
-    currentModal = type;
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalDescription = document.getElementById('modalDescription');
-    const modalInput2 = document.getElementById('modalInput2');
-    
-    modalInput2.style.display = 'none'; // 기본적으로 추가 입력 필드를 숨김
+  <div data-save>
+    <section class="card">
+      <h2>1. 기초공제·인적공제 <small>일괄공제 5억과 비교</small></h2>
+      <div class="field"><label>신고 구분</label>
+        <div class="ctl radio-row">
+          <label><input type="radio" name="filing" value="ontime" checked><span>기한 내 신고</span></label>
+          <label><input type="radio" name="filing" value="late"><span>기한 후 신고·무신고</span></label>
+        </div></div>
+      <div class="field"><label>배우자</label>
+        <div class="ctl radio-row">
+          <label><input type="radio" name="spouse" value="yes" checked><span>있음</span></label>
+          <label><input type="radio" name="spouse" value="no"><span>없음</span></label>
+        </div></div>
+      <div class="field"><label>배우자 단독상속 <small>다른 상속인이 없거나 모두 포기하여 배우자 혼자 상속</small></label>
+        <div class="ctl"><label class="check"><input type="checkbox" id="spouseOnly"> 배우자가 단독으로 상속 (일괄공제 불가)</label></div></div>
+      <div class="field"><label>인적공제 대상 <small>상속인·동거가족</small></label>
+        <div class="ctl fam">
+          <div><label for="childCount">자녀 수 <small>(1인 5천만)</small></label><input type="number" id="childCount" class="short" min="0" step="1" value="1"></div>
+          <div><label for="minorYears">미성년자 잔여연수 합 <small>(19세까지, 1년 1천만)</small></label><input type="number" id="minorYears" class="short" min="0" step="1" value="0"></div>
+          <div><label for="seniorCount">65세 이상 동거가족 수 <small>(배우자 제외, 1인 5천만)</small></label><input type="number" id="seniorCount" class="short" min="0" step="1" value="0"></div>
+          <div><label for="disabledYears">장애인 기대여명 합 <small>(1년 1천만)</small></label><input type="number" id="disabledYears" class="short" min="0" step="1" value="0"></div>
+        </div></div>
+    </section>
 
-    switch (type) {
-        case 'child':
-        modalTitle.textContent = '자녀공제'; 
-        modalDescription.textContent = ': 자녀수 * 1인당 5천만원 ';
-        break;
+    <section class="card" id="spouseCard">
+      <h2>2. 배우자상속공제 <small>최소 5억, 한도 min(법정상속분, 30억)</small></h2>
+      <div class="field"><label for="spouseActual">배우자가 실제 상속받은 금액 <small>기한 내 분할·등기한 금액. 비우면 5억</small></label>
+        <div class="ctl"><input type="text" id="spouseActual" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="shareBase">법정상속분 계산 기준 재산가액 <small>상속재산 − 비과세·채무·공과금 + 상속인 사전증여</small></label>
+        <div class="ctl"><input type="text" id="shareBase" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="spouseGiftBase">배우자 사전증여 과세표준 <small>한도에서 차감. 없으면 비움</small></label>
+        <div class="ctl"><input type="text" id="spouseGiftBase" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <p class="hint">법정상속분 = 기준 재산가액 × 1.5 ÷ (1.5 + 자녀 수). 자녀 수는 1번의 값을 씁니다. 배우자 단독상속이면 100%입니다.</p>
+    </section>
 
-        case 'minor':
-        modalTitle.textContent = '미성년자공제'; // 미성년자 수를 입력받음
-        modalDescription.textContent = ': 미성년자들의 잔여연수(19세까지) 합산 * 1천만원'; // 설명 변경
-        modalInput2.style.display = 'none'; // 추가 입력 필드를 숨김 (필요 없음)
-        break;
+    <section class="card">
+      <h2>3. 금융재산·동거주택 상속공제</h2>
+      <div class="field"><label for="netFin">순금융재산가액 <small>금융재산 − 금융채무</small></label>
+        <div class="ctl"><input type="text" id="netFin" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseValue">동거주택 가액 <small>10년 이상 동거한 무주택 직계비속이 상속</small></label>
+        <div class="ctl"><input type="text" id="houseValue" data-money placeholder="해당 없으면 비움"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseDebt">위 주택의 담보채무 <small>주택가액에서 뺌</small></label>
+        <div class="ctl"><input type="text" id="houseDebt" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    </section>
 
-        case 'elder':
-        modalTitle.textContent = '연로자 공제';
-        modalDescription.textContent = ':연로자수 * 1인당 5천만원';
-        break;
+    <section class="card">
+      <h2>4. 가업·영농상속공제, 재해손실공제 <small>요건 충족 시 금액을 직접 입력</small></h2>
+      <div class="field"><label for="bizValue">가업상속재산가액 <small>가업상속공제 대상</small></label>
+        <div class="ctl"><input type="text" id="bizValue" data-money placeholder="해당 없으면 비움"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="bizYears">피상속인의 가업 경영기간</label>
+        <div class="ctl"><select id="bizYears" class="mid">
+          <option value="10">10년 이상 20년 미만 (한도 300억)</option>
+          <option value="20">20년 이상 30년 미만 (한도 400억)</option>
+          <option value="30">30년 이상 (한도 600억)</option>
+        </select></div></div>
+      <div class="field"><label for="farmValue">영농상속재산가액 <small>한도 30억</small></label>
+        <div class="ctl"><input type="text" id="farmValue" data-money placeholder="해당 없으면 비움"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="disasterValue">재해손실공제 <small>신고기한 내 재해로 멸실·훼손된 가액 − 보험금 등</small></label>
+        <div class="ctl"><input type="text" id="disasterValue" data-money placeholder="해당 없으면 비움"><span class="unit">원</span><span class="won"></span></div></div>
+    </section>
 
-        case 'disabled':
-        modalTitle.textContent = '장애인 공제';
-        modalDescription.textContent = ': 장애인 기대여명 연수 합계 * 1천만원 ';
-        modalInput2.style.display = 'none'; // 추가 입력 필드를 숨김 (필요 없음)        
-        break;
+    <section class="card">
+      <h2>5. 공제 종합한도 <small>§24 — 과세가액을 넣으면 한도가 적용됩니다</small></h2>
+      <div class="field"><label for="taxable">상속세 과세가액 <small>과세가액 계산명세서 ㉗</small></label>
+        <div class="ctl"><input type="text" id="taxable" data-money placeholder="비우면 한도 미적용"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="bequest">상속인 아닌 자에 대한 유증·사인증여 재산가액</label>
+        <div class="ctl"><input type="text" id="bequest" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="renounced">상속포기로 후순위 상속인이 받은 재산가액</label>
+        <div class="ctl"><input type="text" id="renounced" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="giftBase">사전증여재산의 증여세 과세표준 <small>과세가액 5억 초과 시에만 차감</small></label>
+        <div class="ctl"><input type="text" id="giftBase" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    </section>
+  </div>
+
+  <section class="result" id="result">
+    <h2>계산 결과</h2>
+    <div class="kv"><span>기초공제 2억 + 인적공제 <span class="sub" id="r_personalNote"></span></span><b id="r_personal">0원</b></div>
+    <div class="kv"><span>→ 적용 (일괄공제 5억과 비교) <span class="sub" id="r_d1note"></span></span><b id="r_d1">0원</b></div>
+    <div class="kv"><span>배우자상속공제 <span class="sub" id="r_d2note"></span></span><b id="r_d2">0원</b></div>
+    <div class="kv"><span>금융재산상속공제 <span class="sub">2천만 이하 전액 · 1억 이하 2천만 · 초과 20% (한도 2억)</span></span><b id="r_d3">0원</b></div>
+    <div class="kv"><span>동거주택상속공제 <span class="sub">(주택가액 − 담보채무) 100%, 한도 6억</span></span><b id="r_d4">0원</b></div>
+    <div class="kv"><span>가업상속공제 <span class="sub" id="r_d5note"></span></span><b id="r_d5">0원</b></div>
+    <div class="kv"><span>영농상속공제 <span class="sub">한도 30억</span></span><b id="r_d6">0원</b></div>
+    <div class="kv"><span>재해손실공제</span><b id="r_d7">0원</b></div>
+    <div class="kv"><span>공제 합계</span><b id="r_sum">0원</b></div>
+    <div class="kv"><span>공제 종합한도 <span class="sub" id="r_limitNote"></span></span><b id="r_limit">—</b></div>
+    <div class="kv total"><span>상속공제액 (한도 적용 후)</span><b id="r_final">0원</b></div>
+    <div class="note" id="r_note"></div>
+  </section>
+
+  <div class="actions no-print">
+    <a class="btn ghost" href="inheritance-deduction-limit.html">종합한도만 따로 계산</a>
+    <a class="btn ghost" href="cal_Inherit_simple.html">상속세 전체 계산</a>
+  </div>
+
+  <details class="dh"><summary>법령 해설 (상속세 및 증여세법)</summary>
+    <ul>
+      <li><b>기초공제</b> 2억 원(§18). <b>그 밖의 인적공제</b>(§20): 자녀 1인당 5천만 원, 미성년자는 19세까지의 잔여연수 × 1천만 원, 65세 이상 동거가족 1인당 5천만 원, 장애인은 기대여명 × 1천만 원. 자녀가 미성년자이면 자녀공제와 미성년자공제를 함께 받고, 장애인공제는 다른 인적공제와 중복 적용됩니다.</li>
+      <li><b>일괄공제</b>(§21): 기초공제 + 인적공제 합계와 5억 원 중 큰 금액을 선택합니다. 기한 내 신고가 없으면 5억 원(일괄공제)만 적용되고, 배우자가 단독으로 상속받으면 일괄공제를 쓸 수 없어 기초공제 + 인적공제만 적용합니다.</li>
+      <li><b>배우자상속공제</b>(§19): 배우자가 실제 상속받은 금액을 공제하되, 한도는 ① 법정상속분(상속재산가액 × 배우자 법정상속지분 − 배우자 사전증여 과세표준)과 ② 30억 원 중 작은 금액입니다. 실제 상속받은 금액이 없거나 5억 원 미만이면 5억 원을 공제합니다. 5억 원을 초과하여 공제받으려면 신고기한 다음 날부터 9개월 안에 배우자 몫을 분할(등기·등록)해야 합니다.</li>
+      <li><b>금융재산상속공제</b>(§22): 순금융재산(금융재산 − 금융채무)이 2천만 원 이하이면 전액, 1억 원 이하이면 2천만 원, 1억 원 초과이면 20%(한도 2억 원). 최대주주 보유 주식은 제외됩니다.</li>
+      <li><b>동거주택상속공제</b>(§23의2): 피상속인과 10년 이상 하나의 주택에서 동거한 무주택 직계비속(또는 그 배우자)이 상속받는 주택은 주택가액(담보채무 차감)의 100%, 한도 6억 원.</li>
+      <li><b>가업상속공제</b>(§18의2): 10년 이상 계속 경영한 중소·중견기업의 가업상속재산을 피상속인 경영기간에 따라 300억(10년 이상)·400억(20년 이상)·600억(30년 이상)을 한도로 공제. <b>영농상속공제</b>(§18의3): 한도 30억 원. 두 공제 모두 사후관리(5년) 의무가 있습니다.</li>
+      <li><b>재해손실공제</b>(§23): 신고기한 내에 재난으로 상속재산이 멸실·훼손된 경우 그 손실가액(보험금 등으로 보전되는 금액 제외)을 공제합니다.</li>
+      <li><b>공제 종합한도</b>(§24): 위 공제 합계는 「상속세 과세가액 − 상속인 아닌 자에 대한 유증·사인증여 − 상속포기로 후순위 상속인이 받은 재산 − 사전증여재산의 증여세 과세표준(과세가액이 5억 원을 초과하는 경우에만)」을 넘을 수 없습니다. 과세가액을 비워 두면 한도를 적용하지 않고 공제 합계를 그대로 보여 줍니다.</li>
+    </ul>
+  </details>
+</main>
+
+<script src="js/dh.js"></script>
+<script>
+  const R = DH.RULES;
+  const BIZ_CAP = { 10: 3e10, 20: 4e10, 30: 6e10 };   // 가업상속공제 한도 (2026.10 현행)
+  const FARM_CAP = 3e9;                                // 영농상속공제 한도
+  function radio(name){ const el=document.querySelector('input[name="'+name+'"]:checked'); return el?el.value:''; }
+  function raw(id){ const el=document.getElementById(id); return el ? el.value.trim() : ''; }
+  function cnt(id){ return Math.max(0, Math.floor(DH.num(document.getElementById(id).value))); }
+  function txt(id, s){ document.getElementById(id).textContent = s; }
+
+  function recalc(){
+    const late = radio('filing')==='late';
+    const hasSpouse = radio('spouse')==='yes';
+    const spouseOnlyEl = document.getElementById('spouseOnly');
+    if (!hasSpouse) spouseOnlyEl.checked = false;
+    spouseOnlyEl.disabled = !hasSpouse;
+    const spouseOnly = hasSpouse && spouseOnlyEl.checked;
+    document.getElementById('spouseCard').classList.toggle('is-off', !hasSpouse);
+
+    const children=cnt('childCount'), minorY=cnt('minorYears'), seniors=cnt('seniorCount'), disY=cnt('disabledYears');
+    const personal = R.basic + children*R.child + minorY*R.minorPerYear + seniors*R.senior + disY*R.disabledPerYear;
+    txt('r_personalNote', '(자녀 '+children+'명, 미성년 '+minorY+'년, 연로자 '+seniors+'명, 장애인 '+disY+'년)');
+
+    // §21: 일괄공제와 비교. 배우자 단독상속 → 일괄 불가, 무신고·기한후 → 일괄만
+    let d1, d1note;
+    if (spouseOnly){ d1=personal; d1note='배우자 단독상속: 기초+인적공제만 (일괄공제 불가)'; }
+    else if (late){ d1=R.lumpSum; d1note='기한 후 신고·무신고: 일괄공제 5억만'; }
+    else if (personal>R.lumpSum){ d1=personal; d1note='기초+인적공제가 5억보다 커서 그대로 적용'; }
+    else { d1=R.lumpSum; d1note='일괄공제 5억 적용'; }
+
+    // §19 배우자상속공제
+    let d2=0, d2note='배우자 없음';
+    if (hasSpouse){
+      const shareBase = DH.val('shareBase');
+      const ratio = spouseOnly ? 1 : 1.5/(1.5+children);
+      const legal = Math.floor(shareBase*ratio) - DH.val('spouseGiftBase');
+      const limit = Math.max(0, Math.min(legal, R.spouseMax));
+      const actual = DH.val('spouseActual');
+      d2 = Math.max(R.spouseMin, Math.min(actual, limit));
+      d2note = '실제 상속액 '+(actual?DH.kor(actual):'없음')+' · 한도 '+DH.kor(limit)+(shareBase?'':' (기준 재산가액 미입력)')+(d2===R.spouseMin?' → 최소 5억':'');
+    }
+    const d3 = DH.finDeduction(DH.val('netFin'));
+    const d4 = Math.min(DH.clamp0(DH.val('houseValue') - DH.val('houseDebt')), R.cohabitMax);
+    const bizCap = BIZ_CAP[document.getElementById('bizYears').value] || BIZ_CAP[10];
+    const d5 = Math.min(DH.val('bizValue'), bizCap);
+    txt('r_d5note', '한도 '+DH.kor(bizCap));
+    const d6 = Math.min(DH.val('farmValue'), FARM_CAP);
+    const d7 = DH.val('disasterValue');
+
+    const sum = d1+d2+d3+d4+d5+d6+d7;
+    const taxableRaw = raw('taxable');
+    let final = sum, limitAll = null, limitNote = '과세가액 미입력 → 한도 미적용';
+    if (taxableRaw !== ''){
+      const taxable = DH.val('taxable');
+      limitAll = DH.deductionLimit(taxable, DH.val('bequest'), DH.val('renounced'), DH.val('giftBase'));
+      final = Math.min(sum, limitAll);
+      limitNote = taxable>5e8 ? '과세가액 5억 초과: 사전증여 과세표준 차감' : '과세가액 5억 이하: 사전증여 과세표준 차감 없음';
     }
 
-    modal.classList.add('open');
-    }
+    DH.set('r_personal',personal); DH.set('r_d1',d1); txt('r_d1note', d1note);
+    DH.set('r_d2',d2); txt('r_d2note', d2note);
+    DH.set('r_d3',d3); DH.set('r_d4',d4); DH.set('r_d5',d5); DH.set('r_d6',d6); DH.set('r_d7',d7);
+    DH.set('r_sum',sum);
+    if (limitAll===null) txt('r_limit','—'); else DH.set('r_limit',limitAll);
+    txt('r_limitNote', limitNote);
+    DH.set('r_final',final);
 
-    function closeModal() {
-    const modal = document.getElementById('modal');
-    modal.classList.remove('open');
-    }
-
-    function applyModal() {
-    const value1 = parseInt(document.getElementById('modalInput1').value) || 0;
-    const value2 = parseInt(document.getElementById('modalInput2').value) || 0; // 추가 입력값
-    const baseAmounts = {
-        child: 50000000,
-        minor: 10000000,
-        elder: 50000000,
-        disabled: 10000000
-    };
-    let calculatedValue = 0;
-
-    switch (currentModal) {
-        case 'child':
-        calculatedValue = value1 * baseAmounts.child;
-        document.getElementById('childDeduction').value = formatNumber(calculatedValue);
-        break;
-        case 'minor':
-
-        // 미성년자 수만을 입력받아 단순 계산
-        calculatedValue = value1 * baseAmounts.minor; // 미성년자들의  19세까지의 잔여연수 * 1천만원
-        document.getElementById('minorDeduction').value = formatNumber(calculatedValue); // 계산 결과를 화면에 표시
-        break;
-
-        case 'elder':
-        calculatedValue = value1 * baseAmounts.elder;
-        document.getElementById('elderDeduction').value = formatNumber(calculatedValue);
-        break;
-        case 'disabled':
-        calculatedValue = value1 * baseAmounts.disabled; // 기대여명 연수에 따른 계산
-        document.getElementById('disabledDeduction').value = formatNumber(calculatedValue);
-        break;
-    }
-
-    closeModal();
-    calculateInheritDeductionTotal();
-    }
-
-    function formatAndCalculate() {
-    const inputs = ['businessInheritance', 'farmingInheritance', 'spouseInheritance', 'financialInheritance', 'disasterTaxDeduction', 'cohabitationDeduction'];
-    inputs.forEach(id => {
-        const input = document.getElementById(id);
-        input.value = formatNumber(parseNumber(input.value));
-    });
-    calculateInheritDeductionTotal();
-    }
-
-    function formatNumber(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    }
-
-    function parseNumber(numStr) {
-    return parseInt(numStr.replace(/,/g, '')) || 0;
-    }
-
-    function calculateInheritDeductionTotal() {
-    const baseDeduction = parseNumber(document.getElementById('baseDeduction').value);
-    const childDeduction = parseNumber(document.getElementById('childDeduction').value);
-    const minorDeduction = parseNumber(document.getElementById('minorDeduction').value);
-    const elderDeduction = parseNumber(document.getElementById('elderDeduction').value);
-    const disabledDeduction = parseNumber(document.getElementById('disabledDeduction').value);
-    const totalDeduction = parseNumber(document.getElementById('totalDeduction').value);
-    const businessInheritance = parseNumber(document.getElementById('businessInheritance').value);
-    const farmingInheritance = parseNumber(document.getElementById('farmingInheritance').value);
-    const spouseInheritance = parseNumber(document.getElementById('spouseInheritance').value);
-    const financialInheritance = parseNumber(document.getElementById('financialInheritance').value);
-    const disasterTaxDeduction = parseNumber(document.getElementById('disasterTaxDeduction').value);
-    const cohabitationDeduction = parseNumber(document.getElementById('cohabitationDeduction').value);
-    const deductionLimit = parseNumber(document.getElementById('deductionLimit').value);
-
-    const subtotal = baseDeduction + childDeduction + minorDeduction + elderDeduction + disabledDeduction;
-    const maxTotal = Math.max(subtotal, totalDeduction);
-    let finalTotal = maxTotal + businessInheritance + farmingInheritance + spouseInheritance + financialInheritance + disasterTaxDeduction + cohabitationDeduction;
-
-    if (deductionLimit > 0) {
-        finalTotal = Math.min(finalTotal, deductionLimit);
-    }
-
-    document.getElementById('totalDeductionSum').value = formatNumber(finalTotal);
-    }
-
-
-  </script>
+    const notes=[];
+    if (limitAll!==null && sum>limitAll) notes.push('공제 합계 '+DH.kor(sum)+'이 종합한도 '+DH.kor(limitAll)+'을 넘어 한도까지만 공제됩니다.');
+    if (hasSpouse && d2>R.spouseMin) notes.push('배우자공제 5억 초과분은 신고기한 다음 날부터 9개월 안에 배우자 몫을 분할(등기·등록)해야 인정됩니다.');
+    if (d5>0 || d6>0) notes.push('가업·영농상속공제는 요건 확인과 5년 사후관리가 필요합니다. 요건 미충족 시 추징됩니다.');
+    if (!notes.length) notes.push('공제 합계가 그대로 상속공제액이 됩니다. 과세가액에서 이 금액과 감정평가수수료를 빼면 과세표준입니다.');
+    txt('r_note', notes.join(' '));
+  }
+  window.DH_recalc = recalc;
+  document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('DOMContentLoaded', recalc);
+</script>
 </body>
 </html>

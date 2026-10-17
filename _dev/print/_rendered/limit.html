@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속공제 종합한도 계산기 · 대한세무법인</title>
+<meta name="description" content="상속세 과세가액에서 상속인 아닌 자에 대한 유증, 상속포기로 후순위가 받은 재산, 사전증여 과세표준을 빼서 상속공제 종합한도(상증법 §24)를 계산합니다.">
+
+
+<link rel="stylesheet" href="/home/claude/inherit/css/dh.css">
+<style>
+  .faq dt{font-weight:700;color:var(--main);margin:14px 0 4px}
+  .faq dt::before{content:"Q. "}
+  .faq dd{margin:0;word-break:keep-all}
+  .faq dd ol,.faq dd ul{margin:6px 0 0;padding-left:20px}
+  .faq dt:first-child{margin-top:4px}
+  @media print{.faq{font-size:9.5pt}.faq dt{margin:2.5mm 0 0.5mm}details.dh[open]{break-before:auto}}
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
+</head>
+<body data-store="inherit-deduction-limit" data-subject="상속공제 종합한도" data-autoload="1"><header class="dh-top"><div class="wrap"><a class="logo" href="./">대한세무법인 <span>상속·증여</span></a><nav><a href="./">상속세</a><a href="gift.html">상황별 증여세</a><a class="hide-m" href="https://daehantax.github.io/tax/">전체 세무 도구 →</a></nav></div></header>
+
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 계산기</div>
+    <span class="form-no">별지 제9호서식 부표3 "13. 공제적용한도액"</span>
+    <h1>상속공제 종합한도 계산기</h1>
+    <p>상속공제는 무한정 받을 수 없습니다. 과세가액에서 세 가지 금액을 뺀 "공제적용한도액"까지만 공제되며, 사전증여가 많을수록 한도가 줄어듭니다.</p>
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
+
+  <div data-save="">
+    <section class="card">
+      <h2>입력 <small>상속세 과세가액 계산명세서의 금액</small></h2>
+      <div class="field"><label for="taxable">상속세 과세가액 <small>과세가액 계산명세서 ㉗</small></label>
+        <div class="ctl"><input type="text" id="taxable" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="600,000,000"><span class="unit">원</span><span class="won">6억원</span></div></div>
+      <div class="field"><label for="bequest">− 상속인이 아닌 자에게 유증·사인증여한 재산가액 <small>손자·며느리·단체 등</small></label>
+        <div class="ctl"><input type="text" id="bequest" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="100,000,000"><span class="unit">원</span><span class="won">1억원</span></div></div>
+      <div class="field"><label for="renounced">− 상속인의 상속포기로 다음 순위 상속인이 받은 재산가액</label>
+        <div class="ctl"><input type="text" id="renounced" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="giftBase">− 사전증여재산의 증여세 과세표준 <small>증여재산가액 − 증여재산공제. 과세가액 5억 초과 시에만 차감</small></label>
+        <div class="ctl"><input type="text" id="giftBase" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="300,000,000"><span class="unit">원</span><span class="won">3억원</span></div></div>
+    </section>
+  </div>
+
+  <section class="result" id="result">
+    <h2>계산 결과</h2>
+    <div class="kv"><span>상속세 과세가액</span><b id="r_taxable">600,000,000원</b></div>
+    <div class="kv"><span>− 상속인 아닌 자에 대한 유증·사인증여</span><b id="r_bequest">100,000,000원</b></div>
+    <div class="kv"><span>− 상속포기로 후순위 상속인이 받은 재산</span><b id="r_renounced">0원</b></div>
+    <div class="kv"><span>− 사전증여재산의 과세표준 <span class="sub" id="r_giftNote">(과세가액 5억 초과 → 차감)</span></span><b id="r_gift">300,000,000원</b></div>
+    <div class="kv total"><span>공제적용한도액</span><b id="r_limit">200,000,000원</b></div>
+    <div class="note" id="r_note">과세가액이 5억 원을 넘어 사전증여 과세표준 3억원을 뺐습니다. 일괄공제 등 공제 합계가 이 한도를 넘으면 한도까지만 공제됩니다.</div>
+  </section>
+
+  <div class="actions no-print">
+    <a class="btn ghost" href="상속공제.html">상속공제 전체 계산</a>
+    <a class="btn ghost" href="cal_Inherit_simple.html">상속세 전체 계산</a>
+  </div>
+
+  <details class="dh" data-po="1" open=""><summary>법령 해설 (상속세 및 증여세법 §24)</summary>
+    <div>
+      <p>상속공제(기초·인적·일괄·배우자·금융재산·동거주택·가업·영농·재해손실공제)의 합계는 다음 금액을 한도로 합니다.</p>
+      <p><b>공제적용한도액 = 상속세 과세가액 − ① − ② − ③</b></p>
+      <ul>
+        <li>① 선순위 상속인이 아닌 자에게 유증·사인증여한 재산의 가액</li>
+        <li>② 선순위 상속인의 상속포기로 그 다음 순위의 상속인이 상속받은 재산의 가액</li>
+        <li>③ 상속세 과세가액에 가산한 사전증여재산의 <b>증여세 과세표준</b> — 단, 상속세 과세가액이 <b>5억 원을 초과하는 경우에만</b> 뺍니다. 창업자금·가업승계 과세특례(조특법 §30의5·§30의6) 증여재산은 제외합니다.</li>
+      </ul>
+      <p>계산 결과가 음수이면 한도는 0원으로 보아 상속공제를 전혀 받을 수 없습니다.</p>
+    </div>
+  </details>
+
+  <details class="dh" open=""><summary>자주 묻는 질문</summary>
+    <dl class="faq">
+      <dt>상속세 과세가액은 무엇인가요?</dt>
+      <dd>총상속재산가액에서 비과세·과세가액불산입 재산, 공과금·장례비·채무를 빼고 사전증여재산을 더한 금액입니다. 서식 "상속세 과세가액 계산명세서"의 ㉗ 항목을 말합니다.</dd>
+      <dt>상속의 순위는 어떻게 되나요?</dt>
+      <dd>
+        <ol><li>직계비속(자녀·손자녀)</li><li>직계존속(부모·조부모)</li><li>형제자매</li><li>4촌 이내 방계혈족</li></ol>
+        피상속인의 배우자는 직계비속(없으면 직계존속)과 같은 순위의 공동상속인이 되고, 직계비속·직계존속이 모두 없으면 단독상속인이 됩니다. 같은 순위가 여러 명이면 촌수가 가까운 사람이 선순위이고, 촌수가 같으면 공동상속인이 됩니다.
+      </dd>
+      <dt>왜 손자에게 유증한 재산은 공제 한도에서 빠지나요?</dt>
+      <dd>상속공제는 "상속인"이 받는 재산을 전제로 설계되어 있습니다. 선순위 상속인이 아닌 손자·며느리·사위·단체 등이 유증으로 받은 재산과, 상속포기로 후순위가 받은 재산은 공제 한도에 들어가지 않습니다. 그 부분에는 사실상 공제 없이 세금이 붙습니다.</dd>
+      <dt>사전증여 과세표준은 어떻게 구하나요?</dt>
+      <dd>증여 당시 증여세 신고서의 과세표준(증여재산가액 − 증여재산공제)입니다. 예: 배우자에게 10년 안에 7억 원을 증여했다면 7억 − 6억(배우자 증여재산공제) = 1억 원이 과세표준이고, 과세가액이 5억 원을 넘을 때 이 1억 원을 한도에서 뺍니다.</dd>
+      <dt>상속재산 1억 원, 자녀 2명에게 사전증여 4억 원이면 상속세가 나오나요?</dt>
+      <dd>과세가액 = 1억 + 4억 = 5억 원으로 5억 원 이하이므로 사전증여 과세표준을 빼지 않습니다. 한도 5억 원 안에서 일괄공제 5억 원을 전부 받아 과세표준 0, 상속세는 없습니다.</dd>
+      <dt>상속재산 2억 원, 자녀 2명에게 사전증여 4억 원이면요?</dt>
+      <dd>과세가액 6억 원으로 5억 원을 초과하므로 사전증여 과세표준(4억 − 자녀공제 각 5천만 = 3억 원)을 뺍니다. 한도 = 6억 − 3억 = 3억 원. 일괄공제 5억 원이 있어도 3억 원까지만 공제되어 과세표준 3억 원에 상속세가 생깁니다(이미 낸 증여세는 증여세액공제로 차감).</dd>
+    </dl>
+  </details>
+</main>
+
+
+
+
+
+<div class="dh-contact"><div class="wrap"><div><h2>복잡한 상속, 세무사와 함께 검토하세요</h2><p>대한세무법인 · 성남 분당 · 상속·증여·부동산 세무</p></div><a class="btn" href="mailto:sjlee@taxdh.net?subject=%EC%83%81%EC%86%8D%EA%B3%B5%EC%A0%9C%20%EC%A2%85%ED%95%A9%ED%95%9C%EB%8F%84%20%EC%83%81%EB%8B%B4%20%EB%AC%B8%EC%9D%98">상담 문의 →</a></div></div><footer class="dh-foot">© 대한세무법인 · <a href="https://tuzaga.com/" target="_blank" rel="noopener">당신의세무사</a> · 2026년 10월 시행 세법 기준<br>계산 결과는 참고용이며, 실제 신고 전 세무 전문가의 검토를 권합니다.</footer><div id="dh-print-foot" class="print-foot">대한세무법인 · 상속·증여 도구 · /home/claude/inherit/inheritance-deduction-limit.html · 출력 2026. 10. 17. 오후 12:37:22 · 계산 결과는 참고용입니다.</div></body></html>

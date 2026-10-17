@@ -1,268 +1,125 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상속세 공제 한도 계산기</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f7fafc;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            padding: 40px 0;
-        }
-
-        /* 공통 스타일 */
-        .container {
-            max-width: 800px;
-            width: 100%;
-            background-color: #ffffff;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
-            margin: auto;
-        }
-
-        h1, h2 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        label {
-            font-size: 16px;
-            color: #34495e;
-            margin-bottom: 8px;
-            display: block;
-            font-weight: 500;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #ccd1d9;
-            border-radius: 6px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: #a11851;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #9e2d7a;
-        }
-
-        #result {
-            margin-top: 30px;
-            font-size: 20px;
-            color: #2c3e50;
-            text-align: center;
-            font-weight: 700;
-        }
-
-        /* 질문과 답변 스타일 */
-        .faq {
-            background-color: #fafbfc;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
-        }
-
-        .question {
-            background-color: #d9ebf7;
-            color: #0772ed;
-            padding: 5px;
-            margin-top: 20px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .answer {
-            background-color: #f9f9f9;
-            color: #2c3e50;
-            padding: 5px;
-            margin-top: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        .icon {
-            font-size: 24px;
-            margin-right: 10px;
-        }
-
-        .content {
-            font-size: 16px;
-            line-height: 1.6;
-            font-weight: 400;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속공제 종합한도 계산기 · 대한세무법인</title>
+<meta name="description" content="상속세 과세가액에서 상속인 아닌 자에 대한 유증, 상속포기로 후순위가 받은 재산, 사전증여 과세표준을 빼서 상속공제 종합한도(상증법 §24)를 계산합니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  .faq dt{font-weight:700;color:var(--main);margin:14px 0 4px}
+  .faq dt::before{content:"Q. "}
+  .faq dd{margin:0;word-break:keep-all}
+  .faq dd ol,.faq dd ul{margin:6px 0 0;padding-left:20px}
+  .faq dt:first-child{margin-top:4px}
+  @media print{.faq{font-size:9.5pt}.faq dt{margin:2.5mm 0 0.5mm}details.dh[open]{break-before:auto}}
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
 </head>
-<body>
+<body data-store="inherit-deduction-limit" data-subject="상속공제 종합한도" data-autoload="1">
 
-    <!-- 상속세 공제 한도 계산기 -->
-    <div class="container">
-        <h1>💰 상속세 공제 한도 계산기</h1>
-        <form id="tax-form">
-            <label for="taxable-inheritance"><h4>상속세 과세가액  :</h4> </label>
-            <input type="text" id="taxable-inheritance" required oninput="formatNumber(this)">
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 계산기</div>
+    <span class="form-no">별지 제9호서식 부표3 "13. 공제적용한도액"</span>
+    <h1>상속공제 종합한도 계산기</h1>
+    <p>상속공제는 무한정 받을 수 없습니다. 과세가액에서 세 가지 금액을 뺀 "공제적용한도액"까지만 공제되며, 사전증여가 많을수록 한도가 줄어듭니다.</p>
+  </div>
 
-            <label for="gifts-to-others"><h4>- 상속인이 아닌 자에게 유증·사인증여한 재산가액  :</h4></label>
-            <input type="text" id="gifts-to-others" required oninput="formatNumber(this)">
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
 
-            <label for="inherited-by-other"><h4>- 상속인의 상속포기로 다음 순위의 상속인이 상속받은 재산가액  :</h4></label>
-            <input type="text" id="inherited-by-other" required oninput="formatNumber(this)">
+  <div data-save>
+    <section class="card">
+      <h2>입력 <small>상속세 과세가액 계산명세서의 금액</small></h2>
+      <div class="field"><label for="taxable">상속세 과세가액 <small>과세가액 계산명세서 ㉗</small></label>
+        <div class="ctl"><input type="text" id="taxable" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="bequest">− 상속인이 아닌 자에게 유증·사인증여한 재산가액 <small>손자·며느리·단체 등</small></label>
+        <div class="ctl"><input type="text" id="bequest" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="renounced">− 상속인의 상속포기로 다음 순위 상속인이 받은 재산가액</label>
+        <div class="ctl"><input type="text" id="renounced" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="giftBase">− 사전증여재산의 증여세 과세표준 <small>증여재산가액 − 증여재산공제. 과세가액 5억 초과 시에만 차감</small></label>
+        <div class="ctl"><input type="text" id="giftBase" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    </section>
+  </div>
 
-            <label for="gift-tax-standard"><h4>- 증여재산의 과세표준  :</h4></label>
-            <input type="text" id="gift-tax-standard" required oninput="formatNumber(this)">
+  <section class="result" id="result">
+    <h2>계산 결과</h2>
+    <div class="kv"><span>상속세 과세가액</span><b id="r_taxable">0원</b></div>
+    <div class="kv"><span>− 상속인 아닌 자에 대한 유증·사인증여</span><b id="r_bequest">0원</b></div>
+    <div class="kv"><span>− 상속포기로 후순위 상속인이 받은 재산</span><b id="r_renounced">0원</b></div>
+    <div class="kv"><span>− 사전증여재산의 과세표준 <span class="sub" id="r_giftNote"></span></span><b id="r_gift">0원</b></div>
+    <div class="kv total"><span>공제적용한도액</span><b id="r_limit">0원</b></div>
+    <div class="note" id="r_note"></div>
+  </section>
 
-            <button type="button" onclick="calculate()">계산하기</button>
-        </form>
+  <div class="actions no-print">
+    <a class="btn ghost" href="상속공제.html">상속공제 전체 계산</a>
+    <a class="btn ghost" href="cal_Inherit_simple.html">상속세 전체 계산</a>
+  </div>
 
-        <h2 id="result">공제적용한도액: </h2>
+  <details class="dh"><summary>법령 해설 (상속세 및 증여세법 §24)</summary>
+    <div>
+      <p>상속공제(기초·인적·일괄·배우자·금융재산·동거주택·가업·영농·재해손실공제)의 합계는 다음 금액을 한도로 합니다.</p>
+      <p><b>공제적용한도액 = 상속세 과세가액 − ① − ② − ③</b></p>
+      <ul>
+        <li>① 선순위 상속인이 아닌 자에게 유증·사인증여한 재산의 가액</li>
+        <li>② 선순위 상속인의 상속포기로 그 다음 순위의 상속인이 상속받은 재산의 가액</li>
+        <li>③ 상속세 과세가액에 가산한 사전증여재산의 <b>증여세 과세표준</b> — 단, 상속세 과세가액이 <b>5억 원을 초과하는 경우에만</b> 뺍니다. 창업자금·가업승계 과세특례(조특법 §30의5·§30의6) 증여재산은 제외합니다.</li>
+      </ul>
+      <p>계산 결과가 음수이면 한도는 0원으로 보아 상속공제를 전혀 받을 수 없습니다.</p>
     </div>
+  </details>
 
-    <!-- FAQ 섹션 -->
-    <div class="faq">
+  <details class="dh" open><summary>자주 묻는 질문</summary>
+    <dl class="faq">
+      <dt>상속세 과세가액은 무엇인가요?</dt>
+      <dd>총상속재산가액에서 비과세·과세가액불산입 재산, 공과금·장례비·채무를 빼고 사전증여재산을 더한 금액입니다. 서식 "상속세 과세가액 계산명세서"의 ㉗ 항목을 말합니다.</dd>
+      <dt>상속의 순위는 어떻게 되나요?</dt>
+      <dd>
+        <ol><li>직계비속(자녀·손자녀)</li><li>직계존속(부모·조부모)</li><li>형제자매</li><li>4촌 이내 방계혈족</li></ol>
+        피상속인의 배우자는 직계비속(없으면 직계존속)과 같은 순위의 공동상속인이 되고, 직계비속·직계존속이 모두 없으면 단독상속인이 됩니다. 같은 순위가 여러 명이면 촌수가 가까운 사람이 선순위이고, 촌수가 같으면 공동상속인이 됩니다.
+      </dd>
+      <dt>왜 손자에게 유증한 재산은 공제 한도에서 빠지나요?</dt>
+      <dd>상속공제는 "상속인"이 받는 재산을 전제로 설계되어 있습니다. 선순위 상속인이 아닌 손자·며느리·사위·단체 등이 유증으로 받은 재산과, 상속포기로 후순위가 받은 재산은 공제 한도에 들어가지 않습니다. 그 부분에는 사실상 공제 없이 세금이 붙습니다.</dd>
+      <dt>사전증여 과세표준은 어떻게 구하나요?</dt>
+      <dd>증여 당시 증여세 신고서의 과세표준(증여재산가액 − 증여재산공제)입니다. 예: 배우자에게 10년 안에 7억 원을 증여했다면 7억 − 6억(배우자 증여재산공제) = 1억 원이 과세표준이고, 과세가액이 5억 원을 넘을 때 이 1억 원을 한도에서 뺍니다.</dd>
+      <dt>상속재산 1억 원, 자녀 2명에게 사전증여 4억 원이면 상속세가 나오나요?</dt>
+      <dd>과세가액 = 1억 + 4억 = 5억 원으로 5억 원 이하이므로 사전증여 과세표준을 빼지 않습니다. 한도 5억 원 안에서 일괄공제 5억 원을 전부 받아 과세표준 0, 상속세는 없습니다.</dd>
+      <dt>상속재산 2억 원, 자녀 2명에게 사전증여 4억 원이면요?</dt>
+      <dd>과세가액 6억 원으로 5억 원을 초과하므로 사전증여 과세표준(4억 − 자녀공제 각 5천만 = 3억 원)을 뺍니다. 한도 = 6억 − 3억 = 3억 원. 일괄공제 5억 원이 있어도 3억 원까지만 공제되어 과세표준 3억 원에 상속세가 생깁니다(이미 낸 증여세는 증여세액공제로 차감).</dd>
+    </dl>
+  </details>
+</main>
 
-        <!-- 첫 번째 질문 -->
-        <div class="question">
-            <div class="icon">❓</div>
-            <div class="content"><strong>상속세 과세가액</strong>은 무엇인가요?</div>
-        </div>
-        <div class="answer">
-            <div class="icon">💬</div>
-            <div class="content">
-                서식 중 <strong>“ 상속세 과세가액 계산명세서 ” ㉗ 항목</strong>을 말합니다.
-            </div>
-        </div>
-
-        <!-- 두 번째 질문 -->
-        <div class="question">
-            <div class="icon">❓</div>
-            <div class="content"><strong>상속의 순위</strong>는 어떻게 되나요?</div>
-        </div>
-        <div class="answer">
-            <div class="icon">💬</div>
-            <div class="content">
-                <strong>상속의 순위</strong>는 다음과 같습니다.
-                <ol>
-                    <li>직계비속</li>
-                    <li>직계존속</li>
-                    <li>형제자매</li>
-                    <li>4촌 이내 방계혈족</li>
-                </ol>
-                <strong>피상속인의 배우자</strong>는 직계비속(직계비속이 없는 때에는 직계존속)과 같은 순위로 공동상속인이 되고, <br>
-                 직계비속과 직계존속이 모두 없는 때에는 단독상속인이 됩니다.<br>
-                 <strong>같은 순위의 상속인이 여러 명</strong>일 때에는 촌수가 가장 가까운 상속인을 선순위로 하고, <br>
-                 촌수가 같은 선순위 상속인이 여러 명일 때에는 공동상속인이 됩니다.
-            </div>
-        </div>
-
-        <!-- 세 번째 질문 -->
-        <div class="question">
-            <div class="icon">❓</div>
-            <div class="content"><strong>상속공제한도</strong>는 어떻게 계산되나요?</div>
-        </div>
-        <div class="answer">
-            <div class="icon">💬</div>
-            <div class="content">
-                상속공제는 상속세 과세가액에서 아래 3가지 가액을 뺀 금액을 한도로 공제합니다. 바꿔 말하면, 아래 3가지 가액은 상속공제를 받지 못합니다.
-                <ul>
-                    <li>1. 선순위 상속인이 아닌 자에게 유증 등을 한 재산의 가액</li>
-                    <li>2. 선순위 상속인의 상속 포기로 그 다음 순위의 상속인이 상속받은 재산의 가액</li>
-                    <li>3. 상속세 과세가액에 가산한 증여재산가액의 <strong>증여세 과세표준</strong> (단, 상속세 과세가액이 5억원을 초과하는 경우. )<br>
-                           예) 배우자에게 10년이내 사전증여 7억을 했다면 :   7억 (증여가액) - 6억 ( 증여공제 ) = 1억 (증여재산의 과세표준) . 즉 1억을 차감하여 한도 계산  </li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- 네 번째 질문 -->
-        <div class="question">
-            <div class="icon">❓</div>
-            <div class="content">상속재산가액이 1억원이고, 자녀 2명에 대한 사전증여재산가액이 총 4억원일 경우 상속세가 발생하나요?</div>
-        </div>
-        <div class="answer">
-            <div class="icon">💬</div>
-            <div class="content">
-                상속재산가액과 사전증여재산 가액을 합하여 계산된 상속세 과세가액이 5억원 이하이므로 상속세는 발생하지 않습니다.
-            </div>
-        </div>
-
-        <!-- 다섯 번째 질문 -->
-        <div class="question">
-            <div class="icon">❓</div>
-            <div class="content">상속재산가액이 2억원이고, 자녀 2명에 대한 사전증여재산가액이 총 4억원일 경우 상속세가 발생하나요?</div>
-        </div>
-        <div class="answer">
-            <div class="icon">💬</div>
-            <div class="content">
-                상속재산가액과 사전증여재산 가액을 합하여 계산된 상속세 과세가액이 5억원을 초과하므로, 가산한 사전증여재산의 증여세 과세표준 부분에서 상속세가 발생합니다.
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        // 숫자를 천단위로 쉼표 처리하는 함수
-        function formatNumber(input) {
-            const value = input.value.replace(/,/g, ''); // 쉼표 제거
-            if (!isNaN(value) && value.trim() !== "") {
-                input.value = Number(value).toLocaleString(); // 천단위 쉼표 추가
-            }
-        }
-
-        // 쉼표 제거 후 숫자 변환 함수
-        function parseNumber(input) {
-            return parseFloat(input.replace(/,/g, '')) || 0;
-        }
-
-        function calculate() {
-            // 입력값 가져오기 및 쉼표 제거
-            const taxableInheritance = parseNumber(document.getElementById('taxable-inheritance').value);
-            const giftsToOthers = parseNumber(document.getElementById('gifts-to-others').value);
-            const inheritedByOther = parseNumber(document.getElementById('inherited-by-other').value);
-            const giftTaxStandard = parseNumber(document.getElementById('gift-tax-standard').value);
-
-            // 상속세 과세가액이 5억원 초과하는 경우에만 증여재산 과세표준을 차감
-            let totalGiftTax = 0;
-            if (taxableInheritance > 500000000) {
-                totalGiftTax = giftTaxStandard;
-            }
-
-            // 공제적용한도액 계산
-            const deductionLimit = taxableInheritance - giftsToOthers - inheritedByOther - totalGiftTax;
-
-            // 결과 표시
-            document.getElementById('result').textContent = `공제적용한도액: ${deductionLimit.toLocaleString()} 원`;
-        }
-    </script>
-
+<script src="js/dh.js"></script>
+<script>
+  function recalc(){
+    const taxable = DH.val('taxable'), bequest = DH.val('bequest'), renounced = DH.val('renounced'), giftBase = DH.val('giftBase');
+    const over5 = taxable > 5e8;
+    const giftUsed = over5 ? giftBase : 0;
+    const rawLimit = taxable - bequest - renounced - giftUsed;
+    const limit = DH.deductionLimit(taxable, bequest, renounced, giftBase);   // 음수는 0
+    DH.set('r_taxable', taxable); DH.set('r_bequest', bequest); DH.set('r_renounced', renounced); DH.set('r_gift', giftUsed);
+    document.getElementById('r_giftNote').textContent = taxable===0 ? '' : over5 ? '(과세가액 5억 초과 → 차감)' : '(과세가액 5억 이하 → 차감하지 않음)';
+    DH.set('r_limit', limit);
+    const notes=[];
+    if (rawLimit < 0) notes.push('계산값이 음수('+DH.kor(rawLimit)+')이므로 한도는 0원입니다. 상속공제를 받을 수 없습니다.');
+    else if (!over5 && giftBase>0 && taxable>0) notes.push('과세가액이 5억 원 이하이므로 사전증여 과세표준 '+DH.kor(giftBase)+'은 한도에서 빼지 않습니다.');
+    else if (over5 && giftBase>0) notes.push('과세가액이 5억 원을 넘어 사전증여 과세표준 '+DH.kor(giftBase)+'을 뺐습니다. 일괄공제 등 공제 합계가 이 한도를 넘으면 한도까지만 공제됩니다.');
+    if (!notes.length) notes.push('이 한도 안에서 기초·인적·일괄·배우자·금융재산 등 상속공제 합계를 공제합니다.');
+    document.getElementById('r_note').textContent = notes.join(' ');
+  }
+  window.DH_recalc = recalc;
+  document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('DOMContentLoaded', recalc);
+</script>
 </body>
 </html>

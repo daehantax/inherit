@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속공제 계산기 · 대한세무법인</title>
+<meta name="description" content="기초·인적공제와 일괄공제, 배우자상속공제, 금융재산·동거주택·가업·영농상속공제를 한 번에 계산하고 공제 종합한도까지 적용합니다. 2026년 시행 세법 기준.">
+
+
+<link rel="stylesheet" href="/home/claude/inherit/css/dh.css">
+<style>
+  .fam{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .fam label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  .fam input{max-width:none}
+  .kv .sub{display:block;font-weight:400}
+  .is-off{opacity:.45}
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
+</head>
+<body data-store="inherit-deduction" data-subject="상속공제" data-autoload="1"><header class="dh-top"><div class="wrap"><a class="logo" href="./">대한세무법인 <span>상속·증여</span></a><nav><a href="./">상속세</a><a href="gift.html">상황별 증여세</a><a class="hide-m" href="https://daehantax.github.io/tax/">전체 세무 도구 →</a></nav></div></header>
+
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 계산기</div>
+    <span class="form-no">별지 제9호서식 부표3 "라. 상속공제" 작성 보조</span>
+    <h1>상속공제 계산기</h1>
+    <p>가족 구성과 재산 내용을 넣으면 각 공제액과 공제 합계, 그리고 공제 종합한도를 적용한 최종 상속공제액이 바로 계산됩니다.</p>
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
+
+  <div data-save="">
+    <section class="card">
+      <h2>1. 기초공제·인적공제 <small>일괄공제 5억과 비교</small></h2>
+      <div class="field"><label>신고 구분</label>
+        <div class="ctl radio-row">
+          <label><input type="radio" name="filing" value="ontime" checked=""><span>기한 내 신고</span></label>
+          <label><input type="radio" name="filing" value="late"><span>기한 후 신고·무신고</span></label>
+        </div></div>
+      <div class="field"><label>배우자</label>
+        <div class="ctl radio-row">
+          <label><input type="radio" name="spouse" value="yes" checked=""><span>있음</span></label>
+          <label><input type="radio" name="spouse" value="no"><span>없음</span></label>
+        </div></div>
+      <div class="field"><label>배우자 단독상속 <small>다른 상속인이 없거나 모두 포기하여 배우자 혼자 상속</small></label>
+        <div class="ctl"><label class="check"><input type="checkbox" id="spouseOnly"> 배우자가 단독으로 상속 (일괄공제 불가)</label></div></div>
+      <div class="field"><label>인적공제 대상 <small>상속인·동거가족</small></label>
+        <div class="ctl fam">
+          <div><label for="childCount">자녀 수 <small>(1인 5천만)</small></label><input type="number" id="childCount" class="short" min="0" step="1" value="2"></div>
+          <div><label for="minorYears">미성년자 잔여연수 합 <small>(19세까지, 1년 1천만)</small></label><input type="number" id="minorYears" class="short" min="0" step="1" value="0"></div>
+          <div><label for="seniorCount">65세 이상 동거가족 수 <small>(배우자 제외, 1인 5천만)</small></label><input type="number" id="seniorCount" class="short" min="0" step="1" value="0"></div>
+          <div><label for="disabledYears">장애인 기대여명 합 <small>(1년 1천만)</small></label><input type="number" id="disabledYears" class="short" min="0" step="1" value="0"></div>
+        </div></div>
+    </section>
+
+    <section class="card" id="spouseCard">
+      <h2>2. 배우자상속공제 <small>최소 5억, 한도 min(법정상속분, 30억)</small></h2>
+      <div class="field"><label for="spouseActual">배우자가 실제 상속받은 금액 <small>기한 내 분할·등기한 금액. 비우면 5억</small></label>
+        <div class="ctl"><input type="text" id="spouseActual" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="800,000,000"><span class="unit">원</span><span class="won">8억원</span></div></div>
+      <div class="field"><label for="shareBase">법정상속분 계산 기준 재산가액 <small>상속재산 − 비과세·채무·공과금 + 상속인 사전증여</small></label>
+        <div class="ctl"><input type="text" id="shareBase" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="1,400,000,000"><span class="unit">원</span><span class="won">14억원</span></div></div>
+      <div class="field"><label for="spouseGiftBase">배우자 사전증여 과세표준 <small>한도에서 차감. 없으면 비움</small></label>
+        <div class="ctl"><input type="text" id="spouseGiftBase" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""><span class="unit">원</span><span class="won"></span></div></div>
+      <p class="hint">법정상속분 = 기준 재산가액 × 1.5 ÷ (1.5 + 자녀 수). 자녀 수는 1번의 값을 씁니다. 배우자 단독상속이면 100%입니다.</p>
+    </section>
+
+    <section class="card">
+      <h2>3. 금융재산·동거주택 상속공제</h2>
+      <div class="field"><label for="netFin">순금융재산가액 <small>금융재산 − 금융채무</small></label>
+        <div class="ctl"><input type="text" id="netFin" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="300,000,000"><span class="unit">원</span><span class="won">3억원</span></div></div>
+      <div class="field"><label for="houseValue">동거주택 가액 <small>10년 이상 동거한 무주택 직계비속이 상속</small></label>
+        <div class="ctl"><input type="text" id="houseValue" data-money="" placeholder="해당 없으면 비움" data-bound="1" inputmode="numeric" class="money" value="800,000,000"><span class="unit">원</span><span class="won">8억원</span></div></div>
+      <div class="field"><label for="houseDebt">위 주택의 담보채무 <small>주택가액에서 뺌</small></label>
+        <div class="ctl"><input type="text" id="houseDebt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""><span class="unit">원</span><span class="won"></span></div></div>
+    </section>
+
+    <section class="card">
+      <h2>4. 가업·영농상속공제, 재해손실공제 <small>요건 충족 시 금액을 직접 입력</small></h2>
+      <div class="field"><label for="bizValue">가업상속재산가액 <small>가업상속공제 대상</small></label>
+        <div class="ctl"><input type="text" id="bizValue" data-money="" placeholder="해당 없으면 비움" data-bound="1" inputmode="numeric" class="money" value=""><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="bizYears">피상속인의 가업 경영기간</label>
+        <div class="ctl"><select id="bizYears" class="mid">
+          <option value="10" selected="">10년 이상 20년 미만 (한도 300억)</option>
+          <option value="20">20년 이상 30년 미만 (한도 400억)</option>
+          <option value="30">30년 이상 (한도 600억)</option>
+        </select></div></div>
+      <div class="field"><label for="farmValue">영농상속재산가액 <small>한도 30억</small></label>
+        <div class="ctl"><input type="text" id="farmValue" data-money="" placeholder="해당 없으면 비움" data-bound="1" inputmode="numeric" class="money" value=""><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="disasterValue">재해손실공제 <small>신고기한 내 재해로 멸실·훼손된 가액 − 보험금 등</small></label>
+        <div class="ctl"><input type="text" id="disasterValue" data-money="" placeholder="해당 없으면 비움" data-bound="1" inputmode="numeric" class="money" value=""><span class="unit">원</span><span class="won"></span></div></div>
+    </section>
+
+    <section class="card">
+      <h2>5. 공제 종합한도 <small>§24 — 과세가액을 넣으면 한도가 적용됩니다</small></h2>
+      <div class="field"><label for="taxable">상속세 과세가액 <small>과세가액 계산명세서 ㉗</small></label>
+        <div class="ctl"><input type="text" id="taxable" data-money="" placeholder="비우면 한도 미적용" data-bound="1" inputmode="numeric" class="money" value="2,000,000,000"><span class="unit">원</span><span class="won">20억원</span></div></div>
+      <div class="field"><label for="bequest">상속인 아닌 자에 대한 유증·사인증여 재산가액</label>
+        <div class="ctl"><input type="text" id="bequest" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="100,000,000"><span class="unit">원</span><span class="won">1억원</span></div></div>
+      <div class="field"><label for="renounced">상속포기로 후순위 상속인이 받은 재산가액</label>
+        <div class="ctl"><input type="text" id="renounced" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="giftBase">사전증여재산의 증여세 과세표준 <small>과세가액 5억 초과 시에만 차감</small></label>
+        <div class="ctl"><input type="text" id="giftBase" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""><span class="unit">원</span><span class="won"></span></div></div>
+    </section>
+  </div>
+
+  <section class="result" id="result">
+    <h2>계산 결과</h2>
+    <div class="kv"><span>기초공제 2억 + 인적공제 <span class="sub" id="r_personalNote">(자녀 2명, 미성년 0년, 연로자 0명, 장애인 0년)</span></span><b id="r_personal">300,000,000원</b></div>
+    <div class="kv"><span>→ 적용 (일괄공제 5억과 비교) <span class="sub" id="r_d1note">일괄공제 5억 적용</span></span><b id="r_d1">500,000,000원</b></div>
+    <div class="kv"><span>배우자상속공제 <span class="sub" id="r_d2note">실제 상속액 8억원 · 한도 6억원</span></span><b id="r_d2">600,000,000원</b></div>
+    <div class="kv"><span>금융재산상속공제 <span class="sub">2천만 이하 전액 · 1억 이하 2천만 · 초과 20% (한도 2억)</span></span><b id="r_d3">60,000,000원</b></div>
+    <div class="kv"><span>동거주택상속공제 <span class="sub">(주택가액 − 담보채무) 100%, 한도 6억</span></span><b id="r_d4">600,000,000원</b></div>
+    <div class="kv"><span>가업상속공제 <span class="sub" id="r_d5note">한도 300억원</span></span><b id="r_d5">0원</b></div>
+    <div class="kv"><span>영농상속공제 <span class="sub">한도 30억</span></span><b id="r_d6">0원</b></div>
+    <div class="kv"><span>재해손실공제</span><b id="r_d7">0원</b></div>
+    <div class="kv"><span>공제 합계</span><b id="r_sum">1,760,000,000원</b></div>
+    <div class="kv"><span>공제 종합한도 <span class="sub" id="r_limitNote">과세가액 5억 초과: 사전증여 과세표준 차감</span></span><b id="r_limit">1,900,000,000원</b></div>
+    <div class="kv total"><span>상속공제액 (한도 적용 후)</span><b id="r_final">1,760,000,000원</b></div>
+    <div class="note" id="r_note">배우자공제 5억 초과분은 신고기한 다음 날부터 9개월 안에 배우자 몫을 분할(등기·등록)해야 인정됩니다.</div>
+  </section>
+
+  <div class="actions no-print">
+    <a class="btn ghost" href="inheritance-deduction-limit.html">종합한도만 따로 계산</a>
+    <a class="btn ghost" href="cal_Inherit_simple.html">상속세 전체 계산</a>
+  </div>
+
+  <details class="dh" data-po="1" open=""><summary>법령 해설 (상속세 및 증여세법)</summary>
+    <ul>
+      <li><b>기초공제</b> 2억 원(§18). <b>그 밖의 인적공제</b>(§20): 자녀 1인당 5천만 원, 미성년자는 19세까지의 잔여연수 × 1천만 원, 65세 이상 동거가족 1인당 5천만 원, 장애인은 기대여명 × 1천만 원. 자녀가 미성년자이면 자녀공제와 미성년자공제를 함께 받고, 장애인공제는 다른 인적공제와 중복 적용됩니다.</li>
+      <li><b>일괄공제</b>(§21): 기초공제 + 인적공제 합계와 5억 원 중 큰 금액을 선택합니다. 기한 내 신고가 없으면 5억 원(일괄공제)만 적용되고, 배우자가 단독으로 상속받으면 일괄공제를 쓸 수 없어 기초공제 + 인적공제만 적용합니다.</li>
+      <li><b>배우자상속공제</b>(§19): 배우자가 실제 상속받은 금액을 공제하되, 한도는 ① 법정상속분(상속재산가액 × 배우자 법정상속지분 − 배우자 사전증여 과세표준)과 ② 30억 원 중 작은 금액입니다. 실제 상속받은 금액이 없거나 5억 원 미만이면 5억 원을 공제합니다. 5억 원을 초과하여 공제받으려면 신고기한 다음 날부터 9개월 안에 배우자 몫을 분할(등기·등록)해야 합니다.</li>
+      <li><b>금융재산상속공제</b>(§22): 순금융재산(금융재산 − 금융채무)이 2천만 원 이하이면 전액, 1억 원 이하이면 2천만 원, 1억 원 초과이면 20%(한도 2억 원). 최대주주 보유 주식은 제외됩니다.</li>
+      <li><b>동거주택상속공제</b>(§23의2): 피상속인과 10년 이상 하나의 주택에서 동거한 무주택 직계비속(또는 그 배우자)이 상속받는 주택은 주택가액(담보채무 차감)의 100%, 한도 6억 원.</li>
+      <li><b>가업상속공제</b>(§18의2): 10년 이상 계속 경영한 중소·중견기업의 가업상속재산을 피상속인 경영기간에 따라 300억(10년 이상)·400억(20년 이상)·600억(30년 이상)을 한도로 공제. <b>영농상속공제</b>(§18의3): 한도 30억 원. 두 공제 모두 사후관리(5년) 의무가 있습니다.</li>
+      <li><b>재해손실공제</b>(§23): 신고기한 내에 재난으로 상속재산이 멸실·훼손된 경우 그 손실가액(보험금 등으로 보전되는 금액 제외)을 공제합니다.</li>
+      <li><b>공제 종합한도</b>(§24): 위 공제 합계는 「상속세 과세가액 − 상속인 아닌 자에 대한 유증·사인증여 − 상속포기로 후순위 상속인이 받은 재산 − 사전증여재산의 증여세 과세표준(과세가액이 5억 원을 초과하는 경우에만)」을 넘을 수 없습니다. 과세가액을 비워 두면 한도를 적용하지 않고 공제 합계를 그대로 보여 줍니다.</li>
+    </ul>
+  </details>
+</main>
+
+
+
+
+
+<div class="dh-contact"><div class="wrap"><div><h2>복잡한 상속, 세무사와 함께 검토하세요</h2><p>대한세무법인 · 성남 분당 · 상속·증여·부동산 세무</p></div><a class="btn" href="mailto:sjlee@taxdh.net?subject=%EC%83%81%EC%86%8D%EA%B3%B5%EC%A0%9C%20%EC%83%81%EB%8B%B4%20%EB%AC%B8%EC%9D%98">상담 문의 →</a></div></div><footer class="dh-foot">© 대한세무법인 · <a href="https://tuzaga.com/" target="_blank" rel="noopener">당신의세무사</a> · 2026년 10월 시행 세법 기준<br>계산 결과는 참고용이며, 실제 신고 전 세무 전문가의 검토를 권합니다.</footer><div id="dh-print-foot" class="print-foot">대한세무법인 · 상속·증여 도구 · /home/claude/inherit/%EC%83%81%EC%86%8D%EA%B3%B5%EC%A0%9C.html · 출력 2026. 10. 17. 오후 12:37:21 · 계산 결과는 참고용입니다.</div></body></html>

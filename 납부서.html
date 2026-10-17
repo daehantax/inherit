@@ -1,402 +1,208 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영수증서(납세자용) 및 납부서(수납기관용)</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 30px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 5px;
-            text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .center {
-            text-align: center;
-        }
-        .right {
-            text-align: right;
-        }
-        .no-border {
-            border: none;
-        }
-        .bold {
-            font-weight: bold;
-        }
-        .section {
-            margin-top: 40px;
-            margin-bottom: 40px;
-        }
-        input.tax-input, input.tax-sum {
-            width: 20px; /* 또는 원하는 크기로 조정 */
-            text-align: right;
-            padding: 2px;
-            border: none;
-            outline: none;
-            font-weight: bold;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속세 납부서 · 대한세무법인</title>
+<meta name="description" content="상속세 자진납부용 영수증서(납세자용)와 납부서(수납기관용)를 한 번에 채워 A4 한 장으로 인쇄합니다. 금액은 자릿수 칸에 자동으로 나뉘어 들어갑니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  .idrow{display:flex;align-items:center;gap:6px}
+  .idrow input{max-width:120px;text-align:center;letter-spacing:.08em}
+  .fixed{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--main-tint);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:13px}
 
-        input[type="text"] {
-            
-            border: none;
-            padding: 2px;
-            margin: 0;
-            font-family: inherit;
-            font-size: inherit;
-            text-align: center;
-            background: transparent;
-            box-sizing: border-box;
-        }
-        
-    </style>
+  /* ---- 납부서 양식 (mm 단위) ---- */
+  .stubs{background:#fff;border:1px solid var(--line-strong);padding:10mm;margin:0 0 18px;overflow-x:auto}
+  .stub{width:186mm;margin:0 auto;font-size:8.5pt;line-height:1.35;color:#000}
+  .stub h2{text-align:center;font-size:14pt;font-weight:900;margin:0 0 3mm;letter-spacing:.15em}
+  .stub table{width:186mm;border-collapse:collapse;table-layout:fixed;margin:0 0 2mm}
+  .stub th,.stub td{border:0.3mm solid #000;padding:0.8mm 1.2mm;text-align:center;vertical-align:middle;font-weight:400;overflow:hidden;white-space:normal;word-break:keep-all;line-height:1.3}
+  .stub th{background:#f0f0f0;font-size:7.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .stub td.l{text-align:left}
+  .stub td.v{font-weight:700;font-size:9pt;letter-spacing:.04em}
+  .stub td.sm{font-size:7pt}
+  .stub td.wrap2{white-space:normal;line-height:1.3;font-size:7.5pt;text-align:left;vertical-align:top;padding:1.5mm 2mm}
+  .stub .digits td{width:7mm;height:7mm;white-space:nowrap;font-size:10.5pt;font-weight:700;font-variant-numeric:tabular-nums;padding:0}
+  .stub .units th{width:7mm;height:4mm;white-space:nowrap;font-size:6.5pt;padding:0}
+  .stub .wm18{width:18mm}.stub .wm22{width:22mm}.stub .wm30{width:30mm}
+  .stub td.lbl{width:22mm;font-size:8pt;background:#f7f7f7;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .stub td.side{width:73mm;white-space:normal;text-align:left;vertical-align:top;padding:1.5mm 2mm;font-size:7.5pt;line-height:1.45}
+  .stub td.side b{font-size:8.5pt}
+  .stub .seal{display:flex;justify-content:space-between;align-items:flex-end;margin-top:2mm}
+  .stub .seal span{display:inline-block;border-bottom:0.2mm solid #000;min-width:18mm;text-align:center}
+  .stub .seal span.d{min-width:9mm}
+  .stub .foot{display:flex;justify-content:space-between;font-size:7.5pt;margin-top:1mm}
+  .cut{border:0;border-top:0.3mm dashed #777;margin:5mm 0;position:relative;height:0}
+  .cut::after{content:"✂ 절취선";position:absolute;left:50%;top:-2.6mm;transform:translateX(-50%);background:#fff;padding:0 3mm;font-size:7pt;color:#777}
+  @page{size:A4 portrait;margin:8mm 12mm}
+  @media print{
+    .dh-head,.card,.result,.actions,details.dh{display:none!important}
+    .stubs{border:0;padding:0;margin:0;overflow:visible}
+    .stub{break-inside:avoid}
+    .stub h2{margin-bottom:2mm}
+    .cut{margin:4mm 0}
+  }
+  @media (max-width:720px){.stubs{padding:12px}}
+</style>
 </head>
-<body>
-    <div class="section">
-        <h1 class="center">영수증서(납세자용)</h1>
-        
-        <table>
-            <tr>
-                <th colspan="4">납부번호</th>
-                <th colspan="4">수입징수관서</th>
-                <td rowspan="4" class="center">QR코드</td>
-            </tr>
-            <tr>
-                <td>분류기호</td>
-                <td>납부연월</td>
-                <td>납부구분</td>
-                <td>세목</td>
-                <td>발행번호</td>
-                <td><a href="https://www.nts.go.kr/nts/taxSrch/taxSrchPage.do?mi=6761" target="_blank">세무서명</a></td>
-                <td>서코드</td>
-                <td>계좌번호</td>
-            </tr>
-            <tr>
-                <td>0126</td>
-                <td><input type="text" id="paymentDate" placeholder="2021.01 > 2101" maxlength="4" pattern="\d{4}"></td>
-                <td>1</td>
-                <td>32</td>
-                <td></td>
-                <td><input type="text" id="officeName" ></td>
-                <td><input type="text" id="officeCode" ></td>
-                <td><input type="text" id="officeAccount" ></td>
-            </tr>
-        </table>
+<body data-store="napbuseo" data-subject="상속세 납부" data-autoload="1">
 
-        <table>
-            <tr>
-                <th>성명(상호)</th>
-                <td></td>
-                <th>주민등록번호(사업자등록번호)</th>
-                <td></td>
-                <th>회계연도</th>
-                <td></td>
-            </tr>
-            <tr>
-                <th>주소(사업장)</th>
-                <td colspan="2"></td>
-                <td >일반회계 </td>
-                <td>기획재정부소관 </td>
-                <td>조세</td>
-            </tr>
-            
-        </table>
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 납부</div>
+    <span class="form-no">영수증서(납세자용) · 납부서(수납기관용)</span>
+    <h1>상속세 납부서</h1>
+    <p>아래 한 번만 입력하면 납세자용 영수증서와 수납기관용 납부서가 똑같이 채워집니다. 은행·우체국 창구 납부용이며, 홈택스 전자납부가 더 간편합니다.</p>
+  </div>
 
-        <table>
-            <tr>
-                
-                <th>연도/기분</th>
-                <th colspan="14">년 기 분 </th>
-                <td rowspan="6" class="center">
-                    왼쪽의 금액을 한국은행 국고(수납)대리점인 은행 또는
-                    우체국 등에 납부합니다.<br>
-                    (인터넷 등에 의한 전자납부 가능)<br>
-                    <strong>납부기한 <input type="text" size="4">년 <input type="text" size="2">월 <input type="text" size="2">일</strong><br><br>
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
 
-                    <small><table>
-                        <tr>
-                            <td class="no-border"><input type="text" size="4">년 <input type="text" size="2">월 <input type="text" size="2">일</td>
-                            <td class="no-border right">수납인</td>
-                        </tr>
-                        <tr>
-                            <td class="no-border">은행 <input type="text" size="10">지점  수납인 </td>
-                        </tr>
-                        <tr>
-                            <td class="no-border">우체국 등 <input type="text" size="10"></td>
-                        </tr>
-                    </table></small>
-                </td>
-            </tr>
-            <tr>
-                <th rowspan="2">세목명</th>
-                <th colspan="14">납부금액</th>
+  <div data-save>
+    <section class="card">
+      <h2>납부서 내용 입력</h2>
+      <div class="field"><label for="name">성명 <small>납세자(상속인)</small></label><div class="ctl"><input type="text" id="name" class="mid"></div></div>
+      <div class="field"><label>주민등록번호</label><div class="ctl idrow"><input type="text" id="ssn1" maxlength="6" placeholder="앞 6자리" inputmode="numeric"><span>−</span><input type="text" id="ssn2" maxlength="7" placeholder="뒤 7자리" inputmode="numeric"></div></div>
+      <div class="field"><label for="addr">주소</label><div class="ctl"><input type="text" id="addr"></div></div>
+      <div class="field"><label for="office">관할 세무서 <small>피상속인 주소지 관할</small></label><div class="ctl"><input type="text" id="office" class="mid" placeholder="예: 분당"><span class="unit">세무서</span></div></div>
+      <div class="field"><label for="officeCode">서코드 · 계좌번호 <small>선택 (납부서 우측 상단)</small></label><div class="ctl"><input type="text" id="officeCode" class="short" placeholder="서코드"><input type="text" id="officeAcct" class="mid" placeholder="계좌번호"></div></div>
+      <div class="field"><label for="issueNo">발행번호 · 관리번호 <small>선택</small></label><div class="ctl"><input type="text" id="issueNo" class="mid" placeholder="발행번호"><input type="text" id="mgmtNo" class="mid" placeholder="관리번호"></div></div>
+      <div class="field"><label for="dueDate">납부기한 <small>상속개시일이 속한 달 말일부터 6개월</small></label><div class="ctl"><input type="date" id="dueDate" class="mid"></div></div>
+      <div class="field"><label for="payYM">납부연월 <small>YYMM, 비우면 납부기한에서</small></label><div class="ctl"><input type="text" id="payYM" class="short" maxlength="4" placeholder="2610" inputmode="numeric"><span class="unit">회계연도</span><input type="text" id="fiscalYear" class="short" maxlength="4" placeholder="2026" inputmode="numeric"></div></div>
+      <div class="field"><label for="taxAmount">상속세 납부금액 <small>신고서 ㊹ 신고납부 세액 (10원 미만 절사)</small></label><div class="ctl"><input type="text" id="taxAmount" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="ruralAmount">농어촌특별세 <small>선택 (해당 시)</small></label><div class="ctl"><input type="text" id="ruralAmount" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label>고정 코드</label><div class="ctl"><span class="fixed">분류기호 0126</span><span class="fixed">납부구분 1 (확정분 자납)</span><span class="fixed">세목 32 상속세</span><span class="muted">※ 세목코드는 홈택스 납부서와 대조하세요</span></div></div>
+    </section>
+  </div>
 
-            </tr>
-            <tr>
-                <th>조</th>
-                <th>천</th>
-                <th>백</th>
-                <th>십</th>
-                <th>억</th>
-                <th>천</th>
-                <th>백</th>
-                <th>십</th>
-                <th>만</th>
-                <th>천</th>
-                <th>백</th>
-                <th>십</th>
-                <th>일</th>
-            </tr>
-            <tr>
-                <th>상속세</th>
-                <td><input type="text" class="tax-input" data-index="0"></td>
-                <td><input type="text" class="tax-input" data-index="1"></td>
-                <td><input type="text" class="tax-input" data-index="2"></td>
-                <td><input type="text" class="tax-input" data-index="3"></td>
-                <td><input type="text" class="tax-input" data-index="4"></td>
-                <td><input type="text" class="tax-input" data-index="5"></td>
-                <td><input type="text" class="tax-input" data-index="6"></td>
-                <td><input type="text" class="tax-input" data-index="7"></td>
-                <td><input type="text" class="tax-input" data-index="8"></td>
-                <td><input type="text" class="tax-input" data-index="9"></td>
-                <td><input type="text" class="tax-input" data-index="10"></td>
-                <td><input type="text" class="tax-input" data-index="11"></td>
-                <td><input type="text" class="tax-input" data-index="12"></td>
-            </tr>
-            <tr>
-                <th>농어촌특별세</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <th>계</th>
-                <td><input type="text" class="tax-sum" data-index="0" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="1" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="2" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="3" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="4" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="5" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="6" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="7" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="8" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="9" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="10" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="11" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="12" readonly></td>
-            </tr>
-        </table>
+  <section class="result no-print">
+    <h2>납부 요약</h2>
+    <div class="kv"><span>상속세</span><b id="rTax">0원</b></div>
+    <div class="kv"><span>농어촌특별세</span><b id="rRural">0원</b></div>
+    <div class="kv total"><span>납부할 합계</span><b id="rTotal">0원</b></div>
+    <div class="note" id="rNote"></div>
+  </section>
 
-        
+  <div class="stubs" id="stubs"></div>
+
+  <template id="stubTpl">
+    <div class="stub">
+      <h2 data-f="title"></h2>
+      <table>
+        <tbody>
+          <tr><th colspan="5">납부번호</th><th colspan="3">수입징수관서</th><th rowspan="3" class="wm18">QR코드</th></tr>
+          <tr><th>분류기호</th><th>납부연월</th><th>납부구분</th><th>세목</th><th>발행번호</th><th>세무서명</th><th>서코드</th><th>계좌번호</th></tr>
+          <tr><td class="v">0126</td><td class="v" data-f="payYM"></td><td class="v">1</td><td class="v">32</td><td data-f="issueNo"></td><td class="v" data-f="office"></td><td data-f="officeCode"></td><td data-f="officeAcct"></td></tr>
+        </tbody>
+      </table>
+      <table>
+        <tbody>
+          <tr><th class="wm22">성명(상호)</th><td class="v l" colspan="2" data-f="name"></td><th class="wm30">주민등록번호<br>(사업자등록번호)</th><td class="v" colspan="2" data-f="ssn"></td><th class="wm18">회계연도</th><td class="v" data-f="fiscalYear"></td></tr>
+          <tr><th>주소(사업장)</th><td class="l" colspan="2" data-f="addr"></td><th>관리번호</th><td data-f="mgmtNo"></td><td class="sm">일반회계</td><td class="sm">기획재정부소관</td><td class="sm">조세</td></tr>
+        </tbody>
+      </table>
+      <table>
+        <tbody>
+          <tr><td class="lbl">연도/기분</td><td colspan="13" class="v l" data-f="period"></td><td class="side" rowspan="6"><b>왼쪽의 금액을 한국은행 국고(수납)대리점인 은행 또는 우체국 등에 납부하시기 바랍니다.</b><br>(인터넷 등에 의한 전자납부 가능)<br><br><b>납부기한 <span data-f="dueDate"></span></b><br><br><span data-f="sideNote"></span></td></tr>
+          <tr><td class="lbl">세목명</td><th colspan="13">납 부 금 액</th></tr>
+          <tr class="units"><td class="lbl"></td><th>조</th><th>천</th><th>백</th><th>십</th><th>억</th><th>천</th><th>백</th><th>십</th><th>만</th><th>천</th><th>백</th><th>십</th><th>일</th></tr>
+          <tr class="digits" data-row="tax"><td class="lbl">상속세</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr class="digits" data-row="rural"><td class="lbl">농어촌특별세</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr class="digits" data-row="total"><td class="lbl">계</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+      <div class="seal"><div>위 금액을 정히 <b data-f="verb"></b>합니다. &nbsp; <span class="d"></span>년 <span class="d"></span>월 <span class="d"></span>일</div><div>은행 <span></span> 지점 · 우체국 등 <span></span> &nbsp;수납인 (인)</div></div>
+      <div class="foot"><span data-f="footL"></span><span>납부금액(합계): <b data-f="totalText"></b></span></div>
     </div>
+  </template>
 
-    <div class="section">
-        <h1 class="center">납부서(수납기관용)</h1>
-        
-        <table>
-            <tr>
-                <th colspan="4">납부번호</th>
-                <th colspan="4">수입징수관서</th>
-                <td rowspan="4" class="center">QR코드</td>
-            </tr>
-            <tr>
-                <td>분류기호</td>
-                <td>납부연월</td>
-                <td>납부구분</td>
-                <td>세목</td>
-                <td>발행번호</td>
-                <td>세무서명</td>
-                <td>서코드</td>
-                <td>계좌번호</td>
-            </tr>
-            <tr>
-                <td>0126</td>
-                <td></td>
-                <td>1</td>
-                <td>32</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-        </table>
+  <div class="actions no-print">
+    <a class="btn" href="inherit-tax-report.html">상속세 신고서로 돌아가기 →</a>
+    <a class="btn ghost" href="https://www.hometax.go.kr" target="_blank" rel="noopener">홈택스 전자납부</a>
+  </div>
 
-        <table>
-            <tr>
-                <th>성명(상호)</th>
-                <td></td>
-                <th>주민등록번호(사업자등록번호)</th>
-                <td></td>
-                <th>회계연도</th>
-                <td></td>
-            </tr>
-            <tr>
-                <th>주소(사업장)</th>
-                <td colspan="2"></td>
-                <td >일반회계 </td>
-                <td>기획재정부소관 </td>
-                <td>조세</td>
-            </tr>
-            
-        </table>
+  <details class="dh"><summary>납부서 작성 안내</summary>
+    <ul>
+      <li>납부기한은 상속개시일(사망일)이 속한 달의 말일부터 6개월입니다 (피상속인·상속인 전원이 외국에 주소를 둔 경우 9개월). 기한을 넘기면 납부지연가산세(1일 0.022%)가 붙습니다.</li>
+      <li>납부금액은 10원 미만을 버린 금액으로 적습니다 (국고금관리법 §47②).</li>
+      <li>납부번호: 분류기호 0126 − 납부연월(YYMM) − 납부구분 1(확정분 자진납부) − 세목코드. 세목코드는 홈택스에서 출력한 납부서나 세무서 안내와 대조해 확인하세요.</li>
+      <li>납부세액이 1천만원을 넘으면 납부기한 뒤 2개월까지 분납, 2천만원을 넘으면 연부연납(담보 제공, 최장 10년)을 신고서에 함께 신청할 수 있습니다.</li>
+      <li>홈택스 › 납부·고지·환급 › 자진납부에서 전자납부(계좌이체·신용카드 0.8%·체크카드 0.5% 수수료)할 수 있습니다. 납부한 세금은 취소할 수 없습니다.</li>
+    </ul>
+  </details>
+</main>
 
-        <table>
-            <tr>
-                
-                <th>연도/기분</th>
-                <th colspan="14">년 기 분 </th>
-                <td rowspan="6" class="center">
-                    왼쪽의 금액을 한국은행 국고(수납)대리점인 은행 또는
-                    우체국 등에 납부합니다.<br>
-                    (인터넷 등에 의한 전자납부 가능)<br>
-                    <strong>납부기한 <input type="text" size="4">년 <input type="text" size="2">월 <input type="text" size="2">일</strong><br><br>
+<script src="js/dh.js"></script>
+<script>
+  // 금액을 13자리 칸(조~일)으로 나눈다. 10원 미만 절사, 오른쪽 정렬, 빈 칸은 ''.
+  function splitDigits(n) {
+    n = Math.floor(DH.clamp0(n) / 10) * 10;
+    const s = n > 0 ? String(n) : '';
+    const cells = new Array(13).fill('');
+    for (let i = 0; i < s.length && i < 13; i++) cells[12 - i] = s[s.length - 1 - i];
+    return cells;
+  }
+  window.splitDigits = splitDigits;
 
-                    <small><table>
-                        <tr>
-                            <td class="no-border"><input type="text" size="4">년 <input type="text" size="2">월 <input type="text" size="2">일</td>
-                            <td class="no-border right">수납인</td>
-                        </tr>
-                        <tr>
-                            <td class="no-border">은행 <input type="text" size="10">지점  수납인 </td>
-                        </tr>
-                        <tr>
-                            <td class="no-border">우체국 등 <input type="text" size="10"></td>
-                        </tr>
-                    </table></small>
-                </td>
-            </tr>
-            <tr>
-                <th rowspan="2">세목명</th>
-                <th colspan="14">납부금액</th>
+  function fmtDate(v) { if (!v) return ''; const [y, m, d] = v.split('-'); return y + '년 ' + Number(m) + '월 ' + Number(d) + '일'; }
+  function val(id) { return (document.getElementById(id).value || '').trim(); }
 
-            </tr>
-            <tr>
-                <th>조</th>
-                <th>천</th>
-                <th>백</th>
-                <th>십</th>
-                <th>억</th>
-                <th>천</th>
-                <th>백</th>
-                <th>십</th>
-                <th>만</th>
-                <th>천</th>
-                <th>백</th>
-                <th>십</th>
-                <th>일</th>
-            </tr>
-            <tr>
-                <td class="right">상속세</td>
-                <td><input type="text" class="tax-sum" data-index="0" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="1" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="2" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="3" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="4" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="5" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="6" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="7" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="8" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="9" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="10" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="11" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="12" readonly></td>
-            </tr>
-            <tr>
-                <th>농어촌특별세</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <th>계</th>
-                <td><input type="text" class="tax-sum" data-index="0" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="1" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="2" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="3" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="4" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="5" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="6" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="7" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="8" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="9" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="10" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="11" readonly></td>
-                <td><input type="text" class="tax-sum" data-index="12" readonly></td>
-            </tr>
-        </table>
-        
-    </div>
-
-    <script>
-       document.addEventListener('DOMContentLoaded', function() {
-    const taxInputs = document.querySelectorAll('.tax-input');
-    const taxSums = document.querySelectorAll('.tax-sum');
-
-    taxInputs.forEach(input => {
-        input.addEventListener('input', updateSum);
+  function buildStubs() {
+    const host = document.getElementById('stubs'); host.textContent = '';
+    const tpl = document.getElementById('stubTpl');
+    [['영수증서(납세자용)', '영수', '납세자 보관용'], ['납부서(수납기관용)', '납부', '수납기관 보관용']].forEach(function (cfg, i) {
+      const node = tpl.content.firstElementChild.cloneNode(true);
+      node.dataset.stub = i === 0 ? 'receipt' : 'bank';
+      node.querySelector('[data-f="title"]').textContent = cfg[0];
+      node.querySelector('[data-f="verb"]').textContent = cfg[1];
+      node.querySelector('[data-f="footL"]').textContent = cfg[2];
+      host.appendChild(node);
+      if (i === 0) { const hr = document.createElement('hr'); hr.className = 'cut'; host.appendChild(hr); }
     });
+  }
 
-    function updateSum() {
-        taxInputs.forEach((input, index) => {
-            if (index === 12) {
-                // 마지막 필드(index 12)는 항상 "0"으로 설정
-                input.value = "0";
-            }
-            const value = input.value.trim();
-            taxSums[index].value = value;
-        });
-    }
-
-    // 페이지 로드 시 초기화 함수 호출
-    initializeFields();
-
-    function initializeFields() {
-        // 마지막 입력 필드와 합계 필드를 "0"으로 설정
-        taxInputs[12].value = "0";
-        taxSums[12].value = "0";
-
-        // 마지막 입력 필드를 읽기 전용으로 설정
-        taxInputs[12].readOnly = true;
-
-        // 초기 상태 업데이트
-        updateSum();
-    }
-});
-
-
+  function fill() {
+    const tax = Math.floor(DH.val('taxAmount') / 10) * 10, rural = Math.floor(DH.val('ruralAmount') / 10) * 10, total = tax + rural;
+    const due = val('dueDate');
+    let payYM = val('payYM').replace(/\D/g, '');
+    if (!payYM && due) payYM = due.slice(2, 4) + due.slice(5, 7);
+    let fy = val('fiscalYear').replace(/\D/g, '');
+    if (!fy && due) fy = due.slice(0, 4);
+    const ssn = val('ssn1') + (val('ssn2') ? '-' + val('ssn2') : '');
+    const t = new Date();
+    const data = {
+      payYM: payYM, issueNo: val('issueNo'), office: val('office') ? val('office') + '세무서' : '', officeCode: val('officeCode'), officeAcct: val('officeAcct'),
+      name: val('name'), ssn: ssn, fiscalYear: fy, addr: val('addr'), mgmtNo: val('mgmtNo'),
+      period: fy ? fy + '년 귀속 확정분' : '', dueDate: fmtDate(due),
+      totalText: DH.won(total),
+      sideNote: '납부기한이 지나면 납부지연가산세가 더해집니다.'
+    };
+    document.querySelectorAll('#stubs .stub').forEach(function (stub) {
+      Object.keys(data).forEach(function (k) { stub.querySelectorAll('[data-f="' + k + '"]').forEach(function (el) { el.textContent = data[k]; }); });
+      [['tax', tax], ['rural', rural], ['total', total]].forEach(function (r) {
+        const cells = splitDigits(r[1]);
+        stub.querySelectorAll('tr[data-row="' + r[0] + '"] td:not(.lbl)').forEach(function (td, i) { td.textContent = cells[i]; });
+      });
+    });
+    DH.set('rTax', tax); DH.set('rRural', rural); DH.set('rTotal', total);
+    const notes = [];
+    if (DH.val('taxAmount') !== tax) notes.push('10원 미만 ' + (DH.val('taxAmount') - tax) + '원은 버렸습니다.');
+    if (total > 1e7) notes.push('1천만원 초과: 납부기한 뒤 2개월까지 분납 가능.');
+    if (total > 2e7) notes.push('2천만원 초과: 연부연납 신청 가능(담보 필요).');
+    if (!due) notes.push('납부기한을 넣으면 납부연월·회계연도가 자동으로 채워집니다.');
+    document.getElementById('rNote').textContent = notes.join(' ');
+  }
+  window.DH_recalc = fill;
+  document.addEventListener('input', function (e) { if (e.target.closest('[data-save]')) fill(); });
+  document.addEventListener('change', function (e) { if (e.target.closest('[data-save]')) fill(); });
+  buildStubs();
+  document.addEventListener('DOMContentLoaded', fill);
 </script>
-    </script>
 </body>
 </html>

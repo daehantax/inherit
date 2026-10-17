@@ -1,283 +1,143 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>당신의 세무사! 상속세 셀프신고 교실</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
-
-        :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #2c3e50;
-            --accent-color: #e74c3c;
-            --background-color: #f8f9fa;
-            --text-color: #333;
-        }
-
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--background-color);
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            text-align: center;
-            padding: 3rem 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.2;
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 900;
-            margin-bottom: 0.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 1;
-        }
-
-        h2 {
-            color: var(--primary-color);
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .section {
-            background-color: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            padding: 2.5rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            overflow: hidden;
-        }
-
-        .section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .highlight {
-            background-color: #fff3cd;
-            border-left: 6px solid var(--accent-color);
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            border-radius: 0 15px 15px 0;
-            font-weight: 400;
-            position: relative;
-        }
-
-        .highlight h3 {
-            color: var(--accent-color);
-            margin-top: 0;
-        }
-
-        .highlight ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-
-        .highlight li {
-            position: relative;
-            padding-left: 30px;
-            margin-bottom: 15px;
-        }
-
-        .highlight li:before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: var(--accent-color);
-            font-weight: bold;
-        }
-
-        .highlight-image {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 50%;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .prep-item {
-            background-color: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .prep-item a {
-            display: flex;
-            padding: 1.2rem;
-            color: var(--text-color);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            flex-grow: 1;
-        }
-
-        .prep-item:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            border-color: var(--primary-color);
-        }
-
-        .prep-item:hover a {
-            color: var(--primary-color);
-            padding-left: 1.8rem;
-        }
-
-        .prep-item::after {
-            content: '→';
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-
-        .prep-item:hover::after {
-            opacity: 1;
-            right: 15px;
-        }
-
-        .prep-item-image {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            margin-right: 15px;
-            border-radius: 25%;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            animation: fadeIn 1s ease-out forwards;
-            opacity: 0;
-        }
-
-        .delay-1 { animation-delay: 0.2s; }
-        .delay-2 { animation-delay: 0.4s; }
-        .delay-3 { animation-delay: 0.6s; }
-
-        .menu-item {
-            display: block;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #ffffff;
-            border: 1px solid #e9ecef;
-            border-radius: 5px;
-            text-decoration: none;
-            color: #495057;
-            transition: background-color 0.3s ease;
-        }
-        .menu-item:hover {
-            background-color: #e9ecef;
-        }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속세 셀프 신고 교실 · 대한세무법인</title>
+<meta name="description" content="재산 찾기부터 계산, 절세 검토, 신고서 작성, 납부, 환급 점검까지. 상속세 셀프 신고를 순서대로 따라 하는 안내.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  .timeline{position:relative;padding-left:0;list-style:none;margin:0}
+  .step{position:relative;display:grid;grid-template-columns:56px 1fr;gap:0 18px;padding:0 0 28px}
+  .step::before{content:"";position:absolute;left:27px;top:52px;bottom:0;width:2px;background:var(--line)}
+  .step:last-child::before{display:none}
+  .step .n{width:54px;height:54px;border-radius:50%;background:var(--main);color:#fff;display:grid;place-items:center;font-weight:900;font-size:18px;box-shadow:0 6px 16px rgba(159,36,77,.25)}
+  .step .n small{display:block;font-size:9px;font-weight:700;opacity:.85;line-height:1;margin-top:-2px}
+  .step h2{margin:8px 0 6px;font-size:20px}
+  .step .lead{margin:0 0 12px;color:var(--muted);font-size:14.5px;word-break:keep-all}
+  .links{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+  .lk{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;transition:border-color .12s,transform .12s,box-shadow .12s}
+  .lk:hover{border-color:var(--main);transform:translateY(-2px);box-shadow:var(--sh);text-decoration:none}
+  .lk b{font-size:14.5px;color:var(--ink)}
+  .lk span{font-size:12.5px;color:var(--muted);margin-top:3px;word-break:keep-all}
+  .lk em{font-style:normal;font-size:11px;font-weight:700;color:var(--main);margin-top:8px}
+  .lk.ext b::after{content:" ↗";color:var(--muted);font-weight:400}
+  .tips{margin-top:10px;padding:12px 16px;background:var(--main-tint);border-radius:10px;font-size:13.5px;word-break:keep-all}
+  .tips b{color:var(--main)}
+  .deadline{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 24px;font-size:14px}
+  .deadline input{max-width:170px}
+  .deadline b{color:var(--main);font-size:16px}
+  @media (max-width:600px){.step{grid-template-columns:44px 1fr;gap:0 12px}.step .n{width:42px;height:42px;font-size:15px}.step::before{left:21px}}
+</style>
 </head>
-<body>
-    <header>
-        <img src="https://tuzaga.com/wp-content/uploads/%EC%BA%A1%EC%B2%98-14.png" alt="상속세 셀프신고 배경" class="header-image">
-        <h1>당신의 세무사! 상속세 셀프신고 교실</h1>
-    </header>
-    
-    <div class="container">
-        <section class="section fade-in">
-            <h2>상속세 절세 보고서 ! 상속세 셀프 신고!!</h2>
-            <p>상속세는 최대 50%의 세율이 적용되기 때문에 세법 절세방법을 잘 활용하여 세금을 절약하는 것이 중요합니다.</p>
-            
-            <div class="highlight">
-                <img src="https://tuzaga.com/wp-content/uploads/%EB%8F%88%EC%9C%BC%EB%A1%9C-%EB%A7%8C%EB%93%A0-%ED%86%A0%EB%81%BC-1.jpg" alt="상속세 절세 아이콘" class="highlight-image">
-                <h3>상속세 절세 보고서 ! 상속세 셀프 신고 !</h3>
-                <ul>
-                    <li><strong>확인해보셨나요?</strong> 당신만을 위한 맞춤형 절세 전략!</li>
-                    <li><strong>순서에 따라 진행하면,</strong> 어느새 납부해야 할 상속세가 반토막!</li>
-                    <li><strong>따라가다 보면 어느새,</strong> 상속세 신고서 완성!</li>
-                    <li><strong>궁금한 점이 있다면,</strong> 당신의 세무사가 직접 오프라인에서 상담!!</li>
-                </ul>
-            </div>
-        </section>
-        
-        <section class="section fade-in delay-1">
-            <h2>자 ! 하나씩 따라해 보세요. </h2>
-            <div class="prep-item fade-in delay-2">
-                <img src="https://tuzaga.com/wp-content/uploads/%EC%BA%A1%EC%B2%98-14.png" alt="안심톡 아이콘" class="prep-item-image">
-                <a href="https://www.gov.kr/portal/onestopSvc/safeInheritance" target="_blank" rel="noopener">상속재산 찾기 : 안심상속 원스톱서비스 (정부24)</a>
-            </div>
+<body data-store="inherit-class" data-subject="상속세 셀프 신고" data-chrome="on">
 
-            <div class="prep-item fade-in delay-2">
-                <img src="https://tuzaga.com/wp-content/uploads/%EB%8F%88%EC%9C%BC%EB%A1%9C-%EB%A7%8C%EB%93%A0-%ED%86%A0%EB%81%BC-1.jpg" alt="📌" class="prep-item-image">
-                <a href="https://tuzaga.com/%ec%83%81%ec%86%8d%ec%9e%ac%ec%82%b0%ea%b3%bc-%ec%82%ac%ec%a0%84%ec%a6%9d%ec%97%ac%ec%9e%ac%ec%82%b0-%ec%95%8c%ec%95%84%eb%b3%b4%ea%b8%b0/" target="_blank" rel="noopener">사전증여재산 알아보기 : 국세청 홈택스 조회 / 세무서 방문 조회</a>
-            </div>
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 셀프 신고 교실</div>
+    <h1>상속세 셀프 신고 교실</h1>
+    <p>상속세는 최고 50%가 적용되는 세금입니다. 그만큼 공제와 절세 방법을 제대로 쓰는 것이 중요합니다. 아래 순서대로 하나씩 따라 하세요. 각 단계에서 필요한 도구와 서식이 바로 열립니다.</p>
+  </div>
 
-            <div class="prep-item fade-in delay-2">       
-                    <img src="https://tuzaga.com/wp-content/uploads/jess-bailey-l3N9Q27zULw.jpg" alt="절세 솔루션 아이콘" class="prep-item-image">
-                    <a href="https://tuzaga.com/products/" target="_blank" rel="noopener">자! 이제 절세 솔루션으로 !</a>              
-            </div>  
-                
-            <div class="prep-item fade-in delay-2">
-                <img src="https://tuzaga.com/wp-content/uploads/화살표-2.webp" alt="절세 솔루션 아이콘" class="prep-item-image">
-                <a href="adquisitionTaxClaim.html">상속으로 받은 주택 !  취득세 환급 받아요! </a>
-            </div>
+  <div class="deadline no-print" data-save>
+    <label for="deathDate">사망일(상속개시일)</label>
+    <input type="date" id="deathDate">
+    <span>→ 신고·납부 기한 <b id="dueDate">—</b> <span class="muted" id="dueLeft"></span></span>
+  </div>
 
-            <div class="prep-item fade-in delay-2">
-                <img src="https://tuzaga.com/wp-content/uploads/화살표-2.webp" alt="절세 솔루션 아이콘" class="prep-item-image">
-                <a href="https://daehantax.github.io/tax/양도상속증여/양도·증여/totalPropertyClaim.html">상속으로 받은 주택 ! 종부세 환급 받아요! </a>
-            </div>       
-                                           
-           
+  <ol class="timeline">
+    <li class="step"><div class="n">1<small>STEP</small></div><div>
+      <h2>상속재산과 채무를 모두 찾는다</h2>
+      <p class="lead">피상속인 명의의 부동산·예금·보험·주식·차량과 대출·세금 체납까지 한 번에 조회합니다. 10년 안에 자녀·배우자에게 증여한 재산도 상속재산에 합산되므로 함께 확인하세요.</p>
+      <div class="links">
+        <a class="lk ext" href="https://www.gov.kr/portal/onestopSvc/safeInheritance" target="_blank" rel="noopener"><b>안심상속 원스톱 서비스</b><span>정부24 · 금융·부동산·세금·연금을 한 번에 조회</span><em>정부24</em></a>
+        <a class="lk ext" href="https://www.hometax.go.kr/" target="_blank" rel="noopener"><b>사전증여 내역 조회</b><span>홈택스 → 증여세 결정정보 조회, 또는 세무서 방문</span><em>홈택스</em></a>
+        <a class="lk" href="채무공과금.html"><b>채무·공과금·장례비 정리</b><span>빼는 금액을 표로 정리하고 장례비 인정액 확인</span><em>계산기</em></a>
+      </div>
+    </div></li>
 
-            <div class="prep-item fade-in delay-3">
-                <img src="https://tuzaga.com/wp-content/uploads/jess-bailey-l3N9Q27zULw.jpg" alt="상속세 신고 아이콘" class="prep-item-image">
-                <a href="inherit-tax-report.html">아! 이제 상속세 신고로 ! </a>
-            </div>
-            <div class="prep-item fade-in delay-3">
-                <img src="https://tuzaga.com/wp-content/uploads/career-g73c2dd2d1_1280.jpg" alt="증여 아이콘" class="prep-item-image">
-                <a href="https://tuzaga.com/circumstance-calc/" target="_blank" rel="noopener">미리 증여해서 절세하고 싶어요!</a>
-            </div>
-            <div class="prep-item fade-in delay-2">
-                <img src="https://tuzaga.com/wp-content/uploads/21.png" alt="한정승인 아이콘" class="prep-item-image">
-                <a href="https://tuzaga.com/%ec%83%81%ec%86%8d%ed%8f%ac%ea%b8%b0%ec%99%80-%ed%95%9c%ec%a0%95%ec%8a%b9%ec%9d%b8-%ec%95%8c%ec%95%84%eb%b3%b4%ea%b8%b0/" target="_blank" rel="noopener">한정승인/상속포기를 생각해 봐야 할 상황인가요?</a>
-            </div>
-        </section>
-    </div>
+    <li class="step"><div class="n">2<small>STEP</small></div><div>
+      <h2>재산을 평가하고 상속세를 가늠한다</h2>
+      <p class="lead">상속세는 상속개시일의 시가로 계산합니다. 아파트는 매매사례가액, 토지·건물은 감정평가 또는 기준시가로 평가합니다. 평가가 끝나면 세금 규모부터 확인하세요.</p>
+      <div class="links">
+        <a class="lk" href="cal_Inherit_simple.html"><b>단순한 상속세 계산기</b><span>재산·채무·가족 구성만 넣으면 예상 세액</span><em>계산기</em></a>
+        <a class="lk ext" href="https://tuzaga.com/%ec%83%81%ec%86%8d%ec%8b%9c-%ec%95%84%ed%8c%8c%ed%8a%b8-%ed%8f%89%ea%b0%80/" target="_blank" rel="noopener"><b>상속 아파트 평가 교실</b><span>매매사례가액 찾는 법</span><em>당신의세무사</em></a>
+        <a class="lk ext" href="https://www.realtyprice.kr/" target="_blank" rel="noopener"><b>공시가격 조회</b><span>국토교통부 부동산공시가격 알리미</span><em>국토교통부</em></a>
+      </div>
+    </div></li>
+
+    <li class="step"><div class="n">3<small>STEP</small></div><div>
+      <h2>공제를 빠짐없이 챙긴다</h2>
+      <p class="lead">일괄공제 5억 외에도 배우자공제(최대 30억), 금융재산공제(최대 2억), 동거주택공제(최대 6억)가 있습니다. 공제 하나가 세액을 크게 바꿉니다. 절세보고서로 전체를 검토하세요.</p>
+      <div class="links">
+        <a class="lk" href="inheritPremium.html"><b>상속세 절세보고서</b><span>재산 구성별 절세 포인트와 공제 비교</span><em>보고서</em></a>
+        <a class="lk" href="상속공제.html"><b>상속공제 계산기</b><span>기초·인적·배우자·금융·동거주택 공제 합계와 한도</span><em>계산기</em></a>
+        <a class="lk" href="inheritance-deduction-limit.html"><b>공제 종합한도</b><span>사전증여·유증이 있을 때 공제가 줄어드는 한도</span><em>계산기</em></a>
+      </div>
+      <div class="tips"><b>미리 증여를 생각 중이라면</b> 상속 전 증여는 10년 합산되지만, 배우자 6억·자녀 5천만 공제와 낮은 세율 구간을 먼저 쓰는 효과가 있습니다. → <a href="gift.html">상황별 증여세 계산하기</a></div>
+    </div></li>
+
+    <li class="step"><div class="n">4<small>STEP</small></div><div>
+      <h2>신고서와 명세서를 작성한다</h2>
+      <p class="lead">상속세 신고서(별지 제9호서식)와 부표, 그리고 공제별 명세서를 작성합니다. 화면에서 입력하면 서식 그대로 A4로 인쇄됩니다.</p>
+      <div class="links">
+        <a class="lk" href="inherit-tax-report.html"><b>상속세 신고서 (5단계)</b><span>재산 목록 → 채무·공제 → 과세가액 → 세액계산</span><em>서식</em></a>
+        <a class="lk" href="spose-inherit-deduction.html"><b>배우자 상속공제 명세서</b><span>법정상속분 한도와 공제액</span><em>서식</em></a>
+        <a class="lk" href="finantial-asset-deduction.html"><b>금융재산 상속공제 신고서</b><span>금융재산·금융채무 명세</span><em>서식</em></a>
+        <a class="lk" href="co-habitation-deduction.html"><b>동거주택 상속공제 신고서</b><span>10년 동거 요건과 공제액</span><em>서식</em></a>
+        <a class="lk" href="상속세과세표준 자진납부.html"><b>과세표준 신고·자진납부 계산서</b><span>⑰~㊹ 세액 계산 부분만 따로</span><em>서식</em></a>
+      </div>
+    </div></li>
+
+    <li class="step"><div class="n">5<small>STEP</small></div><div>
+      <h2>신고하고 납부한다</h2>
+      <p class="lead">기한은 상속개시일이 속한 달의 말일부터 6개월(해외 거주 9개월). 기한 내 신고하면 3% 세액공제를 받습니다. 홈택스 전자신고 또는 세무서 방문 신고가 가능하며, 2천만 원을 넘으면 연부연납(최장 10년)을 검토하세요.</p>
+      <div class="links">
+        <a class="lk ext" href="https://www.hometax.go.kr/" target="_blank" rel="noopener"><b>홈택스 상속세 신고</b><span>세금신고 → 상속세 → 정기신고</span><em>홈택스</em></a>
+        <a class="lk" href="납부서.html"><b>상속세 납부서 작성</b><span>영수증서·납부서를 채워 은행 납부</span><em>서식</em></a>
+      </div>
+    </div></li>
+
+    <li class="step"><div class="n">6<small>STEP</small></div><div>
+      <h2>신고 후 환급·세금을 점검한다</h2>
+      <p class="lead">상속받은 주택의 취득세를 일반세율로 냈다면 특례세율(0.8%)로 경정청구할 수 있습니다. 상속 후 보유세가 어떻게 바뀌는지, 팔 때 양도세는 얼마인지도 미리 보세요.</p>
+      <div class="links">
+        <a class="lk" href="adquisitionTaxClaim.html"><b>상속주택 취득세 경정청구</b><span>특례세율 적용 여부와 환급액</span><em>계산기</em></a>
+        <a class="lk" href="상속으로인한재산세.html"><b>상속 후 재산세·종부세 비교</b><span>상속주택 주택수 제외 특례 반영</span><em>계산기</em></a>
+        <a class="lk" href="https://daehantax.github.io/tax/양도상속증여/양도·증여/transferTaxAfterInheritance.html"><b>상속 후 양도세</b><span>상속받은 부동산을 팔 때</span><em>계산기</em></a>
+        <a class="lk ext" href="https://tuzaga.com/%ec%83%81%ec%86%8d%ed%8f%ac%ea%b8%b0%ec%99%80-%ed%95%9c%ec%a0%95%ec%8a%b9%ec%9d%b8-%ec%95%8c%ec%95%84%eb%b3%b4%ea%b8%b0/" target="_blank" rel="noopener"><b>한정승인·상속포기</b><span>빚이 더 많을 때 (사망 안 날부터 3개월)</span><em>당신의세무사</em></a>
+      </div>
+    </div></li>
+  </ol>
+
+  <details class="dh"><summary>신고할 때 꼭 알아둘 것</summary>
+    <ul>
+      <li>상속세는 상속인 전원이 연대해서 납부할 의무가 있습니다. 상속인별 세액은 받은 재산 비율로 안분합니다.</li>
+      <li>신고기한을 넘기면 무신고 가산세 20%(부정 40%)와 납부지연 가산세(일 0.022%)가 붙고, 일괄공제 외 인적공제 선택이 제한됩니다.</li>
+      <li>세무서는 신고 후 통상 6~9개월 안에 조사·결정합니다. 평가 근거 서류(감정평가서, 매매계약서, 통장 사본)를 보관하세요.</li>
+      <li>상속재산이 10억을 넘거나 부동산·주식 평가가 복잡하면 세무사 검토를 권합니다.</li>
+    </ul>
+  </details>
+</main>
+
+<script src="js/dh.js"></script>
+<script>
+  function due(){
+    const v=document.getElementById('deathDate').value; const out=document.getElementById('dueDate'), left=document.getElementById('dueLeft');
+    if(!v){ out.textContent='—'; left.textContent=''; return; }
+    const d=new Date(v+'T00:00:00'); if(isNaN(d)){ out.textContent='—'; return; }
+    // 상속개시일이 속한 달의 말일부터 6개월 → 그 달의 말일
+    const end=new Date(d.getFullYear(), d.getMonth()+1+6, 0);
+    out.textContent=end.getFullYear()+'년 '+(end.getMonth()+1)+'월 '+end.getDate()+'일';
+    const days=Math.ceil((end-new Date().setHours(0,0,0,0))/86400000);
+    left.textContent = days>=0 ? '(오늘부터 '+days+'일 남음)' : '(기한 경과 '+(-days)+'일 · 기한 후 신고)';
+  }
+  window.DH_recalc=due;
+  document.getElementById('deathDate').addEventListener('change',due);
+  document.addEventListener('DOMContentLoaded',function(){ DH.load(true); due(); });
+  document.getElementById('deathDate').addEventListener('change',function(){ try{localStorage.setItem(DH.storeKey(),JSON.stringify({deathDate:this.value}));}catch(e){} });
+</script>
 </body>
 </html>

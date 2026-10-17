@@ -1,0 +1,150 @@
+/* ============================================================
+   상속세 절세 보고서 전용 스타일 (report.css)
+   - css/dh.css 위에 얹는다. 보고서 5종(프리·프리미엄·골드·골드답변·로얄)이 공유.
+   - 단계(step) 위저드, 절세 목록, 안내 카드, 인쇄 요약표.
+   ============================================================ */
+
+/* ---------- 단계 위저드 ---------- */
+.step{display:none}
+.step.on{display:block}
+.wiz-progress{display:flex;gap:4px;margin:0 0 14px;flex-wrap:wrap}
+.wiz-progress span{flex:1;min-width:48px;height:6px;border-radius:999px;background:var(--line);cursor:pointer}
+.wiz-progress span.done{background:var(--main-soft);border:1px solid var(--line-strong)}
+.wiz-progress span.on{background:var(--main)}
+.wiz-progress span[title]{position:relative}
+.step-no{display:inline-block;font-size:12px;font-weight:700;color:var(--main);background:var(--main-soft);border-radius:999px;padding:2px 10px;margin-bottom:6px}
+.step h2.title{margin:0 0 14px;font-size:20px;padding-bottom:10px;border-bottom:2px solid var(--main-soft)}
+.step h3{font-size:16px;margin:22px 0 8px;color:var(--main)}
+.step h4{font-size:14.5px;margin:16px 0 6px}
+.step ul.tips,.step ol.tips{margin:8px 0 0;padding-left:20px;font-size:13.5px;color:var(--ink)}
+.step ul.tips li{margin:3px 0;word-break:keep-all}
+.links{margin-top:12px;font-size:13.5px}
+.links .hot{display:inline-block;font-weight:700;color:var(--bad);margin-bottom:4px}
+.links ul{margin:4px 0 0;padding-left:20px}
+.step .field>label{font-size:14.5px}
+.step input[type=text],.step input[type=number],.step select{max-width:360px}
+.step select{max-width:100%}
+.step .big{font-size:18px;font-weight:700;color:var(--main)}
+.subtle{font-size:13px;color:var(--muted);word-break:keep-all}
+
+/* ---------- 결과표 ---------- */
+table.dh td.lab{font-weight:500}
+table.dh td.rem{font-size:12.5px;color:var(--muted);text-align:center}
+#resultTable td.num{font-weight:600}
+#resultTable tr.total td{background:var(--main-tint);font-weight:700}
+#resultTable tr.total td.num{color:var(--main);font-size:17px}
+
+/* ---------- 절세 목록 (12단계) ---------- */
+.tax-tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:10px 0 22px}
+.tax-tips .tip{background:var(--main);color:#fff;border-radius:var(--r);padding:16px 18px;font-weight:700;font-size:14.5px;cursor:pointer;
+  word-break:keep-all;transition:transform .12s,box-shadow .12s;line-height:1.45;border:0;text-align:left;font-family:inherit}
+.tax-tips .tip:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.tax-tips .tip .n{display:block;font-size:11.5px;opacity:.8;font-weight:500;margin-bottom:2px}
+.tax-tips .tip.lock{background:#fff;color:var(--muted);border:1px dashed var(--line-strong)}
+.back-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:8px 0 0}
+.back-links .back-link{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px;text-align:center;cursor:pointer;color:var(--muted);font-family:inherit}
+.back-links .back-link:hover{border-color:var(--main);color:var(--main)}
+
+/* ---------- 모달 ---------- */
+.modal .box label{display:block;font-size:13.5px;margin:10px 0 4px;font-weight:500}
+.modal .box input[type=text],.modal .box input[type=number]{max-width:none}
+.modal .box .actions{margin-top:14px}
+.modal .box ul{font-size:13.5px;padding-left:18px}
+.modal .box .out{font-size:15px;font-weight:700;color:var(--main);margin:12px 0 4px}
+
+/* ---------- 공제 결과 상자 ---------- */
+.ded-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:12px 0}
+.ded-box>div{background:var(--main-tint);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:13.5px}
+.ded-box b{display:block;font-size:17px;color:var(--main);margin-top:2px;font-variant-numeric:tabular-nums}
+.ded-total{background:var(--main);color:#fff;border-radius:var(--r);padding:14px 18px;font-size:15px;margin:12px 0;display:flex;justify-content:space-between;align-items:center}
+.ded-total b{font-size:20px;font-variant-numeric:tabular-nums}
+
+/* ---------- 양도세 사례 ---------- */
+.case{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin:12px 0;background:#fff}
+.case h4{margin:0 0 8px;color:var(--main);font-size:15px}
+.case .field{padding:6px 0}
+
+/* ---------- 인쇄 선택 ---------- */
+.print-pick{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);float:right;margin:4px 0 0}
+.print-pick input{accent-color:var(--main)}
+
+/* ---------- 질문·답변·상담 ---------- */
+.qa{margin:8px 0 0}
+.qa .editor-container{background:#fff;min-height:180px}
+.qa .ql-toolbar{border-radius:8px 8px 0 0;border-color:var(--line-strong)}
+.qa .ql-container{border-radius:0 0 8px 8px;border-color:var(--line-strong);font-family:inherit;font-size:14.5px}
+.qa textarea.plain{width:100%;max-width:none;min-height:160px}
+.qa-content{border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;background:#fff;margin-top:12px;font-size:14.5px;min-height:40px}
+.qa-content:empty{display:none}
+.qa-content h3{margin:0 0 8px;font-size:15px;color:var(--main)}
+.qa-meta{font-size:12.5px;color:var(--muted);margin-top:6px}
+.consult .field>label{font-size:14px}
+
+/* ---------- 업그레이드 안내 (프리) ---------- */
+.upgrade{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:14px 0}
+.upgrade a{display:block;border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 18px;background:#fff;color:var(--ink);text-decoration:none;transition:transform .12s,box-shadow .12s}
+.upgrade a:hover{transform:translateY(-2px);box-shadow:var(--sh);text-decoration:none}
+.upgrade a .tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;margin-bottom:8px;color:#fff}
+.upgrade a.p .tag{background:#2f6fb3}.upgrade a.g .tag{background:#1f7a4d}.upgrade a.r .tag{background:var(--main)}
+.upgrade a strong{display:block;font-size:16px;margin-bottom:4px}
+.upgrade a span{font-size:13px;color:var(--muted);word-break:keep-all}
+
+/* ---------- 인쇄 요약표 ---------- */
+#printSummary{margin:0 0 5mm}
+#printSummary td.lab{width:24%;white-space:nowrap}
+#printSummary td.num{width:26%}
+
+/* ---------- 모바일 ---------- */
+@media (max-width:720px){
+  .step input[type=text],.step input[type=number],.step select{max-width:none}
+  .tax-tips{grid-template-columns:1fr}
+}
+
+/* ============================================================
+   인쇄 — A4 세로. 입력 단계(1~10)는 요약표로, 결과·절세 단계는 쪽마다.
+   ============================================================ */
+@media print{
+  .step{display:block!important}
+  .input-step,.menu-step,.wiz-progress,.print-pick,.toolbar,.links,.qa-form,.modal{display:none!important}
+  .step.page-break{break-before:page}
+  .step h2.title{font-size:13pt;border-bottom:1px solid #999;color:#000;margin-bottom:3mm}
+  .step h3{font-size:11.5pt;color:#000;margin:4mm 0 2mm}
+  .step h4{font-size:10.5pt}
+  .step ul.tips{font-size:9.5pt}
+  .print-section.print-skip{display:none!important}
+  .card.step{border:0;padding:0;margin:0 0 5mm;box-shadow:none;break-inside:auto}
+  .result.step{break-inside:avoid;padding:3mm 4mm}
+  .result.step h2{margin-bottom:2mm}
+  #resultTable{font-size:9pt}
+  #resultTable th,#resultTable td{padding:1mm 2mm;line-height:1.3}
+  #resultTable td.rem{font-size:8pt}
+  #resultTable tr.total td.num{font-size:12pt}
+  .dh-head{padding-bottom:3mm}
+  .card>h2{margin-bottom:2mm;padding-bottom:1.5mm}
+  .card ol.tips,.card ul.tips{margin:0}
+  .tax-tips,.back-links{display:none!important}
+  .ded-box{grid-template-columns:1fr 1fr 1fr 1fr;gap:2mm}
+  .ded-box>div{border:1px solid #999;border-radius:0;font-size:9pt;padding:2mm}
+  .ded-box b{font-size:11pt;color:#000}
+  .ded-total{background:#fff!important;color:#000;border:1.5px solid #000;border-radius:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .case{border:1px solid #999;border-radius:0;break-inside:avoid;padding:2mm 3mm;margin:2mm 0}
+  .case h4{color:#000}
+  .step input[type=text],.step input[type=number],.step select{max-width:none}
+  .upgrade{grid-template-columns:1fr 1fr 1fr;gap:3mm}
+  .upgrade a{border:1px solid #999;border-radius:0;padding:3mm}
+  .upgrade a .tag{border:1px solid #000;color:#000;background:#fff!important}
+  .qa-content{border:1px solid #999;border-radius:0;font-size:10pt}
+  .ql-editor{padding:0}
+  #printSummary{display:table;font-size:9pt}
+  #printSummary td{padding:1mm 2mm;line-height:1.3}
+  #printSummaryWrap .subhead{margin:3mm 0 2mm}
+  .print-only{display:block}
+  .step .field{grid-template-columns:62mm 1fr;padding:1mm 0;font-size:9.5pt}
+  .step .field>label small{font-size:8pt}
+  .step .field input,.step .field select{font-size:9.5pt!important;padding:.5mm 1.5mm!important}
+  .step .field .won,.step .field .unit{font-size:8pt}
+  .subtle{font-size:8.5pt}
+  body[data-tier="free"] #step20{break-before:auto}
+  details.dh>div,details.dh>ul,details.dh>p{font-size:9.5pt}
+  table.dh{break-inside:auto}
+}

@@ -1,170 +1,196 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>채무 계산기</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 5px;
-            box-sizing: border-box;
-        }
-        .total {
-            font-weight: bold;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>채무·공과금·장례비 계산기 · 대한세무법인</title>
+<meta name="description" content="상속세 과세가액에서 빼는 채무·공과금·장례비용을 항목별로 정리하고 장례비 인정 한도(500만~1천만, 봉안시설 500만)를 자동 적용합니다. 별지 제9호서식 부표3 작성 보조.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  table.dh td input[data-money]{text-align:right}
+  table.dh td.del{width:34px;text-align:center;padding:4px}
+  .xbtn{font:inherit;font-size:14px;line-height:1;border:0;background:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px}
+  .xbtn:hover{background:var(--main-soft);color:var(--main)}
+  .tbl-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;font-size:13px;color:var(--muted)}
+  .col-date{width:130px}.col-type{width:140px}.col-amt{width:170px}.col-doc{width:150px}
+  @media (max-width:720px){.col-date,.col-type,.col-amt,.col-doc{width:auto}}
+  @media print{
+    table.dh td.del,.tbl-foot{display:none}
+    .col-amt{width:34mm}.col-doc{width:30mm}.col-date{width:26mm}.col-type{width:30mm}
+    table.dh td input,table.dh td select{font-size:9.5pt!important;padding:0.5mm 1mm!important}
+    table.dh td{padding:0.8mm 1.5mm}
+    .card{padding:3mm 4mm}
+  }
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
 </head>
-<body>
-[별지 제9호서식](2020.0313 개정)
-    <h1>채무 공과금 장례비용 및 상속공제명세서</h1>
-    뒤쪽의 작성방법을 읽고 작성하시기 바랍니다. 
-    <hr>
-    
-    <h4>가. 채무 </h4>
-    <table id="debtTable">
-        <tr>
-           <td rowspan="2"></td>
-           <td colspan="2">차입기간</td>
-           <td colspan="3">채권자</td>
-           <td rowspan="2"> 금액 </td>
-        </tr>
-        <tr>
-            <td>채무 1</td>
-            <td><input type="text" class="debt-amount" onInput="formatAndCalculateDebtUtility(this, 'debt')"></td>
-        </tr>
-        <tr>
-            <td>채무 2</td>
-            <td><input type="text" class="debt-amount" onInput="formatAndCalculateDebtUtility(this, 'debt')"></td>
-        </tr>
-        <tr>
-            <td>채무 3</td>
-            <td><input type="text" class="debt-amount" onInput="formatAndCalculateDebtUtility(this, 'debt')"></td>
-        </tr>
-        <tr>
-            <td>채무 4</td>
-            <td><input type="text" class="debt-amount" onInput="formatAndCalculateDebtUtility(this, 'debt')"></td>
-        </tr>
-        <tr class="total">
-            <td>합계</td>
-            <td id="debtTotal">0</td>
-        </tr>
-    </table>
+<body data-store="debt-charge-funeral" data-subject="상속세 채무·공과금" data-autoload="1">
 
-    <h2>공과금 테이블</h2>
-    <table id="utilityTable">
-        <tr>
-            <th>내용</th>
-            <th>금액</th>
-        </tr>
-        <tr>
-            <td>공과금 1</td>
-            <td><input type="text" class="utility-amount" onInput="formatAndCalculateDebtUtility(this, 'utility')"></td>
-        </tr>
-        <tr>
-            <td>공과금 2</td>
-            <td><input type="text" class="utility-amount" onInput="formatAndCalculateDebtUtility(this, 'utility')"></td>
-        </tr>
-        <tr>
-            <td>공과금 3</td>
-            <td><input type="text" class="utility-amount" onInput="formatAndCalculateDebtUtility(this, 'utility')"></td>
-        </tr>
-        <tr>
-            <td>공과금 4</td>
-            <td><input type="text" class="utility-amount" onInput="formatAndCalculateDebtUtility(this, 'utility')"></td>
-        </tr>
-        <tr class="total">
-            <td>합계</td>
-            <td id="utilityTotal">0</td>
-        </tr>
-    </table>
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 계산기</div>
+    <span class="form-no">별지 제9호서식 부표3 "가·나·다" 작성 보조</span>
+    <h1>채무·공과금·장례비 계산기</h1>
+    <p>상속세 과세가액에서 빼는 채무, 공과금, 장례비용을 항목별로 정리합니다. 장례비는 법정 인정 한도를 자동으로 적용해 줍니다.</p>
+  </div>
 
-    <h2>장례비용 테이블</h2>
-    <table id="funeralTable">
-        <tr>
-            <th>내용</th>
-            <th>금액</th>
-        </tr>
-        <tr>
-            <td>장례비용 1</td>
-            <td><input type="text" class="funeral-amount" onInput="formatAndCalculateDebtUtility(this, 'funeral')"></td>
-        </tr>
-        <tr>
-            <td>장례비용 2</td>
-            <td><input type="text" class="funeral-amount" onInput="formatAndCalculateDebtUtility(this, 'funeral')"></td>
-        </tr>
-        <tr>
-            <td>장례비용 3</td>
-            <td><input type="text" class="funeral-amount" onInput="formatAndCalculateDebtUtility(this, 'funeral')"></td>
-        </tr>
-        <tr>
-            <td>장례비용 4</td>
-            <td><input type="text" class="funeral-amount" onInput="formatAndCalculateDebtUtility(this, 'funeral')"></td>
-        </tr>
-        <tr>
-            <td>장례비용 5</td>
-            <td><input type="text" class="funeral-amount" onInput="formatAndCalculateDebtUtility(this, 'funeral')"></td>
-        </tr>
-        <tr class="total">
-            <td>합계</td>
-            <td id="funeralTotal">0</td>
-        </tr>
-    </table>
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
 
-    <script>
-        function formatNumber(num) {
-            // 소수점 아래 절사 후 천 단위 쉼표 추가
-            return Math.floor(num).toLocaleString('ko-KR');
-        }
+  <div data-save>
+    <section class="card">
+      <h2>1. 채무 <small>상속개시일 현재 피상속인이 부담할 확정 채무 (최대 10건)</small></h2>
+      <div class="table-scroll">
+      <table class="dh" id="debtTable">
+        <thead><tr><th class="no">#</th><th>채권자</th><th class="col-type">종류</th><th class="col-date">발생일</th><th class="col-amt">금액(원)</th><th class="col-doc">증빙</th><th class="del no-print"></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr class="total"><td colspan="4" class="right">채무 합계</td><td class="num" id="debtTotal">0</td><td></td><td class="del no-print"></td></tr></tfoot>
+      </table>
+      </div>
+      <div class="tbl-foot no-print"><span>금융기관 대출·임대보증금·미지급금·미납 신용카드 등. 상속인이 승계하는 채무만.</span><button class="btn ghost sm" type="button" data-add="debt">+ 행 추가</button></div>
+    </section>
 
-        function formatAndCalculateDebtUtility(input, type) {
-            // 숫자가 아닌 문자 제거
-            let value = input.value.replace(/[^\d]/g, '');
-            
-            // 숫자를 정수로 변환
-            let numValue = parseInt(value, 10);
+    <section class="card">
+      <h2>2. 공과금 <small>상속개시일 현재 납부 의무가 생긴 세금·공공요금 (최대 5건)</small></h2>
+      <div class="table-scroll">
+      <table class="dh" id="pubTable">
+        <thead><tr><th class="no">#</th><th>종류 <small>(종합소득세·재산세·건강보험료·전기요금 등)</small></th><th class="col-amt">금액(원)</th><th class="del no-print"></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr class="total"><td colspan="2" class="right">공과금 합계</td><td class="num" id="pubTotal">0</td><td class="del no-print"></td></tr></tfoot>
+      </table>
+      </div>
+      <div class="tbl-foot no-print"><span>사망 후 발생한 가산세·가산금·체납처분비는 공과금이 아닙니다.</span><button class="btn ghost sm" type="button" data-add="pub">+ 행 추가</button></div>
+    </section>
 
-            // NaN 체크
-            if (isNaN(numValue)) {
-                numValue = 0;
-            }
+    <section class="card">
+      <h2>3. 장례비용 <small>장례에 직접 들어간 비용 (최대 5건)</small></h2>
+      <div class="table-scroll">
+      <table class="dh" id="funTable">
+        <thead><tr><th class="no">#</th><th>항목 <small>(장례식장·상조·화장·운구 등)</small></th><th class="col-amt">금액(원)</th><th class="del no-print"></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr class="total"><td colspan="2" class="right">장례비 지출 합계</td><td class="num" id="funTotal">0</td><td class="del no-print"></td></tr></tfoot>
+      </table>
+      </div>
+      <div class="tbl-foot no-print"><span>봉안시설·자연장지 비용은 아래 칸에 따로 적습니다.</span><button class="btn ghost sm" type="button" data-add="fun">+ 행 추가</button></div>
+      <div class="field"><label for="enshrine">봉안시설·자연장지 비용 <small>납골당·수목장 등. 별도로 500만 원까지 인정</small></label>
+        <div class="ctl"><input type="text" id="enshrine" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+    </section>
+  </div>
 
-            // 포맷된 값을 입력 필드에 설정
-            input.value = formatNumber(numValue);
+  <section class="result" id="result">
+    <h2>계산 결과 <small class="muted">— 과세가액에서 빼는 금액</small></h2>
+    <div class="kv"><span>채무 합계</span><b id="r_debt">0원</b></div>
+    <div class="kv"><span>공과금 합계</span><b id="r_pub">0원</b></div>
+    <div class="kv"><span>장례비 지출 합계 <span class="sub" id="r_funNote"></span></span><b id="r_funSpent">0원</b></div>
+    <div class="kv"><span>→ 장례비 인정액 <span class="sub">(500만 미만이면 500만, 최대 1천만)</span></span><b id="r_fun">0원</b></div>
+    <div class="kv"><span>→ 봉안시설·자연장지 인정액 <span class="sub">(최대 500만)</span></span><b id="r_ens">0원</b></div>
+    <div class="kv total"><span>과세가액에서 빼는 금액 (채무 + 공과금 + 장례비 인정액)</span><b id="r_total">0원</b></div>
+    <div class="note" id="r_note"></div>
+  </section>
 
-            // 합계 계산
-            calDebtUtilityFuneralTotal(type);
-        }
+  <div class="actions no-print">
+    <a class="btn ghost" href="상속공제.html">상속공제 계산기</a>
+    <a class="btn ghost" href="cal_Inherit_simple.html">상속세 전체 계산</a>
+  </div>
 
-        function calDebtUtilityFuneralTotal(type) {
-            const inputs = document.querySelectorAll(`.${type}-amount`);
-            let total = 0;
-            inputs.forEach(input => {
-                // 쉼표 제거 후 숫자로 변환
-                let value = parseInt(input.value.replace(/,/g, ''), 10) || 0;
-                total += value;
-            });
-            document.getElementById(`${type}Total`).textContent = formatNumber(total);
-        }
-    </script>
+  <details class="dh"><summary>법령 해설 (상속세 및 증여세법 §14, 시행령 §9·§10)</summary>
+    <ul>
+      <li><b>공과금</b>: 상속개시일 현재 피상속인이 납부할 의무가 있는 조세·공공요금 등. 상속개시일 이후 상속인의 귀책사유로 생긴 가산세·가산금·강제징수비·벌금·과태료는 제외됩니다.</li>
+      <li><b>장례비용</b>: 장례에 직접 소요된 금액. 증빙이 없거나 500만 원 미만이면 500만 원을 인정하고, 증빙이 있어도 1천만 원을 넘으면 1천만 원까지만 인정합니다. 봉안시설(납골당)·자연장지 비용은 이와 별도로 500만 원까지 인정하므로 최대 인정액은 1,500만 원입니다.</li>
+      <li><b>채무</b>: 상속개시일 현재 피상속인이 부담해야 할 확정 채무로 상속인이 실제 승계한 것. 국가·지자체·금융기관 채무는 해당 기관 확인서로, 그 밖의 채무는 계약서·채권자 확인서·담보설정 등 객관적 자료로 입증해야 합니다. 임대보증금, 미지급 공사대금·의료비, 상속개시 후 확정된 소득세·부가가치세도 채무입니다.</li>
+      <li>상속개시 전 2년 안에 채무를 부담하고 사용처가 불분명한 금액(1년 2억·2년 5억 기준)은 상속재산으로 추정될 수 있습니다(§15). 이 경우 채무는 공제되지만 그 사용처를 소명해야 합니다.</li>
+      <li>입증서류: 채무부담·공과금·장례비 지급 입증서류를 신고서에 첨부합니다. 이 표를 인쇄해 부표3 작성의 근거 자료로 보관하세요.</li>
+    </ul>
+  </details>
+</main>
+
+<script src="js/dh.js"></script>
+<script>
+  const MAX = { debt: 10, pub: 5, fun: 5 }, INIT = { debt: 3, pub: 2, fun: 3 };
+  const DEBT_TYPES = ['금융기관 대출','임대보증금','개인 차입금','미지급금·카드','미납 세금(확정)','기타'];
+  function tbody(kind){ return document.querySelector('#'+kind+'Table tbody'); }
+  function rowCount(kind){ return tbody(kind).children.length; }
+  function esc(s){ return String(s).replace(/"/g,'&quot;'); }
+  function rowHtml(kind, i){
+    const n = i+1, p = kind+n+'_';
+    const del = '<td class="del no-print"><button type="button" class="xbtn" data-del="'+kind+'" title="이 행 삭제">×</button></td>';
+    if (kind==='debt') return '<tr><td class="no">'+n+'</td>'+
+      '<td><input type="text" id="'+p+'cred" placeholder="채권자명"></td>'+
+      '<td><select id="'+p+'type">'+DEBT_TYPES.map(t=>'<option value="'+esc(t)+'">'+t+'</option>').join('')+'</select></td>'+
+      '<td><input type="date" id="'+p+'date"></td>'+
+      '<td><input type="text" id="'+p+'amt" data-money placeholder="0"></td>'+
+      '<td><input type="text" id="'+p+'doc" placeholder="확인서·계약서"></td>'+del+'</tr>';
+    const ph = kind==='pub' ? '예: 2025년 귀속 종합소득세' : '예: 장례식장 사용료';
+    return '<tr><td class="no">'+n+'</td><td><input type="text" id="'+p+'name" placeholder="'+ph+'"></td>'+
+      '<td><input type="text" id="'+p+'amt" data-money placeholder="0"></td>'+del+'</tr>';
+  }
+  function addRow(kind){
+    const tb = tbody(kind); if (tb.children.length >= MAX[kind]) { DH.toast('최대 '+MAX[kind]+'행까지 입력할 수 있습니다.', true); return false; }
+    tb.insertAdjacentHTML('beforeend', rowHtml(kind, tb.children.length)); DH.bindMoney(tb); return true;
+  }
+  function setRows(kind, n){
+    n = Math.min(MAX[kind], Math.max(1, n|0));
+    const tb = tbody(kind); tb.innerHTML = '';
+    for (let i=0;i<n;i++) tb.insertAdjacentHTML('beforeend', rowHtml(kind, i));
+    DH.bindMoney(tb);
+  }
+  function renumber(kind){
+    // 행 삭제 뒤 id·번호를 다시 매긴다 (값은 유지)
+    const tb = tbody(kind);
+    Array.from(tb.children).forEach(function(tr, i){
+      tr.querySelector('.no').textContent = i+1;
+      tr.querySelectorAll('input,select').forEach(function(el){ el.id = el.id.replace(/^[a-z]+\d+_/, kind+(i+1)+'_'); });
+    });
+  }
+  function sumKind(kind){ let s=0; tbody(kind).querySelectorAll('input[data-money]').forEach(i=>{ s+=DH.num(i.value); }); return s; }
+  function counts(){ return { debt: rowCount('debt'), pub: rowCount('pub'), fun: rowCount('fun') }; }
+
+  // 저장/불러오기/지우기 훅: 행 수를 함께 저장하고, 불러오기 전에 행을 먼저 만든다
+  const _save = DH.save, _load = DH.load, _clear = DH.clear;
+  DH.save = function(extra){ return _save(Object.assign({ rows: counts() }, extra||{})); };
+  DH.load = function(silent){
+    try { const raw = localStorage.getItem(DH.storeKey()); if (raw){ const d = JSON.parse(raw); if (d && d.rows) ['debt','pub','fun'].forEach(k=>{ if (d.rows[k]) setRows(k, d.rows[k]); }); } } catch(e){}
+    return _load(silent);
+  };
+  DH.clear = function(){
+    _clear();
+    let any=false; document.querySelectorAll('[data-save] input[type=text],[data-save] input[type=date]').forEach(i=>{ if(i.value) any=true; });
+    if (!any) ['debt','pub','fun'].forEach(k=>setRows(k, INIT[k]));   // 확인을 눌렀을 때만 행 수도 초기화
+  };
+
+  function recalc(){
+    const debt = sumKind('debt'), pub = sumKind('pub'), funSpent = sumKind('fun'), ens = DH.val('enshrine');
+    const fun = DH.funeral(funSpent, 0), ensOk = Math.min(ens, DH.RULES.enshrineMax);
+    DH.set('debtTotal', debt, {won:false}); DH.set('pubTotal', pub, {won:false}); DH.set('funTotal', funSpent, {won:false});
+    DH.set('r_debt', debt); DH.set('r_pub', pub); DH.set('r_funSpent', funSpent); DH.set('r_fun', fun); DH.set('r_ens', ensOk);
+    DH.set('r_total', debt + pub + fun + ensOk);
+    let fn = '';
+    if (funSpent < DH.RULES.funeralMin) fn = '(500만 미만 → 500만 인정)';
+    else if (funSpent > DH.RULES.funeralMax) fn = '(1천만 초과분 '+DH.kor(funSpent-DH.RULES.funeralMax)+' 불인정)';
+    else fn = '(증빙 범위 내 전액 인정)';
+    document.getElementById('r_funNote').textContent = fn;
+    const notes=[];
+    if (ens > DH.RULES.enshrineMax) notes.push('봉안시설·자연장지 비용은 500만 원까지만 인정되어 '+DH.kor(ens-DH.RULES.enshrineMax)+'은 제외됩니다.');
+    if (debt>0) notes.push('채무는 채권자 확인서·계약서 등 객관적 증빙이 있어야 공제됩니다.');
+    if (!notes.length) notes.push('장례비는 증빙이 없어도 500만 원은 인정됩니다. 봉안시설·자연장지 비용은 별도 500만 원까지입니다.');
+    document.getElementById('r_note').textContent = notes.join(' ');
+  }
+  window.DH_recalc = recalc;
+  document.addEventListener('click', function(e){
+    const add = e.target.closest('[data-add]'); if (add){ addRow(add.dataset.add); recalc(); return; }
+    const del = e.target.closest('[data-del]'); if (del){ const k=del.dataset.del; if (rowCount(k)>1) del.closest('tr').remove(); else del.closest('tr').querySelectorAll('input').forEach(i=>{ i.value=''; }); renumber(k); recalc(); }
+  });
+  document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
+  document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
+  // dh.js 의 자동 불러오기보다 먼저 기본 행을 만든다 (이 리스너는 dh.js 보다 늦게 등록되지만, 불러오기 훅이 행을 다시 만든다)
+  ['debt','pub','fun'].forEach(k=>setRows(k, INIT[k]));
+  document.addEventListener('DOMContentLoaded', recalc);
+</script>
 </body>
 </html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상속 취득세 계산·경정청구 점검 · 대한세무법인</title>
+<meta name="description" content="상속으로 취득한 주택·토지·농지의 취득세(지방교육세·농어촌특별세 포함)를 계산하고, 무주택 1가구 1주택 특례(0.8%)를 놓쳤다면 경정청구 기한과 환급 예상액을 알려 줍니다.">
+
+
+<link rel="stylesheet" href="/home/claude/inherit/css/dh.css">
+<style>
+  .is-off{opacity:.4;pointer-events:none}
+  table.dh.rates td:first-child{font-weight:500}
+  .result table.dh{margin:6px 0 12px}
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
+</head>
+<body data-store="acq-tax-claim" data-subject="상속 취득세 경정청구" data-contact-title="취득세를 더 내셨나요? 경정청구를 도와드립니다" data-autoload="1"><header class="dh-top"><div class="wrap"><a class="logo" href="./">대한세무법인 <span>상속·증여</span></a><nav><a href="./">상속세</a><a href="gift.html">상황별 증여세</a><a class="hide-m" href="https://daehantax.github.io/tax/">전체 세무 도구 →</a></nav></div></header>
+
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 계산기</div>
+    <h1>상속 취득세 계산 · 경정청구 점검</h1>
+    <p>상속으로 받은 주택·토지의 취득세를 계산합니다. 무주택 1가구가 상속으로 1주택이 된 경우 세율이 2.8%에서 0.8%로 낮아지는데, 이를 모르고 더 냈다면 5년 안에 경정청구로 돌려받을 수 있습니다.</p>
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
+
+  <div data-save="">
+    <section class="card">
+      <h2>1. 상속받은 재산</h2>
+      <div class="field"><label>재산 종류</label>
+        <div class="ctl radio-row">
+          <label><input type="radio" name="kind" value="house" checked=""><span>주택</span></label>
+          <label><input type="radio" name="kind" value="land"><span>토지 (농지 외)</span></label>
+          <label><input type="radio" name="kind" value="farm"><span>농지</span></label>
+          <label><input type="radio" name="kind" value="farmSelf"><span>자경농민이 상속받는 농지</span></label>
+        </div></div>
+      <div class="field"><label for="stdValue">시가표준액 <small>아파트: 공동주택가격, 단독: 개별주택가격, 토지: 개별공시지가 × 면적</small></label>
+        <div class="ctl"><input type="text" id="stdValue" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="500,000,000"><span class="unit">원</span><span class="won">5억원</span></div></div>
+      <div class="field"><label for="share">내 상속 지분 <small>단독 상속이면 100</small></label>
+        <div class="ctl"><input type="number" id="share" class="short" min="0" max="100" step="0.01" value="100"><span class="unit">%</span></div></div>
+      <div class="field"><label for="startDate">상속개시일 <small>사망일. 신고기한·경정청구 기한 계산용</small></label>
+        <div class="ctl"><input type="date" id="startDate" class="mid" value="2024-03-15"></div></div>
+    </section>
+
+    <section class="card" id="houseCard">
+      <h2>2. 주택 세율 판정 <small>주택일 때만</small></h2>
+      <div class="field"><label>무주택 1가구 특례 <small>지방세법 §15①2호 가목</small></label>
+        <div class="ctl"><label class="check"><input type="checkbox" id="special" checked=""> 상속개시일 현재 우리 가구가 무주택이고, 이 상속으로 1가구 1주택이 됨</label></div></div>
+      <div class="field is-off" id="sizeField"><label>국민주택규모 <small>농어촌특별세 비과세 판정</small></label>
+        <div class="ctl"><label class="check"><input type="checkbox" id="small85" disabled=""> 전용면적 85㎡ 이하 (수도권 외 읍·면은 100㎡ 이하)</label></div></div>
+    </section>
+
+    <section class="card">
+      <h2>3. 경정청구 점검 <small>이미 신고·납부한 경우</small></h2>
+      <div class="field"><label for="paid">이미 낸 세액 합계 <small>취득세 + 지방교육세 + 농특세. 모르면 비움</small></label>
+        <div class="ctl"><input type="text" id="paid" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="15,800,000"><span class="unit">원</span><span class="won">1,580만원</span></div></div>
+    </section>
+  </div>
+
+  <section class="result" id="result">
+    <h2>계산 결과</h2>
+    <div class="kv"><span>과세표준 <span class="sub" id="r_baseNote">(시가표준액)</span></span><b id="r_base">500,000,000원</b></div>
+    <table class="dh rates">
+      <thead><tr><th>구분</th><th>세율</th><th class="num">세액</th></tr></thead>
+      <tbody>
+        <tr><td>취득세</td><td class="c" id="r_acqRate">0.8%</td><td class="num" id="r_acq">4,000,000</td></tr>
+        <tr><td>지방교육세</td><td class="c" id="r_eduRate">0.16%</td><td class="num" id="r_edu">800,000</td></tr>
+        <tr><td>농어촌특별세</td><td class="c" id="r_agRate">비과세</td><td class="num" id="r_ag">0</td></tr>
+        <tr class="total"><td>합계</td><td class="c" id="r_sumRate">0.96%</td><td class="num" id="r_sum">4,800,000</td></tr>
+      </tbody>
+    </table>
+    <div class="kv total"><span>내야 할 취득세 합계 <span class="sub" id="r_kindNote">(무주택 1가구 1주택 특례)</span></span><b id="r_total">4,800,000원</b></div>
+    <div class="kv"><span>이미 낸 세액</span><b id="r_paid">15,800,000원</b></div>
+    <div class="kv"><span>차액 (이미 낸 세액 − 계산 세액) <span class="sub" id="r_diffNote">→ 더 냈습니다. 경정청구 환급 대상</span></span><b id="r_diff">11,000,000원</b></div>
+    <div class="kv"><span>취득세 법정신고기한 <span class="sub">상속개시일이 속한 달의 말일부터 6개월</span></span><b id="r_due">2024-09-30</b></div>
+    <div class="kv"><span>경정청구 기한 <span class="sub">법정신고기한이 지난 날부터 5년</span></span><b id="r_claim">2029-09-30</b></div>
+    <div class="note" id="r_note">이미 낸 세액이 1,100만원 더 많습니다. 아래 경정청구 기한 안에 시·군·구청에 경정청구하면 환급(환급가산금 포함)받을 수 있습니다. 신고기한은 지났고 경정청구 기한까지 1079일 남았습니다. 특례는 공동상속 시 지분이 가장 큰 상속인 1명에게만 적용됩니다. 상속개시일 현재 가구 전체가 무주택이어야 합니다.</div>
+  </section>
+
+  <details class="dh" data-po="1" open=""><summary>특례 요건 확인 (꼭 읽어 보세요)</summary>
+    <ul>
+      <li><b>1가구</b>: 상속인과 같은 세대별 주민등록표에 기재된 가족(동거인 제외). 배우자와 30세 미만 미혼 자녀는 따로 살아도 같은 가구로 봅니다.</li>
+      <li>상속개시일(사망일) 현재 상속인이 속한 가구가 <b>이 주택 외에 다른 주택을 가지고 있지 않아야</b> 합니다.</li>
+      <li><b>공동상속</b>: 1주택을 여러 명이 공동상속하면 지분이 가장 큰 상속인 1명만 특례 대상입니다. 지분이 같으면 그 주택에 거주하는 사람, 그다음 연장자 순입니다.</li>
+      <li>고급주택(지방세법 §13⑤)은 특례가 적용되지 않습니다.</li>
+      <li>특례를 모르고 2.8%로 신고·납부했다면 지방세기본법 §50에 따라 법정신고기한이 지난 날부터 <b>5년 이내</b>에 경정청구할 수 있습니다. 시·군·구청 세무과에 경정청구서와 무주택 입증서류(주민등록등본, 지방세 세목별 과세증명 등)를 냅니다.</li>
+    </ul>
+  </details>
+
+  <details class="dh" data-po="1" open=""><summary>법령 해설 · 세율표 (지방세법 §11·§15·§151, 농어촌특별세법 §4·§5)</summary>
+    <div>
+      <table class="dh rates">
+        <thead><tr><th>구분</th><th>취득세</th><th>지방교육세</th><th>농특세</th><th>합계</th></tr></thead>
+        <tbody>
+          <tr><td>주택 상속 (일반)</td><td class="c">2.8%</td><td class="c">0.16%</td><td class="c">0.2% <small>(85㎡ 이하 비과세)</small></td><td class="c">3.16% / 2.96%</td></tr>
+          <tr><td>무주택 1가구 1주택 특례</td><td class="c">0.8%</td><td class="c">0.16%</td><td class="c">—</td><td class="c">0.96%</td></tr>
+          <tr><td>토지(농지 외) 상속</td><td class="c">2.8%</td><td class="c">0.16%</td><td class="c">0.2%</td><td class="c">3.16%</td></tr>
+          <tr><td>농지 상속</td><td class="c">2.3%</td><td class="c">0.06%</td><td class="c">0.2%</td><td class="c">2.56%</td></tr>
+          <tr><td>자경농민 농지 상속 (§15①1호 나목)</td><td class="c">0.3%</td><td class="c">0.06%</td><td class="c">—</td><td class="c">0.36%</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li>상속 취득의 과세표준은 <b>시가표준액</b>(지방세법 §10의2②)입니다. 유상취득과 달리 실거래가·감정가가 아닙니다. 공동상속이면 내 지분만큼만 과세됩니다.</li>
+        <li>취득세율: 상속 취득은 농지 2.3%, 농지 외 2.8%(§11①1호). 무주택 1가구의 1주택 상속과 자경농민의 농지 상속은 표준세율에서 2%를 뺀 세율(§15①)을 적용합니다.</li>
+        <li>지방교육세: (취득세 표준세율 − 2%) × 20% (§151①1호). 특례 적용 시에도 같은 방식으로 계산되어 주택 0.16%, 농지 0.06%입니다.</li>
+        <li>농어촌특별세: 취득세 표준세율 2% 부분의 10% = 0.2% (농특세법 §5①6호). 국민주택규모(전용 85㎡ 이하) 주택과 §15① 특례 취득은 비과세(§4)입니다.</li>
+        <li>신고·납부 기한: 상속개시일이 속하는 달의 말일부터 6개월(상속인 전원이 외국에 주소를 둔 경우 9개월) (§20①).</li>
+        <li><b>확인 필요</b>: 농지·자경농민 농지의 지방교육세·농특세는 위 산식으로 계산한 값이며, 지자체 실무(자경 요건 2년 이상 경작 등)에 따라 다를 수 있습니다. 농지는 신고 전 담당 세무과에 확인하세요.</li>
+      </ul>
+    </div>
+  </details>
+</main>
+
+
+
+
+
+<div class="dh-contact"><div class="wrap"><div><h2>취득세를 더 내셨나요? 경정청구를 도와드립니다</h2><p>대한세무법인 · 성남 분당 · 상속·증여·부동산 세무</p></div><a class="btn" href="mailto:sjlee@taxdh.net?subject=%EC%83%81%EC%86%8D%20%EC%B7%A8%EB%93%9D%EC%84%B8%20%EA%B2%BD%EC%A0%95%EC%B2%AD%EA%B5%AC%20%EC%83%81%EB%8B%B4%20%EB%AC%B8%EC%9D%98">상담 문의 →</a></div></div><footer class="dh-foot">© 대한세무법인 · <a href="https://tuzaga.com/" target="_blank" rel="noopener">당신의세무사</a> · 2026년 10월 시행 세법 기준<br>계산 결과는 참고용이며, 실제 신고 전 세무 전문가의 검토를 권합니다.</footer><div id="dh-print-foot" class="print-foot">대한세무법인 · 상속·증여 도구 · /home/claude/inherit/adquisitionTaxClaim.html · 출력 2026. 10. 17. 오후 12:37:22 · 계산 결과는 참고용입니다.</div></body></html>

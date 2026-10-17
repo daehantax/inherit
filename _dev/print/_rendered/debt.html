@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>채무·공과금·장례비 계산기 · 대한세무법인</title>
+<meta name="description" content="상속세 과세가액에서 빼는 채무·공과금·장례비용을 항목별로 정리하고 장례비 인정 한도(500만~1천만, 봉안시설 500만)를 자동 적용합니다. 별지 제9호서식 부표3 작성 보조.">
+
+
+<link rel="stylesheet" href="/home/claude/inherit/css/dh.css">
+<style>
+  table.dh td input[data-money]{text-align:right}
+  table.dh td.del{width:34px;text-align:center;padding:4px}
+  .xbtn{font:inherit;font-size:14px;line-height:1;border:0;background:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px}
+  .xbtn:hover{background:var(--main-soft);color:var(--main)}
+  .tbl-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;font-size:13px;color:var(--muted)}
+  .col-date{width:130px}.col-type{width:140px}.col-amt{width:170px}.col-doc{width:150px}
+  @media (max-width:720px){.col-date,.col-type,.col-amt,.col-doc{width:auto}}
+  @media print{
+    table.dh td.del,.tbl-foot{display:none}
+    .col-amt{width:34mm}.col-doc{width:30mm}.col-date{width:26mm}.col-type{width:30mm}
+    table.dh td input,table.dh td select{font-size:9.5pt!important;padding:0.5mm 1mm!important}
+    table.dh td{padding:0.8mm 1.5mm}
+    .card{padding:3mm 4mm}
+  }
+  @media print{.card,.result,.form-sheet,details.dh{break-inside:auto}.field,.kv,table.dh tr,.note{break-inside:avoid}details.dh>div,details.dh>ul,details.dh>dl{font-size:9.5pt}}
+</style>
+</head>
+<body data-store="debt-charge-funeral" data-subject="상속세 채무·공과금" data-autoload="1"><header class="dh-top"><div class="wrap"><a class="logo" href="./">대한세무법인 <span>상속·증여</span></a><nav><a href="./">상속세</a><a href="gift.html">상황별 증여세</a><a class="hide-m" href="https://daehantax.github.io/tax/">전체 세무 도구 →</a></nav></div></header>
+
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 계산기</div>
+    <span class="form-no">별지 제9호서식 부표3 "가·나·다" 작성 보조</span>
+    <h1>채무·공과금·장례비 계산기</h1>
+    <p>상속세 과세가액에서 빼는 채무, 공과금, 장례비용을 항목별로 정리합니다. 장례비는 법정 인정 한도를 자동으로 적용해 줍니다.</p>
+  </div>
+
+  <div class="toolbar no-print">
+    <button class="btn ghost sm" data-action="load">불러오기</button>
+    <button class="btn ghost sm" data-action="save">저장</button>
+    <button class="btn ghost sm" data-action="clear">지우기</button>
+    <button class="btn sm" data-action="print">인쇄 / PDF</button>
+  </div>
+
+  <div data-save="">
+    <section class="card">
+      <h2>1. 채무 <small>상속개시일 현재 피상속인이 부담할 확정 채무 (최대 10건)</small></h2>
+      <div class="table-scroll">
+      <table class="dh" id="debtTable">
+        <thead><tr><th class="no">#</th><th>채권자</th><th class="col-type">종류</th><th class="col-date">발생일</th><th class="col-amt">금액(원)</th><th class="col-doc">증빙</th><th class="del no-print"></th></tr></thead>
+        <tbody><tr><td class="no">1</td><td><input type="text" id="debt1_cred" placeholder="채권자명" value="국민은행"></td><td><select id="debt1_type"><option value="금융기관 대출" selected="">금융기관 대출</option><option value="임대보증금">임대보증금</option><option value="개인 차입금">개인 차입금</option><option value="미지급금·카드">미지급금·카드</option><option value="미납 세금(확정)">미납 세금(확정)</option><option value="기타">기타</option></select></td><td><input type="date" id="debt1_date" value=""></td><td><input type="text" id="debt1_amt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="300,000,000"></td><td><input type="text" id="debt1_doc" placeholder="확인서·계약서" value=""></td><td class="del no-print"><button type="button" class="xbtn" data-del="debt" title="이 행 삭제">×</button></td></tr><tr><td class="no">2</td><td><input type="text" id="debt2_cred" placeholder="채권자명" value=""></td><td><select id="debt2_type"><option value="금융기관 대출" selected="">금융기관 대출</option><option value="임대보증금">임대보증금</option><option value="개인 차입금">개인 차입금</option><option value="미지급금·카드">미지급금·카드</option><option value="미납 세금(확정)">미납 세금(확정)</option><option value="기타">기타</option></select></td><td><input type="date" id="debt2_date" value=""></td><td><input type="text" id="debt2_amt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="50,000,000"></td><td><input type="text" id="debt2_doc" placeholder="확인서·계약서" value=""></td><td class="del no-print"><button type="button" class="xbtn" data-del="debt" title="이 행 삭제">×</button></td></tr><tr><td class="no">3</td><td><input type="text" id="debt3_cred" placeholder="채권자명" value=""></td><td><select id="debt3_type"><option value="금융기관 대출" selected="">금융기관 대출</option><option value="임대보증금">임대보증금</option><option value="개인 차입금">개인 차입금</option><option value="미지급금·카드">미지급금·카드</option><option value="미납 세금(확정)">미납 세금(확정)</option><option value="기타">기타</option></select></td><td><input type="date" id="debt3_date" value=""></td><td><input type="text" id="debt3_amt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""></td><td><input type="text" id="debt3_doc" placeholder="확인서·계약서" value=""></td><td class="del no-print"><button type="button" class="xbtn" data-del="debt" title="이 행 삭제">×</button></td></tr></tbody>
+        <tfoot><tr class="total"><td colspan="4" class="right">채무 합계</td><td class="num" id="debtTotal">350,000,000</td><td></td><td class="del no-print"></td></tr></tfoot>
+      </table>
+      </div>
+      <div class="tbl-foot no-print"><span>금융기관 대출·임대보증금·미지급금·미납 신용카드 등. 상속인이 승계하는 채무만.</span><button class="btn ghost sm" type="button" data-add="debt">+ 행 추가</button></div>
+    </section>
+
+    <section class="card">
+      <h2>2. 공과금 <small>상속개시일 현재 납부 의무가 생긴 세금·공공요금 (최대 5건)</small></h2>
+      <div class="table-scroll">
+      <table class="dh" id="pubTable">
+        <thead><tr><th class="no">#</th><th>종류 <small>(종합소득세·재산세·건강보험료·전기요금 등)</small></th><th class="col-amt">금액(원)</th><th class="del no-print"></th></tr></thead>
+        <tbody><tr><td class="no">1</td><td><input type="text" id="pub1_name" placeholder="예: 2025년 귀속 종합소득세" value="종합소득세"></td><td><input type="text" id="pub1_amt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="1,200,000"></td><td class="del no-print"><button type="button" class="xbtn" data-del="pub" title="이 행 삭제">×</button></td></tr><tr><td class="no">2</td><td><input type="text" id="pub2_name" placeholder="예: 2025년 귀속 종합소득세" value=""></td><td><input type="text" id="pub2_amt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""></td><td class="del no-print"><button type="button" class="xbtn" data-del="pub" title="이 행 삭제">×</button></td></tr></tbody>
+        <tfoot><tr class="total"><td colspan="2" class="right">공과금 합계</td><td class="num" id="pubTotal">1,200,000</td><td class="del no-print"></td></tr></tfoot>
+      </table>
+      </div>
+      <div class="tbl-foot no-print"><span>사망 후 발생한 가산세·가산금·체납처분비는 공과금이 아닙니다.</span><button class="btn ghost sm" type="button" data-add="pub">+ 행 추가</button></div>
+    </section>
+
+    <section class="card">
+      <h2>3. 장례비용 <small>장례에 직접 들어간 비용 (최대 5건)</small></h2>
+      <div class="table-scroll">
+      <table class="dh" id="funTable">
+        <thead><tr><th class="no">#</th><th>항목 <small>(장례식장·상조·화장·운구 등)</small></th><th class="col-amt">금액(원)</th><th class="del no-print"></th></tr></thead>
+        <tbody><tr><td class="no">1</td><td><input type="text" id="fun1_name" placeholder="예: 장례식장 사용료" value="장례식장"></td><td><input type="text" id="fun1_amt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="8,000,000"></td><td class="del no-print"><button type="button" class="xbtn" data-del="fun" title="이 행 삭제">×</button></td></tr><tr><td class="no">2</td><td><input type="text" id="fun2_name" placeholder="예: 장례식장 사용료" value=""></td><td><input type="text" id="fun2_amt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""></td><td class="del no-print"><button type="button" class="xbtn" data-del="fun" title="이 행 삭제">×</button></td></tr><tr><td class="no">3</td><td><input type="text" id="fun3_name" placeholder="예: 장례식장 사용료" value=""></td><td><input type="text" id="fun3_amt" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value=""></td><td class="del no-print"><button type="button" class="xbtn" data-del="fun" title="이 행 삭제">×</button></td></tr></tbody>
+        <tfoot><tr class="total"><td colspan="2" class="right">장례비 지출 합계</td><td class="num" id="funTotal">8,000,000</td><td class="del no-print"></td></tr></tfoot>
+      </table>
+      </div>
+      <div class="tbl-foot no-print"><span>봉안시설·자연장지 비용은 아래 칸에 따로 적습니다.</span><button class="btn ghost sm" type="button" data-add="fun">+ 행 추가</button></div>
+      <div class="field"><label for="enshrine">봉안시설·자연장지 비용 <small>납골당·수목장 등. 별도로 500만 원까지 인정</small></label>
+        <div class="ctl"><input type="text" id="enshrine" data-money="" placeholder="0" data-bound="1" inputmode="numeric" class="money" value="7,000,000"><span class="unit">원</span><span class="won">700만원</span></div></div>
+    </section>
+  </div>
+
+  <section class="result" id="result">
+    <h2>계산 결과 <small class="muted">— 과세가액에서 빼는 금액</small></h2>
+    <div class="kv"><span>채무 합계</span><b id="r_debt">350,000,000원</b></div>
+    <div class="kv"><span>공과금 합계</span><b id="r_pub">1,200,000원</b></div>
+    <div class="kv"><span>장례비 지출 합계 <span class="sub" id="r_funNote">(증빙 범위 내 전액 인정)</span></span><b id="r_funSpent">8,000,000원</b></div>
+    <div class="kv"><span>→ 장례비 인정액 <span class="sub">(500만 미만이면 500만, 최대 1천만)</span></span><b id="r_fun">8,000,000원</b></div>
+    <div class="kv"><span>→ 봉안시설·자연장지 인정액 <span class="sub">(최대 500만)</span></span><b id="r_ens">5,000,000원</b></div>
+    <div class="kv total"><span>과세가액에서 빼는 금액 (채무 + 공과금 + 장례비 인정액)</span><b id="r_total">364,200,000원</b></div>
+    <div class="note" id="r_note">봉안시설·자연장지 비용은 500만 원까지만 인정되어 200만원은 제외됩니다. 채무는 채권자 확인서·계약서 등 객관적 증빙이 있어야 공제됩니다.</div>
+  </section>
+
+  <div class="actions no-print">
+    <a class="btn ghost" href="상속공제.html">상속공제 계산기</a>
+    <a class="btn ghost" href="cal_Inherit_simple.html">상속세 전체 계산</a>
+  </div>
+
+  <details class="dh" data-po="1" open=""><summary>법령 해설 (상속세 및 증여세법 §14, 시행령 §9·§10)</summary>
+    <ul>
+      <li><b>공과금</b>: 상속개시일 현재 피상속인이 납부할 의무가 있는 조세·공공요금 등. 상속개시일 이후 상속인의 귀책사유로 생긴 가산세·가산금·강제징수비·벌금·과태료는 제외됩니다.</li>
+      <li><b>장례비용</b>: 장례에 직접 소요된 금액. 증빙이 없거나 500만 원 미만이면 500만 원을 인정하고, 증빙이 있어도 1천만 원을 넘으면 1천만 원까지만 인정합니다. 봉안시설(납골당)·자연장지 비용은 이와 별도로 500만 원까지 인정하므로 최대 인정액은 1,500만 원입니다.</li>
+      <li><b>채무</b>: 상속개시일 현재 피상속인이 부담해야 할 확정 채무로 상속인이 실제 승계한 것. 국가·지자체·금융기관 채무는 해당 기관 확인서로, 그 밖의 채무는 계약서·채권자 확인서·담보설정 등 객관적 자료로 입증해야 합니다. 임대보증금, 미지급 공사대금·의료비, 상속개시 후 확정된 소득세·부가가치세도 채무입니다.</li>
+      <li>상속개시 전 2년 안에 채무를 부담하고 사용처가 불분명한 금액(1년 2억·2년 5억 기준)은 상속재산으로 추정될 수 있습니다(§15). 이 경우 채무는 공제되지만 그 사용처를 소명해야 합니다.</li>
+      <li>입증서류: 채무부담·공과금·장례비 지급 입증서류를 신고서에 첨부합니다. 이 표를 인쇄해 부표3 작성의 근거 자료로 보관하세요.</li>
+    </ul>
+  </details>
+</main>
+
+
+
+
+
+<div class="dh-contact"><div class="wrap"><div><h2>복잡한 상속, 세무사와 함께 검토하세요</h2><p>대한세무법인 · 성남 분당 · 상속·증여·부동산 세무</p></div><a class="btn" href="mailto:sjlee@taxdh.net?subject=%EC%83%81%EC%86%8D%EC%84%B8%20%EC%B1%84%EB%AC%B4%C2%B7%EA%B3%B5%EA%B3%BC%EA%B8%88%20%EC%83%81%EB%8B%B4%20%EB%AC%B8%EC%9D%98">상담 문의 →</a></div></div><footer class="dh-foot">© 대한세무법인 · <a href="https://tuzaga.com/" target="_blank" rel="noopener">당신의세무사</a> · 2026년 10월 시행 세법 기준<br>계산 결과는 참고용이며, 실제 신고 전 세무 전문가의 검토를 권합니다.</footer><div id="dh-print-foot" class="print-foot">대한세무법인 · 상속·증여 도구 · /home/claude/inherit/%EC%B1%84%EB%AC%B4%EA%B3%B5%EA%B3%BC%EA%B8%88.html · 출력 2026. 10. 17. 오후 12:37:22 · 계산 결과는 참고용입니다.</div></body></html>
