@@ -1,3 +1,4 @@
 node_modules/
 _dev/print/*.pdf
 _dev/print/*.png
+_scen-local.html

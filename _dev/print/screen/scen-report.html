@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>부동산 세금 상담 보고서</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo',
+                 'Noto Sans KR', 'NanumGothic', sans-serif;
+    color: #1a1a1a; background: #fff;
+    max-width: 200mm; margin: 0 auto; padding: 14mm 10mm;
+    font-size: 10.5pt; line-height: 1.65;
+  }
+  h1 { font-size: 18pt; border-bottom: 3px solid #1a5276; padding-bottom: 6px; margin: 0 0 10px; color: #1a5276; }
+  h2 { font-size: 13pt; color: #1a5276; border-left: 5px solid #1a5276; padding-left: 8px; margin: 22px 0 8px; }
+  h3 { font-size: 11.5pt; color: #21618c; margin: 16px 0 6px; }
+  h4 { font-size: 10.5pt; color: #2e4053; margin: 12px 0 4px; }
+  p { margin: 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 14px; font-size: 10pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #b0bec5; padding: 5px 9px; }
+  th { background: #eaf2f8; color: #1a5276; font-weight: 700; }
+  td:not(:first-child) { text-align: right; white-space: nowrap; }
+  tr:nth-child(even) td { background: #f8fbfd; }
+  ul { margin: 4px 0 10px; padding-left: 20px; }
+  li { margin: 2px 0; }
+  blockquote { margin: 8px 0; padding: 8px 12px; background: #fef9e7; border-left: 4px solid #f39c12; }
+  blockquote p { margin: 0; }
+  hr { border: none; border-top: 1px solid #cfd8dc; margin: 18px 0; }
+  strong { color: #0b3d5c; }
+  em { color: #566573; }
+  @page { size: A4; margin: 15mm 12mm; }
+  @media print {
+    body { max-width: none; padding: 0; font-size: 10pt; }
+    h2 { page-break-after: avoid; }
+    table, blockquote { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<h1>부동산 세금 상담 보고서</h1>
+<p><strong>2주택자 — 자녀에게만 증여할까? 여러 명에게 분산증여할까?</strong></p>
+<p>작성일: 2026-10-17 · 세법 기준: 2026.5.10 시행분 · 계산: 결정적 엔진 (동일 입력 = 동일 결과)</p>
+<hr>
+<h2>1. 상담 개요 (입력값)</h2>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>대상주택 시가</td>
+<td>1,800,000,000원</td>
+</tr>
+<tr>
+<td>대상주택 공시가격(기준시가)</td>
+<td>1,260,000,000원</td>
+</tr>
+<tr>
+<td>대상주택 보유기간(년)</td>
+<td>10</td>
+</tr>
+<tr>
+<td>대상주택 거주기간(년)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>전용면적</td>
+<td>85㎡ 이하 (국민주택규모)</td>
+</tr>
+<tr>
+<td>조정대상지역 (취득세 중과)</td>
+<td>조정지역</td>
+</tr>
+<tr>
+<td>계속보유주택 공시가격</td>
+<td>1,000,000,000원</td>
+</tr>
+<tr>
+<td>계속보유주택 보유기간(년)</td>
+<td>8</td>
+</tr>
+<tr>
+<td>소유자 나이(만)</td>
+<td>62</td>
+</tr>
+<tr>
+<td>자녀 (지분 가액·나이)</td>
+<td>가액 600,000,000원 · 나이 만 32세</td>
+</tr>
+<tr>
+<td>자녀의 배우자 (0원이면 제외)</td>
+<td>가액 600,000,000원 · 나이 만 32세</td>
+</tr>
+<tr>
+<td>손자녀1 (0원이면 제외)</td>
+<td>가액 600,000,000원 · 나이 만 5세</td>
+</tr>
+</tbody></table>
+<h2>2. 케이스별 세부담 비교</h2>
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th align="right">자녀에게만 증여</th>
+<th align="right">여러 명에게 분산증여</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>증여세</td>
+<td align="right">523,800,000원</td>
+<td align="right">359,094,000원</td>
+</tr>
+<tr>
+<td>취득세</td>
+<td align="right">223,200,000원</td>
+<td align="right">223,200,000원</td>
+</tr>
+<tr>
+<td><strong>합계</strong></td>
+<td align="right"><strong>747,000,000원</strong></td>
+<td align="right"><strong>582,294,000원</strong></td>
+</tr>
+</tbody></table>
+<h3>세금 계산 내역</h3>
+<h4>케이스1 — 자녀에게만 증여</h4>
+<p><strong>증여세</strong></p>
+<ul>
+<li>증여재산가액: 1,800,000,000원</li>
+<li>증여재산공제: △50,000,000원</li>
+<li>과세표준: 1,750,000,000원</li>
+<li>산출세액: 1,750,000,000원 × 40% − 160,000,000원(누진공제) = 540,000,000원</li>
+<li>신고세액공제(3%) 반영 → <strong>납부세액: 523,800,000원</strong></li>
+</ul>
+<p><strong>취득세</strong></p>
+<ul>
+<li>과세표준: 1,800,000,000원</li>
+<li>취득세율 12% → 216,000,000원</li>
+<li>지방교육세 0.4% → 7,200,000원</li>
+<li>농어촌특별세: 비과세 (국민주택규모 85㎡ 이하)</li>
+<li><strong>취득세 합계: 223,200,000원</strong></li>
+</ul>
+<h2>3. 보유세(재산세+종합부동산세) 변화 — 연간</h2>
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th align="right">처분 전</th>
+<th align="right">케이스1 이후</th>
+<th align="right">케이스2 이후</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>소유자 보유세</strong></td>
+<td align="right"><strong>11,765,953원</strong></td>
+<td align="right"><strong>3,151,200원</strong></td>
+<td align="right"><strong>3,151,200원</strong></td>
+</tr>
+<tr>
+<td><strong>수증자 부담 소계</strong></td>
+<td align="right"><strong>0원</strong></td>
+<td align="right"><strong>4,605,120원</strong></td>
+<td align="right"><strong>2,678,400원</strong></td>
+</tr>
+<tr>
+<td><strong>총 세부담</strong></td>
+<td align="right"><strong>11,765,953원</strong></td>
+<td align="right"><strong>7,756,320원</strong></td>
+<td align="right"><strong>5,829,600원</strong></td>
+</tr>
+</tbody></table>
+<h2>4. 결론</h2>
+<p>처분·이전 시점의 세부담 기준으로 <strong>「여러 명에게 분산증여」이(가) 「자녀에게만 증여」보다 약 164,706,000원 유리</strong>합니다 (582,294,000원 vs 747,000,000원).</p>
+<p>보유세 변화(3번)와 이월과세·자금출처 등 사후 리스크까지 고려한 종합 판단은 세무 전문가와 상담하시기 바랍니다.</p>
+<h2>근거 법령</h2>
+<ul>
+<li>상속세및증여세법 §53(증여재산 공제)</li>
+<li>상속세및증여세법 §56(증여세율)</li>
+<li>상속세및증여세법 §57(세대생략 할증과세)</li>
+<li>상속세및증여세법 §69(신고세액공제 3%)</li>
+<li>지방세법 §11(취득세 세율)</li>
+<li>지방세법 §13(다주택·법인 중과)</li>
+<li>지방세법 §151(농어촌특별세)</li>
+<li>지방세법시행령 §28의3(저가주택 기준 2억)</li>
+</ul>
+<hr>
+<p><em>본 보고서는 참고용이며, 실제 신고 전 세무 전문가 확인이 필요합니다.</em></p>
+
+</body>
+</html>

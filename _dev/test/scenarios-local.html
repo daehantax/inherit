@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상황별 증여세 계산기 · 대한세무법인</title>
+<meta name="description" content="자녀·배우자에게 증여할까, 팔까? 부담부증여·분산증여·공동명의 전환 등 10가지 상황의 세부담을 비교 보고서로 계산합니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<style>
+  /* 계산기 본체: 왼쪽 입력, 오른쪽 보고서 */
+  .sc-layout{display:grid;grid-template-columns:400px 1fr;gap:18px;align-items:start}
+  .sc-form{position:sticky;top:12px}
+  .sc-form label{display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin:14px 0 4px}
+  .sc-form label:first-child{margin-top:0}
+  .sc-form input,.sc-form select{max-width:none}
+  .sc-form input[data-kind="money"]{text-align:right;font-variant-numeric:tabular-nums}
+  .sc-form #scenario{font-weight:700;color:var(--main);background:var(--main-tint)}
+  .money-hint{font-size:12.5px;color:var(--main);min-height:16px;margin-top:2px;text-align:right}
+  .person-row{display:flex;gap:8px}
+  .person-row>div{flex:1}
+  .person-row .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .sc-btns{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+  .sc-btns #runBtn{flex:1}
+  #status{font-size:13.5px;margin-top:10px;color:var(--muted);min-height:18px;word-break:keep-all}
+  #status.err{color:var(--bad);font-weight:700}
+  .sc-report{min-height:640px;display:flex;flex-direction:column;padding:0;overflow:hidden}
+  .sc-report .placeholder{margin:auto;padding:60px 20px;text-align:center;color:var(--muted);font-size:15px;word-break:keep-all}
+  .sc-report .placeholder b{display:block;font-size:40px;margin-bottom:8px;color:var(--line-strong)}
+  #report{width:100%;flex:1;border:0;min-height:640px;background:#fff}
+  .sc-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:0 0 18px}
+  .sc-picker a{display:block;font-size:13px;font-weight:700;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);line-height:1.35;word-break:keep-all}
+  .sc-picker a:hover{border-color:var(--main);text-decoration:none}
+  .sc-picker a.on{background:var(--main);border-color:var(--main);color:#fff}
+  .sc-picker a small{display:block;font-weight:400;font-size:11.5px;color:var(--muted);margin-top:2px}
+  .sc-picker a.on small{color:#fff;opacity:.85}
+  .loading{padding:14px;border:1px dashed var(--line-strong);border-radius:10px;color:var(--muted);font-size:13.5px;text-align:center}
+  @media (max-width:900px){.sc-layout{grid-template-columns:1fr}.sc-form{position:static}}
+  @media print{.sc-form,.sc-picker,.dh-head p{display:none!important}.sc-layout{display:block}#report{min-height:auto}}
+</style>
+</head>
+<body data-store="scenarios" data-subject="증여세" data-contact-title="우리 가족에 맞는 증여 방법, 세무사와 함께 정하세요" data-wide="1">
+
+<main class="wrap wide container">
+  <div class="dh-head">
+    <div class="crumb"><a href="gift.html">상황별 증여세</a> › 계산기</div>
+    <h1>상황별 증여세 계산기</h1>
+    <p>상황을 고르고 숫자를 넣으면, 두 가지 방법의 증여세·양도세·취득세와 보유세 변화를 비교한 보고서가 만들어집니다. 계산은 브라우저 안에서만 이뤄지고 어디에도 전송되지 않습니다.</p>
+  </div>
+
+  <nav class="sc-picker no-print" id="picker" aria-label="상황 선택"></nav>
+
+  <div class="sc-layout">
+    <section class="card sc-form" id="scFormPanel">
+      <label for="scenario">상담 상황</label>
+      <select id="scenario"></select>
+      <div id="fields"><div class="loading">계산기를 불러오는 중…</div></div>
+      <div class="sc-btns">
+        <button class="btn" id="runBtn">보고서 만들기</button>
+        <button class="btn ghost" id="docBtn" disabled>Word 저장</button>
+        <button class="btn ghost" id="printBtn" disabled>인쇄 / PDF</button>
+      </div>
+      <div id="status"></div>
+    </section>
+    <section class="card sc-report" id="scReportPanel">
+      <div class="placeholder" id="placeholder"><b>⇠</b>왼쪽에서 상황을 고르고 숫자를 넣은 뒤<br>「보고서 만들기」를 누르세요.</div>
+      <iframe id="report" style="display:none" title="증여세 비교 보고서"></iframe>
+    </section>
+  </div>
+
+  <details class="dh no-print"><summary>이 계산기의 전제</summary>
+    <ul>
+      <li>2026년 10월 시행 세법 기준입니다(다주택 양도세 중과 2026.5.10 부활, 조정대상지역 2025.10.15 지정분 반영).</li>
+      <li>증여재산공제: 배우자 6억, 성년 자녀 5천만(미성년 2천만), 기타친족 1천만 — 10년 합산. 세대생략 할증 30%(미성년 20억 초과 40%).</li>
+      <li>부담부증여는 승계 채무분을 양도로 보아 증여자의 양도세와 수증자의 증여세·취득세를 함께 계산합니다.</li>
+      <li>증여 취득세는 시가인정액 기준 3.5%(+부가세), 조정대상지역 3억 이상 주택은 12% 중과(1세대1주택자의 배우자·직계 증여 제외).</li>
+      <li>보고서의 금액은 입력값에 따른 모의계산이며, 실제 신고 전 세무사 검토를 권합니다.</li>
+    </ul>
+  </details>
+</main>
+
+<script src="js/dh.js"></script>
+<script>
+  // 상황 선택 카드 (gift.html 과 같은 10가지). 선택하면 ?s=N 으로 다시 열어 엔진이 해당 시나리오를 잡게 한다.
+  const SCENARIOS = [
+    [1,'자녀에게 넘길까, 시장에 팔까?','자녀 증여 vs 타인 양도'],
+    [2,'전세·대출 끼고 자녀에게','일반증여 vs 부담부증여'],
+    [3,'자녀 1명 vs 여러 명','분산증여 효과'],
+    [4,'부담부증여도 나눠서','1명 vs 여러 명 부담부증여'],
+    [5,'배우자에게 전세·대출 끼고','일반증여 vs 부담부증여'],
+    [6,'1주택 지분 일부만 배우자에게','지분 일반증여 vs 부담부증여'],
+    [7,'공동명의 → 배우자 단독명의','명의 전환'],
+    [8,'배우자에게 넘길까, 시장에 팔까?','배우자 증여 vs 타인 양도'],
+    [9,'배우자만 vs 배우자+자녀','분산증여'],
+    [10,'부담부증여, 배우자 혼자 vs 가족 여럿','분산 부담부증여'],
+  ];
+  const cur = Number(new URLSearchParams(location.search).get('s')) || 1;
+  document.getElementById('picker').innerHTML = SCENARIOS.map(([n,t,s]) =>
+    '<a href="scenarios.html?s='+n+'"'+(n===cur?' class="on"':'')+'><span>'+n+'. '+t+'</span><small>'+s+'</small></a>').join('');
+  // 선택 상자를 바꿔도 카드 표시가 따라가게
+  document.getElementById('scenario').addEventListener('change', function(){
+    document.querySelectorAll('#picker a').forEach(a => a.classList.toggle('on', a.getAttribute('href').endsWith('?s='+this.value)));
+    history.replaceState(null,'','scenarios.html?s='+this.value);
+  });
+  window.DH_summary = function(){
+    const sel=document.getElementById('scenario'); const st=document.getElementById('status').textContent;
+    return '상황별 증여세 계산기: '+(sel.options[sel.selectedIndex]||{}).text+(st?' / '+st:'');
+  };
+</script>
+<!-- 계산 엔진: property 레포에서 빌드·배포되는 번들을 그대로 사용 (한 곳에서만 관리) -->
+<script src="_dev/test/scenarios-local.js" onerror="document.getElementById('fields').innerHTML='<div class=\'note bad\'>계산기를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.</div>'"></script>
+</body>
+</html>
