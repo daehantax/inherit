@@ -1,0 +1,402 @@
+/* ===========================================================
+   대한세무법인 공통 브랜드 스타일 (계산기 · 도구 페이지용)
+   Identity Blue #005a9e  |  Ocean Aqua  |  Sun  |  Coral
+   =========================================================== */
+
+:root {
+    --dh-brand-900: #00325c;
+    --dh-brand-700: #004a80;
+    --dh-brand: #005a9e;
+    --dh-brand-500: #1a7ac2;
+
+    --dh-aqua: #00b4d8;
+    --dh-aqua-light: #7fe0f0;
+    --dh-sea-foam: #e6f7fb;
+    --dh-sun: #ffb703;
+    --dh-sun-light: #ffd569;
+    --dh-coral: #ff6b5b;
+    --dh-sand: #fff9ef;
+
+    --dh-bg: #f2f9fd;
+    --dh-surface: #ffffff;
+    --dh-text: #16324a;
+    --dh-muted: #5b7791;
+    --dh-line: #d8e9f4;
+
+    --dh-radius-lg: 20px;
+    --dh-radius: 12px;
+    --dh-shadow-sm: 0 2px 10px rgba(0, 90, 158, .07);
+    --dh-shadow: 0 10px 28px rgba(0, 90, 158, .10);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 0 0 60px;
+    font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    line-height: 1.65;
+    color: var(--dh-text);
+    background:
+        radial-gradient(900px 420px at 100% -5%, #fff4d9 0%, rgba(255, 244, 217, 0) 60%),
+        radial-gradient(800px 400px at -10% 0%, var(--dh-sea-foam) 0%, rgba(230, 247, 251, 0) 65%),
+        var(--dh-bg);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------- 페이지 헤더 ---------------- */
+.dh-header {
+    position: relative;
+    overflow: hidden;
+    padding: 30px 0 54px;
+    color: #fff;
+    background: linear-gradient(160deg, var(--dh-brand-900) 0%, var(--dh-brand) 55%, #0a86bd 85%, var(--dh-aqua) 100%);
+}
+.dh-header::before {
+    content: "";
+    position: absolute;
+    top: -90px; right: -60px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--dh-sun-light) 0%, rgba(255, 183, 3, .45) 45%, rgba(255, 183, 3, 0) 72%);
+}
+.dh-header .dh-wave {
+    position: absolute;
+    left: 0; bottom: -1px;
+    width: 100%; height: 54px;
+    display: block;
+}
+.dh-header .dh-wave .w1 { fill: rgba(255, 255, 255, .45); }
+.dh-header .dh-wave .w2 { fill: var(--dh-bg); }
+
+.dh-brandline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 5px 15px;
+    font-size: .82rem;
+    font-weight: 700;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .3);
+}
+.dh-header h1 {
+    position: relative;
+    margin: 0;
+    font-size: clamp(1.5rem, 4vw, 2.15rem);
+    font-weight: 900;
+    letter-spacing: -.02em;
+    line-height: 1.25;
+    text-shadow: 0 3px 16px rgba(0, 40, 75, .3);
+}
+.dh-header .dh-lead {
+    position: relative;
+    margin: 10px 0 0;
+    max-width: 62ch;
+    font-size: .98rem;
+    color: rgba(255, 255, 255, .9);
+}
+
+/* ---------------- 레이아웃 ---------------- */
+.dh-wrap {
+    width: min(100% - 28px, 1000px);
+    margin-inline: auto;
+}
+.dh-main { margin-top: 26px; }
+
+/* ---------------- 카드 ---------------- */
+.dh-card {
+    position: relative;
+    margin: 0 0 20px;
+    padding: clamp(18px, 3vw, 28px);
+    background: var(--dh-surface);
+    border: 1px solid var(--dh-line);
+    border-radius: var(--dh-radius-lg);
+    box-shadow: var(--dh-shadow);
+    overflow: hidden;
+}
+.dh-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--dh-brand) 0%, var(--dh-aqua) 55%, var(--dh-sun) 100%);
+}
+.dh-card h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 6px;
+    font-size: clamp(1.15rem, 2.6vw, 1.4rem);
+    font-weight: 900;
+    letter-spacing: -.02em;
+    color: var(--dh-brand-900);
+}
+.dh-card h2 .dh-step {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 32px; height: 32px;
+    font-size: .95rem;
+    font-weight: 900;
+    color: #fff;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--dh-brand) 0%, var(--dh-aqua) 100%);
+}
+.dh-card h3 {
+    margin: 22px 0 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--dh-brand-700);
+}
+.dh-note {
+    margin: 4px 0;
+    padding-left: 14px;
+    position: relative;
+    font-size: .9rem;
+    color: var(--dh-muted);
+}
+.dh-note::before {
+    content: "";
+    position: absolute;
+    left: 0; top: .65em;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--dh-aqua);
+}
+.dh-notice {
+    margin: 14px 0 0;
+    padding: 13px 16px;
+    font-size: .9rem;
+    color: var(--dh-brand-700);
+    background: var(--dh-sand);
+    border: 1px solid #f2e3c4;
+    border-left: 4px solid var(--dh-sun);
+    border-radius: var(--dh-radius);
+}
+
+/* ---------------- 입력 필드 ---------------- */
+.dh-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px 18px;
+    margin-top: 18px;
+}
+.dh-field { display: flex; flex-direction: column; gap: 6px; }
+.dh-field > label {
+    font-size: .89rem;
+    font-weight: 700;
+    color: var(--dh-brand-700);
+}
+.dh-field input[type="text"],
+.dh-field input[type="number"],
+.dh-field input[type="tel"],
+.dh-field input[type="email"],
+.dh-field textarea {
+    width: 100%;
+    padding: 11px 14px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--dh-text);
+    background: #fbfdff;
+    border: 1.5px solid var(--dh-line);
+    border-radius: var(--dh-radius);
+    transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.dh-field textarea { min-height: 110px; resize: vertical; }
+.dh-field input:focus,
+.dh-field textarea:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--dh-aqua);
+    box-shadow: 0 0 0 4px rgba(0, 180, 216, .16);
+}
+.dh-field input[readonly],
+.dh-field input:disabled {
+    background: #eef4f9;
+    color: var(--dh-muted);
+    cursor: not-allowed;
+}
+.dh-field-check {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    background: var(--dh-sea-foam);
+    border: 1.5px solid var(--dh-line);
+    border-radius: var(--dh-radius);
+}
+.dh-field-check input[type="checkbox"] {
+    width: 19px; height: 19px;
+    flex: 0 0 auto;
+    accent-color: var(--dh-brand);
+    cursor: pointer;
+}
+.dh-field-check label { margin: 0; font-size: .89rem; font-weight: 700; color: var(--dh-brand-700); cursor: pointer; }
+
+/* ---------------- 버튼 ---------------- */
+.dh-btn,
+button.dh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+    padding: 13px 30px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--dh-brand) 0%, var(--dh-aqua) 100%);
+    box-shadow: 0 8px 18px rgba(0, 130, 180, .3);
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.dh-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0, 130, 180, .38); }
+.dh-btn:active { transform: translateY(0); }
+
+.dh-btn.dh-btn-ghost,
+button.dh-btn.dh-btn-ghost {
+    color: var(--dh-brand);
+    background: #fff;
+    border: 1.5px solid var(--dh-line);
+    box-shadow: var(--dh-shadow-sm);
+}
+.dh-btn.dh-btn-ghost:hover { border-color: var(--dh-aqua); background: var(--dh-sea-foam); box-shadow: var(--dh-shadow-sm); }
+
+.dh-btn.dh-btn-accent,
+button.dh-btn.dh-btn-accent {
+    width: 100%;
+    padding: 16px 26px;
+    font-size: 1.02rem;
+    line-height: 1.4;
+    text-align: center;
+    background: linear-gradient(135deg, var(--dh-coral) 0%, var(--dh-sun) 100%);
+    box-shadow: 0 10px 22px rgba(255, 107, 91, .32);
+}
+.dh-btn.dh-btn-accent:hover { box-shadow: 0 14px 28px rgba(255, 107, 91, .4); }
+
+.dh-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* ---------------- 결과 · 표 ---------------- */
+.dh-result { margin-top: 24px; }
+.dh-result h2,
+.dh-result h3 { margin-top: 0; }
+
+.dh-table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--dh-line);
+    border-radius: var(--dh-radius);
+    background: #fff;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .93rem;
+    background: #fff;
+}
+thead th,
+table tr:first-child th {
+    position: sticky;
+    top: 0;
+    padding: 12px 14px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    background: linear-gradient(135deg, var(--dh-brand-700) 0%, var(--dh-brand) 100%);
+}
+td, th { border: 1px solid var(--dh-line); }
+td {
+    padding: 10px 14px;
+    text-align: right;
+    white-space: nowrap;
+}
+td:first-child {
+    text-align: left;
+    font-weight: 700;
+    color: var(--dh-brand-700);
+    background: #f6fbfe;
+}
+/* 마지막 열이 '비고' 설명인 표에만 적용 (.dh-has-note) */
+.dh-has-note td:last-child { color: var(--dh-muted); text-align: left; white-space: normal; font-weight: 400; }
+tbody tr:nth-child(even) td:not(:first-child) { background: #fbfdff; }
+tbody tr:last-child td,
+table tr:last-child td {
+    font-weight: 900;
+    color: var(--dh-brand-900);
+    background: var(--dh-sea-foam);
+}
+tbody tr:last-child td:first-child,
+table tr:last-child td:first-child { background: #dcf1f9; }
+
+/* ---------------- 안내 리스트 ---------------- */
+.dh-points {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+}
+.dh-points li {
+    position: relative;
+    padding: 12px 16px 12px 42px;
+    font-size: .95rem;
+    background: linear-gradient(160deg, #ffffff 0%, #f7fcff 100%);
+    border: 1px solid var(--dh-line);
+    border-radius: var(--dh-radius);
+}
+.dh-points li::before {
+    content: "✓";
+    position: absolute;
+    left: 14px; top: 12px;
+    font-weight: 900;
+    color: var(--dh-aqua);
+}
+
+/* ---------------- 푸터 ---------------- */
+.dh-footer {
+    margin-top: 40px;
+    padding: 26px 0;
+    font-size: .86rem;
+    color: var(--dh-muted);
+    text-align: center;
+    border-top: 1px solid var(--dh-line);
+}
+.dh-footer strong { display: block; color: var(--dh-brand-700); font-size: .95rem; margin-bottom: 4px; }
+.dh-footer a { color: var(--dh-brand); }
+
+/* ---------------- 반응형 ---------------- */
+@media (max-width: 620px) {
+    .dh-header { padding: 24px 0 46px; }
+    .dh-fields { grid-template-columns: 1fr; }
+    .dh-btn { width: 100%; }
+    td, th { white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------------- 인쇄 ---------------- */
+@media print {
+    body { background: #fff; padding: 0; }
+    .dh-header {
+        color: #000;
+        background: #fff;
+        padding: 0 0 12px;
+        border-bottom: 3px solid var(--dh-brand);
+    }
+    .dh-header::before, .dh-header .dh-wave { display: none; }
+    .dh-header h1 { color: var(--dh-brand-900); text-shadow: none; }
+    .dh-header .dh-lead, .dh-brandline { color: #333; background: none; border: none; padding-left: 0; }
+    .dh-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+    .dh-btn, .dh-no-print { display: none !important; }
+    thead th, table tr:first-child th { color: #000; background: #eee; }
+}
