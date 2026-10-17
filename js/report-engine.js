@@ -75,8 +75,13 @@
 
     // 사전증여 과세표준: 모르면 증여가액 전액으로 보아 보수적으로 계산
     const priorGiftTaxBase = isBlank('priorGiftTaxBase') ? priorGifts : Math.min(num('priorGiftTaxBase'), priorGifts);
-    // 공제 종합한도 (상증법 24조): 과세가액 > 5억일 때만 사전증여 과세표준을 뺀다
-    const deductionLimit = DH.deductionLimit(taxableAmount, 0, 0, priorGiftTaxBase);
+    // 세대생략 상속분 (손자녀 등 자녀 외 직계비속이 받는 재산) — 할증(27조)과 종합한도(24조) 양쪽에 쓴다
+    const skipRatio = Math.min(100, Math.max(0, DH.num(($('skipGenRatio') || {}).value))) / 100;
+    const skipBig = !!($('skipGenMinorBig') && $('skipGenMinorBig').checked);
+    const skipAmount = Math.floor(totalProperty * skipRatio);
+    // 공제 종합한도 (상증법 24조): 상속인이 아닌 자(손자녀 등)에게 유증·사인증여한 재산은 한도에서 빼고,
+    // 과세가액 > 5억일 때만 사전증여 과세표준을 뺀다. 대습상속이면 비율을 0으로 두므로 영향 없음.
+    const deductionLimit = DH.deductionLimit(taxableAmount, skipAmount, 0, priorGiftTaxBase);
     const appliedDeduction = Math.min(ded, deductionLimit);
 
     let taxBase = Math.max(0, taxableAmount - appliedDeduction - appraisalFee);
@@ -84,9 +89,7 @@
     const calculatedTax = DH.inheritTax(taxBase);
     const rate = DH.inheritRateOf(taxBase);
 
-    // 세대생략 할증 (상증법 27조): 손자녀 등 상속분 × 30% (미성년 + 20억 초과 40%)
-    const skipRatio = Math.min(100, Math.max(0, DH.num(($('skipGenRatio') || {}).value))) / 100;
-    const skipBig = !!($('skipGenMinorBig') && $('skipGenMinorBig').checked);
+    // 세대생략 할증 (상증법 27조): 산출세액 × 손자녀 등 상속분 비율 × 30% (미성년 + 20억 초과 40%), 대습상속 제외
     const surcharge = Math.floor(calculatedTax * skipRatio * (skipBig ? R.surchargeMinorBig : R.surcharge));
     const taxWithSurcharge = calculatedTax + surcharge;
 
@@ -100,7 +103,7 @@
 
     return {
       totalProperty: totalProperty, debts: debts, funeralExpense: funeralExpense, priorGifts: priorGifts, priorGiftTaxBase: priorGiftTaxBase,
-      taxableAmount: taxableAmount, deductionLimit: deductionLimit, requestedDeduction: ded, appliedDeduction: appliedDeduction,
+      taxableAmount: taxableAmount, skipAmount: skipAmount, deductionLimit: deductionLimit, requestedDeduction: ded, appliedDeduction: appliedDeduction,
       appraisalFee: appraisalFee, taxBase: taxBase, rate: rate, calculatedTax: calculatedTax, surcharge: surcharge,
       giftCreditLimit: giftCreditLimit, giftCredit: giftCredit, giftTaxDeduction: giftTaxDeduction, reportCredit: reportCredit,
       taxDeduction: taxDeduction, payableTax: payableTax
