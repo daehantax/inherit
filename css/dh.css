@@ -201,6 +201,7 @@ details.dh>div,details.dh>ul,details.dh>p{padding:0 0 12px;font-size:14px;color:
   table.dh th{background:#eee!important;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   table.dh td input,table.dh td select{border-bottom:0!important;text-align:inherit}
   table.dh thead{display:table-header-group}
+  table.dh tfoot{display:table-row-group}
   table.dh tr{break-inside:avoid}
   .table-scroll{overflow:visible}
   .kv{font-size:10.5pt;border-bottom:1px dotted #bbb}
@@ -215,5 +216,6 @@ details.dh>div,details.dh>ul,details.dh>p{padding:0 0 12px;font-size:14px;color:
   .print-landscape{page:land}
   a{color:#000;text-decoration:none}
   a[href^="http"]::after{content:""}
-  .print-foot{display:block;margin-top:6mm;font-size:8.5pt;color:#555;text-align:center;border-top:1px solid #ccc;padding-top:2mm}
+  .print-foot{display:block;position:fixed;left:0;right:0;bottom:0;font-size:8pt;color:#555;text-align:center;border-top:1px solid #ccc;padding-top:1.5mm;background:#fff}
+  body{padding-bottom:9mm}
 }
