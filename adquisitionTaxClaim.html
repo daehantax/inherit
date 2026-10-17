@@ -182,6 +182,7 @@
     txt('r_note', notes.join(' '));
   }
   window.DH_recalc = recalc;
+  window.DH_summary=function(){const t=id=>(document.getElementById(id)||{textContent:''}).textContent.trim(); return '상속 취득세 '+t('r_total')+', 차액 '+t('r_diff')+', 경정청구 기한 '+t('r_due'); };
   document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
   document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
   document.addEventListener('DOMContentLoaded', recalc);

@@ -665,6 +665,7 @@
     note('s5note', n5.join(' '));
   }
   window.DH_recalc = recalc;
+  window.DH_summary=function(){const t=id=>(document.getElementById(id)||{textContent:''}).textContent.trim(); return '상속세 신고서: 과세가액 '+t('f29')+', 공제 '+t('d31')+', 납부세액 '+t('t44'); };
 
   /* ---------- 단계 이동 · 인쇄 ---------- */
   function go(n) {

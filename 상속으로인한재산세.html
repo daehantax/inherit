@@ -256,6 +256,7 @@
     txt('r_note', notes.join(' '));
   }
   window.DH_recalc = recalc;
+  window.DH_summary=function(){const t=id=>(document.getElementById(id)||{textContent:''}).textContent.trim(); return '상속 후 재산세 '+t('r_pb_all')+'원, 종부세 '+t('r_ca_pay')+'원, 연간 보유세 증가 '+t('r_diff'); };
   document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
   document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
   document.addEventListener('DOMContentLoaded', recalc);

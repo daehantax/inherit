@@ -714,6 +714,10 @@
     renderProgress(); syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); updatePrintSummary();
     window.addEventListener('beforeprint', function () { calculateInheritanceTax(); updatePrintSummary(); });
   }
+  window.DH_summary = function () {
+    const r = lastResult || computeInheritance(defaultDeduction());
+    return '절세보고서 ' + (window.REPORT_TIER && REPORT_TIER.key ? REPORT_TIER.key : '') + ': 재산 ' + DH.won(r.totalProperty) + ', 채무 ' + DH.won(r.debts) + ', 공제 ' + DH.won(r.appliedDeduction) + ', 예상 상속세 ' + DH.won(r.payableTax) + ', 배우자 ' + (hasSpouse() ? '있음' : '없음');
+  };
   // 불러오기·지우기 뒤 dh.js 가 호출
   window.DH_recalc = function () { syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); calculateInheritanceTax(); };
 

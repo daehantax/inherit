@@ -145,13 +145,22 @@ details.dh>div,details.dh>ul,details.dh>p{padding:0 0 12px;font-size:14px;color:
 .modal .box{background:#fff;border-radius:var(--r-lg);max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:24px}
 .modal .box h3{margin:0 0 12px;font-size:18px}
 
-/* ---------- 푸터·상담 ---------- */
+/* ---------- 푸터·상담 접수 ---------- */
 .dh-contact{margin-top:40px;background:var(--main);color:#fff}
-.dh-contact .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:28px 20px}
-.dh-contact h2{margin:0 0 2px;font-size:19px}
-.dh-contact p{margin:0;opacity:.85;font-size:13.5px}
-.dh-contact .btn{background:#fff;color:var(--main);border-color:#fff}
-.dh-contact .btn:hover{background:var(--main-soft)}
+.dh-contact .wrap{padding:30px 20px 26px}
+.dh-consult-head h2{margin:0 0 4px;font-size:20px}
+.dh-consult-head p{margin:0 0 16px;opacity:.88;font-size:14px;word-break:keep-all}
+.dh-consult-row{display:grid;grid-template-columns:1fr 1.4fr auto;gap:8px}
+.dh-consult-row input{max-width:none;min-height:46px;border:0;border-radius:10px;font-size:15px}
+.dh-consult-row input:focus{box-shadow:0 0 0 3px rgba(255,255,255,.45)}
+.dh-consult .btn{background:#fff;color:var(--main);border-color:#fff;min-height:46px;padding:0 22px;border-radius:10px}
+.dh-consult .btn:hover{background:var(--main-soft)}
+.dh-consult-opts{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:10px;font-size:13px;opacity:.92}
+.dh-consult-opts .check input{accent-color:#fff}
+.dh-consult-msg{margin-top:10px;font-size:14px;font-weight:700}
+.dh-consult-msg.bad{color:#ffd9d2}
+.dh-consult-msg a{color:#fff;text-decoration:underline}
+@media (max-width:640px){.dh-consult-row{grid-template-columns:1fr}.dh-consult .btn{width:100%}}
 .dh-foot{padding:20px 0 34px;text-align:center;font-size:12.5px;color:var(--muted)}
 .dh-foot a{color:var(--main)}
 

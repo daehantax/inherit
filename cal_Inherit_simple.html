@@ -219,6 +219,7 @@
     document.getElementById('r_note').textContent = notes.join(' ');
   }
   window.DH_recalc = recalc;
+  window.DH_summary = function(){ const t=id=>document.getElementById(id).textContent; return '예상 상속세 '+t('r_pay')+' (과세가액 '+t('r_taxable')+', 공제 '+t('r_ded')+', 배우자 '+(radio('spouse')==='yes'?'있음':'없음')+', 자녀 '+document.getElementById('childCount').value+'명)'; };
   document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
   document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
   document.addEventListener('DOMContentLoaded', recalc);

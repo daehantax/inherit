@@ -202,6 +202,52 @@
     document.querySelectorAll('details[data-po]').forEach(function (d) { d.open = false; delete d.dataset.po; });
   });
 
+  /* ---------- 상담 접수 (구글 시트, 기존 Apps Script 엔드포인트) ---------- */
+  DH.CONSULT_URL = 'https://script.google.com/macros/s/AKfycbxosuJSvfkc-RwP1V8gYTTwTDrugOINAsJ-P43auIP2d8yFnkhdEC7yxx_Xh5YHFpevqg/exec';
+  // 계산기 페이지는 window.DH_summary = () => '예상 상속세 1.1억 (재산 18억…)' 를 정의하면 접수에 함께 담긴다.
+  DH.consultHtml = function (opt) {
+    opt = opt || {};
+    const hasSummary = typeof window.DH_summary === 'function';
+    return '<form class="dh-consult" id="dhConsult" novalidate>' +
+      '<div class="dh-consult-head"><h2>' + (opt.title || '복잡한 상속, 세무사가 직접 확인해 드립니다') + '</h2>' +
+      '<p>' + (opt.lead || '연락처만 남기시면 대한세무법인 담당자가 전화드립니다. 상담은 무료입니다.') + '</p></div>' +
+      '<div class="dh-consult-row">' +
+      '<input type="text" id="dhName" placeholder="성함" autocomplete="name" maxlength="20">' +
+      '<input type="tel" id="dhPhone" placeholder="연락처 (010-0000-0000)" autocomplete="tel" inputmode="tel" required>' +
+      '<button type="submit" class="btn" id="dhSend">무료 상담 신청</button></div>' +
+      '<div class="dh-consult-opts">' +
+      (hasSummary ? '<label class="check"><input type="checkbox" id="dhWithCalc" checked> 이 페이지의 계산 결과를 함께 보냅니다</label>' : '') +
+      '<label class="check"><input type="checkbox" id="dhAgree"> 상담 연락을 위한 개인정보(이름·연락처) 수집에 동의합니다</label>' +
+      '</div><div class="dh-consult-msg" id="dhMsg" hidden></div></form>';
+  };
+  DH.bindConsult = function () {
+    const f = document.getElementById('dhConsult'); if (!f || f.dataset.bound) return; f.dataset.bound = '1';
+    const msg = document.getElementById('dhMsg');
+    const show = function (t, bad) { msg.hidden = false; msg.textContent = t; msg.className = 'dh-consult-msg' + (bad ? ' bad' : ' ok'); };
+    f.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const name = (document.getElementById('dhName').value || '').trim();
+      const phone = (document.getElementById('dhPhone').value || '').trim();
+      if (!/\d{9,}/.test(phone.replace(/[^\d]/g, '')) ) { show('연락처를 확인해 주세요.', true); document.getElementById('dhPhone').focus(); return; }
+      if (!document.getElementById('dhAgree').checked) { show('개인정보 수집에 동의해 주세요.', true); return; }
+      const withCalc = document.getElementById('dhWithCalc'); let summary = '';
+      if (withCalc && withCalc.checked && typeof window.DH_summary === 'function') { try { summary = String(window.DH_summary() || ''); } catch (e) { } }
+      const page = document.title.replace(' · 대한세무법인', '');
+      const tags = ['[상속 랜딩] ' + page, name ? '이름: ' + name : '', summary].filter(Boolean).join(' / ');
+      const btn = document.getElementById('dhSend'); btn.disabled = true; btn.textContent = '보내는 중…';
+      try {
+        await fetch(DH.CONSULT_URL, { method: 'POST', body: JSON.stringify({ phone: phone, tags: tags, name: name, source: 'inherit/' + location.pathname.split('/').pop(), summary: summary, at: new Date().toISOString() }) });
+        show('접수되었습니다. 담당자가 영업일 기준 1일 안에 연락드립니다.' + (name ? ' (' + name + '님)' : ''));
+        f.reset(); if (withCalc) withCalc.checked = true;
+        try { localStorage.setItem('dh.consult.sent', new Date().toISOString()); } catch (e) { }
+      } catch (err) {
+        const body = encodeURIComponent('이름: ' + name + '\n연락처: ' + phone + '\n페이지: ' + page + '\n' + summary);
+        show('전송에 실패했습니다. 전화 또는 이메일로 문의해 주세요.', true);
+        msg.innerHTML += ' <a href="mailto:sjlee@taxdh.net?subject=' + encodeURIComponent('[상속세 상담] ' + name) + '&body=' + body + '">이메일로 보내기</a>';
+      } finally { btn.disabled = false; btn.textContent = '무료 상담 신청'; }
+    });
+  };
+
   /* ---------- 공통 상단바·푸터 ---------- */
   DH.chrome = function (opt) {
     opt = opt || {};
@@ -213,10 +259,10 @@
       '<a class="hide-m" href="https://daehantax.github.io/tax/">전체 세무 도구 →</a></nav></div>';
     document.body.prepend(top);
     if (opt.contact !== false) {
-      const c = document.createElement('div'); c.className = 'dh-contact';
-      c.innerHTML = '<div class="wrap"><div><h2>' + (opt.contactTitle || '복잡한 상속, 세무사와 함께 검토하세요') + '</h2><p>대한세무법인 · 성남 분당 · 상속·증여·부동산 세무</p></div>' +
-        '<a class="btn" href="mailto:sjlee@taxdh.net?subject=' + encodeURIComponent((opt.subject || '상속세') + ' 상담 문의') + '">상담 문의 →</a></div>';
+      const c = document.createElement('div'); c.className = 'dh-contact no-print';
+      c.innerHTML = '<div class="wrap">' + DH.consultHtml({ title: opt.contactTitle }) + '</div>';
       document.body.appendChild(c);
+      DH.bindConsult();
     }
     const f = document.createElement('footer'); f.className = 'dh-foot';
     f.innerHTML = '© 대한세무법인 · <a href="https://tuzaga.com/" target="_blank" rel="noopener">당신의세무사</a> · 2026년 10월 시행 세법 기준<br>계산 결과는 참고용이며, 실제 신고 전 세무 전문가의 검토를 권합니다.';
