@@ -2,3 +2,5 @@ node_modules/
 _dev/print/*.pdf
 _dev/print/*.png
 _scen-local.html
+_dev/print/screen/
+_dev/test/scenarios-local.js
