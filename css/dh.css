@@ -179,9 +179,15 @@ details.dh>div,details.dh>ul,details.dh>p{padding:0 0 12px;font-size:14px;color:
   .field{grid-template-columns:1fr;gap:4px}
   .grid2{grid-template-columns:1fr}
   .dh-top nav a.hide-m{display:none}
+  .dh-top .wrap{height:52px;gap:12px}
+  .dh-top .logo{font-size:14px;white-space:nowrap}
+  .dh-top .logo span{display:none}
+  .dh-top nav{gap:14px;font-size:13px;white-space:nowrap;overflow-x:auto;scrollbar-width:none}
+  .dh-top nav::-webkit-scrollbar{display:none}
+  .dh-top nav a{flex:0 0 auto}
   input[type=text],input[type=number],select{max-width:none}
   .card{padding:18px 16px}
-  .form-sheet{padding:18px 14px}
+  .form-sheet{padding:18px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
 
 /* ============================================================
