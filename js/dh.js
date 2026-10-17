@@ -211,13 +211,15 @@
     return '<form class="dh-consult" id="dhConsult" novalidate>' +
       '<div class="dh-consult-head"><h2>' + (opt.title || '복잡한 상속, 세무사가 직접 확인해 드립니다') + '</h2>' +
       '<p>' + (opt.lead || '연락처만 남기시면 대한세무법인 담당자가 전화드립니다. 상담은 무료입니다.') + '</p></div>' +
+      '<div class="dh-consult-opts top">' +
+      '<label class="check"><input type="checkbox" id="dhAgree"> 상담 연락을 위한 개인정보(이름·연락처) 수집에 동의합니다</label>' +
+      (hasSummary ? '<label class="check"><input type="checkbox" id="dhWithCalc" checked> 이 페이지의 계산 결과를 함께 보냅니다</label>' : '') +
+      '</div>' +
       '<div class="dh-consult-row">' +
       '<input type="text" id="dhName" placeholder="성함" autocomplete="name" maxlength="20">' +
       '<input type="tel" id="dhPhone" placeholder="연락처 (010-0000-0000)" autocomplete="tel" inputmode="tel" required>' +
       '<button type="submit" class="btn" id="dhSend">무료 상담 신청</button></div>' +
       '<div class="dh-consult-opts">' +
-      (hasSummary ? '<label class="check"><input type="checkbox" id="dhWithCalc" checked> 이 페이지의 계산 결과를 함께 보냅니다</label>' : '') +
-      '<label class="check"><input type="checkbox" id="dhAgree"> 상담 연락을 위한 개인정보(이름·연락처) 수집에 동의합니다</label>' +
       '</div><div class="dh-consult-msg" id="dhMsg" hidden></div></form>';
   };
   DH.bindConsult = function () {
@@ -252,11 +254,11 @@
   DH.chrome = function (opt) {
     opt = opt || {};
     const here = location.pathname.split('/').pop();
-    const nav = [['./', '상속세', 'index.html'], ['gift.html', '상황별 증여세', 'gift.html']];
+    const nav = [['./', '상속세', 'index.html'], ['gift.html', '상황별 증여세', 'gift.html'], ['about.html', '소개', 'about.html']];
     const top = document.createElement('header'); top.className = 'dh-top';
     top.innerHTML = '<div class="wrap' + (opt.wide ? ' wide' : '') + '"><a class="logo" href="./">대한세무법인 <span>상속·증여</span></a><nav>' +
       nav.map(function (n) { return '<a href="' + n[0] + '"' + (here === n[2] ? ' class="on"' : '') + '>' + n[1] + '</a>'; }).join('') +
-      '<a class="hide-m" href="https://daehantax.github.io/tax/">전체 세무 도구 →</a></nav></div>';
+      '<a href="https://daehantax.com/info.html" target="_blank" rel="noopener">블로그</a></nav></div>';
     document.body.prepend(top);
     if (opt.contact !== false) {
       const c = document.createElement('div'); c.className = 'dh-contact no-print';
