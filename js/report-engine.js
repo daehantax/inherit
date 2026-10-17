@@ -106,7 +106,20 @@
       taxDeduction: taxDeduction, payableTax: payableTax
     };
   }
-  function defaultDeduction() { return DH.clamp0(($('inheritanceDeduction') || { value: 1e9 }).value); }
+  // 배우자 생존 여부 선택 (9단계 라디오). 있음 → 일괄 5억 + 배우자 최소 5억 = 10억, 없음 → 일괄 5억
+  function hasSpouse() { const el = document.querySelector('input[name="hasSpouse"]:checked'); return !el || el.value !== 'no'; }
+  function baseDeduction() { return hasSpouse() ? R.lumpSum + R.spouseMin : R.lumpSum; }
+  function applySpouseChoice() {
+    const sp = hasSpouse(), base = baseDeduction();
+    const note = sp ? '배우자 있음: 일괄공제 5억 + 배우자공제 5억' : '배우자 없음: 일괄공제 5억';
+    ['inheritanceDeduction', 'inheritanceDeduction1'].forEach(function (id) { const el = $(id); if (el) { el.value = fmt(base); const w = el.parentElement && el.parentElement.querySelector('.won'); if (w) w.textContent = DH.kor(base); } });
+    ['dedDefaultNote', 'ded1Note'].forEach(function (id) { const el = $(id); if (el) el.textContent = note; });
+    const sc = $('spouseInheritanceDeductionCell'); if (!sp && sc) { setText('spouseInheritanceDeductionCell', 0); setText('spouseNoteCell', '배우자 없음: 배우자상속공제 해당 없음'); }
+    const sb = $('btnSpouse'); if (sb) sb.disabled = !sp;
+    document.querySelectorAll('[data-spouse-only]').forEach(function (el) { el.classList.toggle('dim', !sp); });
+    updateTotalDeduction();
+  }
+  function defaultDeduction() { const el = $('inheritanceDeduction'); return el && el.value !== '' ? DH.clamp0(el.value) : baseDeduction(); }
 
   // 화면 표시 (11단계 결과표)
   function calculateInheritanceTax(ded) {
@@ -120,7 +133,7 @@
     setText('inheritanceDeductionValueCell', r.appliedDeduction);
     setText('inheritanceDeductionNoteCell', r.appliedDeduction < r.requestedDeduction
       ? '종합한도 적용 (공제 ' + fmt(r.requestedDeduction) + ' → 한도 ' + fmt(r.deductionLimit) + ')'
-      : '배우자 생존시 최소 10억, 종합한도 이내');
+      : (hasSpouse() ? '배우자 있음: 일괄 5억 + 배우자 5억, 종합한도 이내' : '배우자 없음: 일괄공제 5억, 종합한도 이내'));
     setText('appraisalFeeValueCell', r.appraisalFee);
     setText('taxBaseValueCell', r.taxBase);
     setText('taxRateValueCell', r.taxBase > 0 ? (r.rate.rate * 100) + '% (누진공제 ' + fmt(r.rate.ded) + ')' : '10%~50%');
@@ -140,6 +153,7 @@
 
   /* ===================== 13단계: 상속공제 ===================== */
   function calculateSpouseInheritanceDeduction() {
+    if (!hasSpouse()) { setText('spouseInheritanceDeductionCell', 0); setText('spouseNoteCell', '배우자 없음: 배우자상속공제 해당 없음'); updateTotalDeduction(); return 0; }
     const total = num('houseValue') + num('buildingValue') + num('agriculturalLandValue') + num('forestLandValue') + num('otherProperty');
     const giftFromMother = num('giftFromMother');
     const n = intOf('childrensNumber');
@@ -219,7 +233,7 @@
     return total;
   }
   function performDeductionComparison() {
-    const d1 = DH.clamp0(($('inheritanceDeduction1') || { value: 1e9 }).value);
+    const d1 = baseDeduction();
     const d2 = num('inheritanceDeduction2');
     const r1 = computeInheritance(d1), r2 = computeInheritance(d2);
     const saving = r1.payableTax - r2.payableTax;
@@ -523,6 +537,7 @@
     });
   }
   function updatePrintSummary() {
+    const ps = $('psSpouse'); if (ps) ps.textContent = hasSpouse() ? '배우자 있음' : '배우자 없음';
     document.querySelectorAll('[data-ps]').forEach(function (td) {
       const el = $(td.dataset.ps); if (!el) { td.textContent = ''; return; }
       const raw = String(el.value || '').trim();
@@ -670,6 +685,7 @@
       if (e.target.classList && e.target.classList.contains('modal')) e.target.classList.remove('open');
     });
     on('btnSpouse', 'click', calculateSpouseInheritanceDeduction);
+    document.querySelectorAll('input[name="hasSpouse"]').forEach(function (r) { r.addEventListener('change', function () { applySpouseChoice(); if (lastResult) calculateInheritanceTax(); }); });
     on('btnCohabOpen', 'click', function () { setText('modalHouseValueCell', DH.won(num('houseValue'))); openModal('cohabitationModal'); });
     on('btnCohabCalc', 'click', calculateCohabitationDeduction);
     on('btnCohabApply', 'click', applyCohabitationDeduction);
@@ -695,11 +711,11 @@
     document.addEventListener('change', function (e) { if (e.target.closest && e.target.closest('.input-step')) { if (lastResult) calculateInheritanceTax(); else updatePrintSummary(); } });
 
     setupQa();
-    renderProgress(); syncHouseFields(); syncTransfer(); syncPrintSections(); updatePrintSummary(); updateTotalDeduction();
+    renderProgress(); syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); updatePrintSummary();
     window.addEventListener('beforeprint', function () { calculateInheritanceTax(); updatePrintSummary(); });
   }
   // 불러오기·지우기 뒤 dh.js 가 호출
-  window.DH_recalc = function () { syncHouseFields(); syncTransfer(); syncPrintSections(); updateTotalDeduction(); calculateInheritanceTax(); };
+  window.DH_recalc = function () { syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); calculateInheritanceTax(); };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
