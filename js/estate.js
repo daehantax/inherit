@@ -1,0 +1,201 @@
+/* ============================================================
+   상속 파일 (estate.js) — 한 번 입력하면 모든 화면이 같이 쓰는 데이터
+   저장: localStorage 'dh.estate.v1' (이 기기에만) / 주소 #e=… (링크로 공유·시트 「다시 보기」)
+   주민등록번호·계좌번호·정확한 주소는 이 파일에 넣지 않는다(일부러 칸이 없음).
+   ------------------------------------------------------------
+   {
+     v: 1,
+     deceased: { date: 'YYYY-MM-DD' },
+     heirs:  [{ id, rel: spouse|child|grandchild|parent|other, name, age, houses(지금 가진 집 수), ownGongsi(그 집 공시가 합계),
+                livedYears(돌아가신 분과 같이 산 햇수), disabledYears(장애인 기대여명 연수), substitute(대습 손자녀) }],
+     assets: [{ id, type(EC.TYPES), name, value(시가), gongsi(공시가), lived(10년 이상 같이 산 집), secured(이 집 담보대출),
+                small(85㎡ 이하, 기본 true), metro(수도권, 기본 true), sellPlan(soon|y3|y5|y10|keep), sellPrice,
+                paid·premium(분양권), premiumByOther(보험료를 다른 사람이 냄), split: [{ heir, share }] }],
+     debts:  { loan(은행 대출), deposit(돌려줄 보증금), tax(밀린 세금·공과금), other(병원비 등) },
+     funeral:{ cost, grave },
+     gifts:  [{ id, to(heirId|'other'), year, value, taxBase, taxPaid }],
+     misc:   { appraisalFee },
+     opened: ['T02', …],   // 열어 본 티칭 포인트
+     meta:   { updated, source }
+   }
+   ============================================================ */
+(function (root) {
+  'use strict';
+  const EST = {};
+  EST.KEY = 'dh.estate.v1';
+
+  /* ---------- 가격·회사 정보 (여기만 고치면 모든 화면에 반영) ---------- */
+  EST.PRICE = {
+    self: 99000,          // 셀프 신고서
+    review: 330000,       // 세무사 검토 상담
+    fileBase: 990000,     // 신고 대행 기본
+    fileRate: 0.001,      // 신고 대행: 상속재산 10억 초과분 × 0.1%
+    fileOver: 1e9
+  };
+  EST.FIRM = { name: '대한세무법인', email: 'sjlee@taxdh.net', bank: '' /* 예: '○○은행 000-000-000000 대한세무법인' — 비어 있으면 접수 후 이메일로 안내 */ };
+  EST.fileFee = function (totalProperty, paidBefore) {
+    const p = EST.PRICE;
+    const fee = p.fileBase + Math.max(0, (Number(totalProperty) || 0) - p.fileOver) * p.fileRate;
+    return Math.max(0, Math.round(fee / 10000) * 10000 - (paidBefore || 0));
+  };
+
+  /* ---------- 기본 모양 ---------- */
+  EST.blank = function () {
+    return { v: 1, deceased: { date: '' }, heirs: [], assets: [], debts: {}, funeral: {}, gifts: [], misc: {}, opened: [], meta: {} };
+  };
+  let seq = 0;
+  EST.id = function (p) { seq += 1; return (p || 'x') + Date.now().toString(36).slice(-4) + seq.toString(36); };
+  EST.normalize = function (e) {
+    const b = EST.blank();
+    e = (e && typeof e === 'object') ? e : {};
+    Object.keys(b).forEach(function (k) { if (e[k] === undefined || e[k] === null) e[k] = b[k]; });
+    ['heirs', 'assets', 'gifts', 'opened'].forEach(function (k) { if (!Array.isArray(e[k])) e[k] = []; });
+    e.heirs = e.heirs.filter(function (h) { return h && h.id && h.rel; });
+    e.assets = e.assets.filter(function (a) { return a && a.id && a.type; });
+    e.v = 1;
+    return e;
+  };
+
+  /* ---------- 저장 ---------- */
+  EST.load = function () {
+    try { const raw = localStorage.getItem(EST.KEY); return raw ? EST.normalize(JSON.parse(raw)) : null; } catch (err) { return null; }
+  };
+  EST.save = function (e) {
+    e.meta = Object.assign({}, e.meta, { updated: new Date().toISOString() });
+    try { localStorage.setItem(EST.KEY, JSON.stringify(e)); return true; } catch (err) { return false; }
+  };
+  EST.clear = function () { try { localStorage.removeItem(EST.KEY); } catch (err) { } };
+
+  /* ---------- 링크 (#e=) ---------- */
+  function compact(o) {
+    if (Array.isArray(o)) return o.map(compact);
+    if (!o || typeof o !== 'object') return o;
+    const out = {};
+    Object.keys(o).forEach(function (k) { const v = o[k]; if (v === '' || v === null || v === undefined || v === false) return; if (Array.isArray(v) && !v.length) return; out[k] = (typeof v === 'object') ? compact(v) : v; });
+    return out;
+  }
+  EST.encode = function (e) {
+    const s = JSON.stringify(compact(e));
+    return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  };
+  EST.decode = function (str) {
+    try { str = String(str).replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; return EST.normalize(JSON.parse(decodeURIComponent(escape(atob(str))))); } catch (err) { return null; }
+  };
+  EST.fromHash = function (hash) {
+    const m = /[#&]e=([A-Za-z0-9_-]+)/.exec(hash || (root.location ? root.location.hash : ''));
+    return m ? EST.decode(m[1]) : null;
+  };
+  EST.link = function (file, e) {
+    const base = root.location ? root.location.href.replace(/[#?].*$/, '').replace(/[^/]*$/, '') : '';
+    return base + file + '#e=' + EST.encode(e);
+  };
+  // 이 화면이 쓸 상속 파일: 주소(#e=)가 있으면 그것(그리고 저장), 없으면 이 기기에 저장된 것
+  EST.current = function () {
+    const fromLink = EST.fromHash();
+    if (fromLink) { EST.save(fromLink); return { e: fromLink, from: 'link' }; }
+    const saved = EST.load();
+    return saved ? { e: saved, from: 'saved' } : { e: EST.blank(), from: 'new' };
+  };
+
+  /* ---------- 상속인 ---------- */
+  EST.REL = { spouse: '배우자', child: '자녀', grandchild: '손자녀', parent: '부모님', other: '그 밖의 가족' };
+  EST.heirLabel = function (h, i) { return h.name || ((EST.REL[h.rel] || '가족') + (h.rel === 'child' || h.rel === 'grandchild' ? (i || '') : '')); };
+  // 자녀 수만 바꿨을 때: 자녀 heir 를 늘리거나 줄인다(입력한 정보는 앞에서부터 유지)
+  EST.setChildren = function (e, n) {
+    n = Math.max(0, Math.min(10, Math.floor(Number(n) || 0)));
+    const kids = e.heirs.filter(function (h) { return h.rel === 'child'; });
+    if (kids.length < n) for (let i = kids.length; i < n; i++) e.heirs.push({ id: EST.id('c'), rel: 'child', name: '자녀' + (i + 1) });
+    else if (kids.length > n) {
+      const drop = kids.slice(n).map(function (h) { return h.id; });
+      e.heirs = e.heirs.filter(function (h) { return drop.indexOf(h.id) < 0; });
+      e.assets.forEach(function (a) { if (a.split) a.split = a.split.filter(function (s) { return drop.indexOf(s.heir) < 0; }); });
+      e.gifts.forEach(function (g) { if (drop.indexOf(g.to) >= 0) g.to = ''; });
+    }
+    return e;
+  };
+  EST.setSpouse = function (e, yes) {
+    const sp = e.heirs.find(function (h) { return h.rel === 'spouse'; });
+    if (yes && !sp) e.heirs.unshift({ id: EST.id('s'), rel: 'spouse', name: '배우자' });
+    if (!yes && sp) {
+      e.heirs = e.heirs.filter(function (h) { return h !== sp; });
+      e.assets.forEach(function (a) { if (a.split) a.split = a.split.filter(function (s) { return s.heir !== sp.id; }); });
+    }
+    return e;
+  };
+
+  /* ---------- 더 정확해지는 빈칸 ---------- */
+  EST.missing = function (e) {
+    const out = [];
+    const EC = root.EC;
+    if (!(e.deceased || {}).date) out.push({ screen: 'A', field: 'deathDate', text: '돌아가신 날 — 신고 기한을 계산합니다' });
+    (e.assets || []).forEach(function (a) {
+      if (EC && EC.isReal(a) && !Number(a.gongsi)) out.push({ screen: 'B', field: 'gongsi_' + a.id, text: (a.name || EC.TYPES[a.type].label) + '의 공시가격 — 취득세·재산세·종부세가 정확해집니다' });
+      if (EC && EC.isReal(a) && !Number(a.value) && a.type !== 'land' && a.type !== 'farm') out.push({ screen: 'B', field: 'value_' + a.id, text: (a.name || EC.TYPES[a.type].label) + '의 시세 — 아파트는 최근 거래가로 평가됩니다' });
+    });
+    (e.heirs || []).forEach(function (h, i) {
+      if (h.houses === undefined || h.houses === '') out.push({ screen: 'A', field: 'houses_' + h.id, text: EST.heirLabel(h, i + 1) + '님이 지금 가진 집 수 — 취득세·종부세가 달라집니다' });
+      else if (Number(h.houses) >= 1 && !Number(h.ownGongsi)) out.push({ screen: 'A', field: 'ownGongsi_' + h.id, text: EST.heirLabel(h, i + 1) + '님 집의 공시가격 — 종부세를 계산합니다' });
+    });
+    return out;
+  };
+
+  /* ---------- 신고 서류 목록 (입력값 기준) ---------- */
+  EST.docs = function (e) {
+    const EC = root.EC, has = function (f) { return (e.assets || []).some(f); };
+    const out = ['돌아가신 분의 가족관계증명서·기본증명서(상세)', '상속인 전원의 주민등록등본', '사망진단서 또는 제적등본'];
+    if (has(function (a) { return EC && EC.isReal(a); })) out.push('부동산 등기부등본(집·땅·건물 모두)');
+    if (has(function (a) { return a.basis === 'appraisal'; })) out.push('감정평가서(받으셨다면)');
+    if (has(function (a) { return a.type === 'deposit' || a.type === 'stock'; })) out.push('돌아가신 날 기준 예금·주식 잔액증명서 (안심상속 원스톱 조회 결과로 은행 목록 확인)');
+    if (has(function (a) { return a.type === 'insurance'; })) out.push('사망보험금 지급 내역서');
+    if (has(function (a) { return a.type === 'bunyang'; })) out.push('분양계약서·납부 영수증');
+    const d = e.debts || {};
+    if (Number(d.loan)) out.push('은행 대출 잔액증명서');
+    if (Number(d.deposit)) out.push('임대차계약서(돌려줄 보증금)');
+    if (Number(d.tax)) out.push('밀린 세금·공과금 고지서');
+    if (Number((e.funeral || {}).cost) > 5e6) out.push('장례비 영수증(장례식장·상조·묘지·봉안)');
+    if ((e.gifts || []).length) out.push('10년 안에 낸 증여세 신고서');
+    out.push('협의분할서(가족끼리 나누기로 했다면, 인감증명서 첨부)');
+    return out;
+  };
+
+  /* ---------- 기존 「계산 후 셀프 절세」 20단계로 넘기기 ---------- */
+  EST.toReport = function (e) {
+    const EC = root.EC; if (!EC) return {};
+    const won = function (v) { v = Math.round(Number(v) || 0); return v ? v.toLocaleString('ko-KR') : ''; };
+    const inh = EC.calcInheritance(e);
+    const sp = e.heirs.find(function (h) { return h.rel === 'spouse'; });
+    const houses = e.assets.filter(EC.isHouse);
+    const d = { hasSpouse: sp ? 'yes' : 'no', houseCount: String(Math.min(4, houses.length)) };
+    houses.slice(0, 4).forEach(function (a, i) {
+      const k = i + 1, sfx = k === 1 ? '' : '_' + k;
+      d['houseValue' + sfx] = won(EC.assetValue(a));
+      d['houseGongsi_' + k] = won(a.gongsi);
+      if (a.lived) d['houseLived_' + k] = '10';
+    });
+    const sumOf = function (f) { return e.assets.filter(f).reduce(function (s, a) { return s + EC.assetValue(a); }, 0); };
+    d.buildingValue = won(sumOf(function (a) { return a.type === 'shop'; }));
+    d.agriculturalLandValue = won(sumOf(function (a) { return a.type === 'farm'; }));
+    d.forestLandValue = won(sumOf(function (a) { return a.type === 'land'; }));
+    d.otherProperty = won(sumOf(function (a) { return !EC.isHouse(a) && ['shop', 'farm', 'land'].indexOf(a.type) < 0; }));
+    d.debts = won(inh.debts);
+    d.funeralExpense = won((e.funeral || {}).cost); d.funeralEnshrine = won((e.funeral || {}).grave);
+    const gSum = function (f) { return (e.gifts || []).filter(f).reduce(function (s, g) { return s + (Number(g.value) || 0); }, 0); };
+    d.giftFromMother = won(gSum(function (g) { return sp && g.to === sp.id; }));
+    d.giftToChildren = won(gSum(function (g) { return g.to && g.to !== 'other' && (!sp || g.to !== sp.id); }));
+    d.giftToOthers = won(gSum(function (g) { return !g.to || g.to === 'other'; }));
+    d.priorGiftTaxBase = won(inh.priorGiftTaxBase);
+    d.giftTaxDeduction = won(inh.giftTaxPaid);
+    d.appraisalFee = won((e.misc || {}).appraisalFee);
+    d.childrensNumber = String(inh.ded.children); d.children = String(inh.ded.children);
+    d.minorYears = String(inh.ded.minorYears); d.seniors = String(inh.ded.seniors); d.disabledYears = String(inh.ded.disabledYears);
+    d.financialAssets = won(e.assets.filter(EC.isFin).reduce(function (s, a) { return s + EC.assetValue(a); }, 0));
+    d.financialDebts = won((e.debts || {}).loan);
+    d.skipGenAmount = won(inh.skipAmount);
+    d._from = 'estate';
+    Object.keys(d).forEach(function (k) { if (d[k] === '' || d[k] === '0' && /Value|Property|debts|gift/.test(k)) delete d[k]; });
+    return d;
+  };
+
+  root.EST = EST;
+  if (typeof module === 'object' && module.exports) module.exports = EST;
+})(typeof window !== 'undefined' ? window : globalThis);

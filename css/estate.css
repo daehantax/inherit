@@ -1,0 +1,116 @@
+/* ============================================================
+   상속 파일 화면 (estate.html 입력 / result.html 결과) 공통 스타일
+   dh.css 위에 얹는다.
+   ============================================================ */
+
+/* ---------- 레이아웃: 왼쪽 입력, 오른쪽 요약 ---------- */
+.es-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+@media (max-width:900px){.es-layout{grid-template-columns:1fr}}
+
+/* ---------- 진행 칩 A~F ---------- */
+.es-steps{display:flex;gap:6px;margin:0 0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.es-steps button{flex:1 0 auto;font:inherit;font-size:13px;font-weight:700;padding:8px 12px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--muted);cursor:pointer;white-space:nowrap}
+.es-steps button .k{display:inline-block;width:20px;height:20px;line-height:20px;border-radius:50%;background:var(--main-soft);color:var(--main);font-size:11.5px;margin-right:5px}
+.es-steps button.on{background:var(--main);border-color:var(--main);color:#fff}
+.es-steps button.on .k{background:#fff}
+.es-steps button.done{border-color:var(--main);color:var(--main)}
+
+/* ---------- 화면(카드) ---------- */
+.es-screen{display:none}
+.es-screen.on{display:block}
+.es-q{font-size:21px;font-weight:900;margin:0 0 4px;letter-spacing:-.02em;word-break:keep-all}
+.es-lead{color:var(--muted);font-size:14px;margin:0 0 16px;word-break:keep-all}
+.es-row{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:6px 14px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.es-row:last-child{border-bottom:0}
+.es-row>label,.es-row>.lab{font-size:14px;font-weight:500;word-break:keep-all}
+.es-row>label small,.es-row>.lab small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.es-ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.es-ctl .unit{font-size:13px;color:var(--muted)}
+.es-ctl .kor{font-size:12.5px;color:var(--main);font-weight:600;min-width:60px}
+.es-ctl input[type=text]{max-width:200px}
+.es-ctl input.name{max-width:150px}
+.es-ctl input.num{max-width:90px;text-align:right}
+.es-ctl select{max-width:220px}
+.es-note{font-size:12.5px;color:var(--muted);margin:2px 0 0;word-break:keep-all}
+@media (max-width:600px){
+  .es-row{grid-template-columns:1fr;gap:6px}
+  .es-ctl input[type=text]{max-width:none;flex:1 1 140px}
+}
+
+/* ---------- 묶음 카드 (상속인·재산 하나) ---------- */
+.es-item{border:1px solid var(--line);border-radius:14px;padding:4px 16px 8px;margin:0 0 12px;background:#fff}
+.es-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0 4px;border-bottom:1px solid var(--line)}
+.es-item-head b{font-size:15px}
+.es-item-head .rel{font-size:12px;font-weight:700;color:var(--main);background:var(--main-soft);border-radius:999px;padding:2px 9px;margin-right:6px}
+.es-del{font:inherit;font-size:12.5px;color:var(--muted);background:none;border:0;cursor:pointer;padding:4px 6px}
+.es-del:hover{color:var(--bad)}
+.es-more{margin:6px 0 0}
+.es-more>summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--main);padding:6px 0;list-style:none}
+.es-more>summary::-webkit-details-marker{display:none}
+.es-more>summary::before{content:'＋ ';}
+.es-more[open]>summary::before{content:'－ ';}
+.es-add{display:inline-flex;align-items:center;gap:6px;font:inherit;font-weight:700;font-size:14px;color:var(--main);background:var(--main-tint);border:1px dashed var(--main);border-radius:12px;padding:12px 16px;cursor:pointer;width:100%;justify-content:center}
+.es-add:hover{background:var(--main-soft)}
+.es-empty{font-size:13.5px;color:var(--muted);text-align:center;padding:10px 0 14px}
+
+/* 숫자 스텝퍼 (자녀 수) */
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line-strong);border-radius:999px;overflow:hidden;background:#fff}
+.stepper button{font:inherit;font-size:18px;width:40px;height:38px;border:0;background:#fff;color:var(--main);cursor:pointer}
+.stepper button:hover{background:var(--main-soft)}
+.stepper output{min-width:46px;text-align:center;font-weight:700;font-size:15px}
+
+/* ---------- 티칭 포인트 ---------- */
+.teach{display:block;font-size:13px;line-height:1.55;color:#5a4a00;background:#fffaeb;border:1px solid #f1e1a6;border-radius:10px;padding:8px 12px;margin:8px 0 2px;word-break:keep-all}
+.teach-k{display:inline-block;font-size:11.5px;font-weight:800;color:#8a6d00;background:#fdeeb5;border-radius:999px;padding:1px 8px;margin-right:4px}
+.teach-play{font:inherit;font-size:12px;font-weight:700;color:#fff;background:var(--main);border:0;border-radius:999px;padding:2px 10px;margin-left:4px;cursor:pointer;white-space:nowrap}
+.teach-video{position:fixed;inset:0;background:rgba(20,10,14,.6);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.teach-video.open{display:flex}
+.tv-card{background:#fff;border-radius:16px;width:min(760px,100%);overflow:hidden}
+.tv-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.tv-close{font:inherit;font-size:16px;background:none;border:0;cursor:pointer;padding:4px 8px}
+.tv-frame{position:relative;padding-top:56.25%;background:#000}
+.tv-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tv-note{font-size:12px;color:var(--muted);margin:0;padding:8px 14px}
+
+/* ---------- 아래 이동 버튼 ---------- */
+.es-nav{display:flex;justify-content:space-between;gap:10px;margin:18px 0 0}
+.es-nav .btn{min-width:120px}
+
+/* ---------- 요약 패널 ---------- */
+.es-sum{position:sticky;top:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh)}
+.es-sum h3{margin:0 0 10px;font-size:14px;color:var(--muted);font-weight:700}
+.es-sum .kv{font-size:13.5px;padding:6px 0}
+.es-sum .big{margin:12px 0 4px;padding:12px;border-radius:12px;background:var(--main-tint);text-align:center}
+.es-sum .big span{display:block;font-size:12.5px;color:var(--muted)}
+.es-sum .big b{display:block;font-size:24px;color:var(--main);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.es-sum .big small{display:block;font-size:12px;color:var(--muted)}
+.es-sum .btn{margin-top:10px}
+.es-sum .tools{display:flex;gap:6px;margin-top:10px}
+.es-sum .tools button{flex:1;font:inherit;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px;cursor:pointer}
+.es-sum .tools button:hover{color:var(--main);border-color:var(--main)}
+.es-deadline{font-size:12.5px;color:var(--ink);background:#f6f2f3;border-radius:8px;padding:7px 10px;margin-top:8px}
+/* 폰: 요약을 아래에 붙는 띠로 */
+@media (max-width:900px){
+  .es-sum{position:fixed;left:0;right:0;bottom:0;top:auto;border-radius:16px 16px 0 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:50;box-shadow:0 -6px 20px rgba(43,42,42,.12)}
+  .es-sum h3,.es-sum .kv,.es-sum .tools,.es-sum .es-deadline,.es-sum .big small{display:none}
+  .es-sum .big{display:flex;align-items:baseline;justify-content:space-between;margin:0;padding:0;background:none;text-align:left}
+  .es-sum .big b{font-size:20px}
+  .es-sum .btn{margin-top:8px;padding:9px 16px}
+  body.es-page{padding-bottom:120px}
+}
+
+/* ---------- 나누기 표 ---------- */
+.split-row{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0 0 10px;background:#fff}
+.split-row .top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.split-row .top b{font-size:14.5px}
+.split-row .top small{color:var(--muted);font-weight:400;margin-left:6px}
+.split-row select{max-width:240px}
+.split-pcts{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:8px}
+.split-pcts label{display:flex;align-items:center;gap:6px;font-size:13px}
+.split-pcts input{width:70px;min-height:34px;padding:4px 8px;text-align:right}
+.split-warn{font-size:12.5px;color:var(--bad);margin-top:4px}
+.mini{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+.mini th,.mini td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.mini th:first-child,.mini td:first-child{text-align:left}
+.mini th{font-size:12px;color:var(--muted);font-weight:700}
+.mini tr.total td{font-weight:800;border-top:2px solid var(--main);border-bottom:0}

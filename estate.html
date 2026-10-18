@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>무엇을 물려받나요 · 상속세 한 번에 계산 · 대한세무법인</title>
+<meta name="description" content="가족·집·예금·빚을 한 번만 적으면 상속세와 취득세·재산세·종부세·양도세까지 한 화면에서 계산합니다. 무료.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<link rel="stylesheet" href="css/estate.css">
+</head>
+<body class="es-page" data-subject="상속세" data-wide="1">
+
+<main class="wrap wide">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › 1단계 · 무엇을 물려받나요</div>
+    <h1>무엇을 물려받나요</h1>
+    <p>아는 것만 적으세요. 모르는 칸은 비워 두셔도 됩니다. 입력하는 대로 이 기기에 저장되고, 오른쪽에 예상 세금이 바로 바뀝니다.</p>
+  </div>
+
+  <nav class="es-steps no-print" id="esSteps" aria-label="입력 단계">
+    <button type="button" data-go="A"><span class="k">A</span>가족</button>
+    <button type="button" data-go="B"><span class="k">B</span>집·땅</button>
+    <button type="button" data-go="C"><span class="k">C</span>예금·그 밖의 재산</button>
+    <button type="button" data-go="D"><span class="k">D</span>빚·장례비</button>
+    <button type="button" data-go="E"><span class="k">E</span>미리 준 재산</button>
+    <button type="button" data-go="F"><span class="k">F</span>나누기</button>
+  </nav>
+
+  <div class="es-layout">
+    <div>
+      <!-- A. 가족 -->
+      <section class="card es-screen" data-screen="A">
+        <h2 class="es-q">누가 돌아가셨고, 누가 물려받나요?</h2>
+        <p class="es-lead">가족 구성에 따라 공제가 크게 달라집니다.</p>
+        <div class="es-row"><label for="deathDate">돌아가신 날</label>
+          <div class="es-ctl"><input type="date" id="deathDate" data-path="d.date" data-type="text"></div></div>
+        <p data-teach="T01"></p>
+        <div class="es-row"><span class="lab">배우자(남편·아내)</span>
+          <div class="es-ctl radio-row" id="spouseRadio">
+            <label><input type="radio" name="hasSpouse" value="yes"><span>살아 계심</span></label>
+            <label><input type="radio" name="hasSpouse" value="no"><span>안 계심</span></label>
+          </div></div>
+        <p data-teach="T02"></p>
+        <div class="es-row"><span class="lab">자녀 수 <small>먼저 돌아가신 자녀는 빼고, 그 자녀의 아이(손자녀)는 아래에서 추가</small></span>
+          <div class="es-ctl"><span class="stepper"><button type="button" data-kids="-1" aria-label="자녀 한 명 빼기">−</button><output id="kidsOut">0</output><button type="button" data-kids="1" aria-label="자녀 한 명 더하기">＋</button></span><span class="unit">명</span></div></div>
+        <h3 class="subhead">물려받는 가족</h3>
+        <div id="heirList"></div>
+        <div class="es-ctl" style="margin-top:4px">
+          <button type="button" class="btn ghost sm" data-add-heir="grandchild">+ 손자녀</button>
+          <button type="button" class="btn ghost sm" data-add-heir="parent" id="addParent">+ 부모님 (자녀가 없을 때)</button>
+        </div>
+        <p data-teach="T03"></p>
+      </section>
+
+      <!-- B. 집·땅 -->
+      <section class="card es-screen" data-screen="B">
+        <h2 class="es-q">집과 땅은 무엇이 있나요?</h2>
+        <p class="es-lead">한 채씩 추가하세요. 시세를 모르면 공시가격만 넣어도 됩니다(공시가격은 「부동산공시가격알리미」에서 조회).</p>
+        <p data-teach="T04"></p>
+        <div id="assetList"></div>
+        <button type="button" class="es-add" id="addAsset">+ 집·땅 추가</button>
+      </section>
+
+      <!-- C. 예금·그 밖의 재산 -->
+      <section class="card es-screen" data-screen="C">
+        <h2 class="es-q">예금, 주식, 보험금은 얼마인가요?</h2>
+        <p class="es-lead">돌아가신 날 기준 금액입니다. 합계만 넣으면 됩니다.</p>
+        <p data-teach="T10"></p>
+        <div id="finList"></div>
+      </section>
+
+      <!-- D. 빚·장례비 -->
+      <section class="card es-screen" data-screen="D">
+        <h2 class="es-q">갚아야 할 돈과 장례비는요?</h2>
+        <p class="es-lead">빚과 장례비는 상속재산에서 빠집니다. 빠뜨리면 세금을 더 냅니다.</p>
+        <div id="debtList"></div>
+      </section>
+
+      <!-- E. 미리 준 재산 -->
+      <section class="card es-screen" data-screen="E">
+        <h2 class="es-q">10년 안에 가족에게 미리 준 재산이 있나요?</h2>
+        <p class="es-lead">가족 외의 사람에게 준 것은 5년 안의 것만 넣습니다.</p>
+        <div class="es-row"><span class="lab">미리 준 재산</span>
+          <div class="es-ctl radio-row">
+            <label><input type="radio" name="hasGifts" value="no"><span>없음</span></label>
+            <label><input type="radio" name="hasGifts" value="yes"><span>있음</span></label>
+          </div></div>
+        <p data-teach="T13"></p>
+        <div id="giftList"></div>
+        <button type="button" class="es-add" id="addGift" hidden>+ 미리 준 재산 추가</button>
+        <p data-teach="T15"></p>
+      </section>
+
+      <!-- F. 나누기 -->
+      <section class="card es-screen" data-screen="F">
+        <h2 class="es-q">누가 무엇을 받나요?</h2>
+        <p class="es-lead">정하지 않았으면 그대로 두세요. 법에 정한 비율로 계산합니다. 여기서 바꾸면 다음 화면의 세금 네 가지가 모두 다시 계산됩니다.</p>
+        <p data-teach="T16"></p>
+        <div id="splitList"></div>
+        <h3 class="subhead">이렇게 나누면</h3>
+        <div class="table-scroll"><table class="mini" id="splitTable"></table></div>
+        <p data-teach="T18"></p>
+      </section>
+
+      <div class="es-nav no-print">
+        <button type="button" class="btn ghost" id="btnPrev">← 이전</button>
+        <button type="button" class="btn" id="btnNext">다음 →</button>
+      </div>
+    </div>
+
+    <aside class="es-sum no-print" id="esSum" aria-live="polite">
+      <h3>지금까지 입력한 내용</h3>
+      <div class="kv"><span>물려받는 재산</span><b id="sumProp">0원</b></div>
+      <div class="kv"><span>빼는 돈 (빚·장례비)</span><b id="sumMinus">0원</b></div>
+      <div class="kv"><span>미리 준 재산</span><b id="sumGift">0원</b></div>
+      <div class="big"><span>예상 상속세</span><b id="sumTax">—</b><small id="sumNow"></small></div>
+      <div class="es-deadline" id="sumDeadline" hidden></div>
+      <a class="btn wide" href="result.html" id="btnResult">세금 자세히 보기 →</a>
+      <div class="tools"><button type="button" id="btnLink">링크 복사</button><button type="button" id="btnReset">처음부터</button></div>
+    </aside>
+  </div>
+</main>
+
+<script src="js/dh.js"></script>
+<script src="js/estate-calc.js"></script>
+<script src="js/estate.js"></script>
+<script src="js/teach.js"></script>
+<script src="js/estate-ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세금은 얼마인가요 · 상속세 한 번에 계산 · 대한세무법인</title>
+<meta name="description" content="상속세와 취득세, 앞으로의 재산세·종부세, 팔 때 양도세까지 한 화면에서. 줄일 수 있는 방법을 금액으로 보여 드립니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<link rel="stylesheet" href="css/estate.css">
+<link rel="stylesheet" href="css/result.css">
+</head>
+<body data-subject="상속세" data-contact-title="계산 결과, 세무사와 먼저 통화해 보시겠어요?">
+
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › <a href="estate.html">1단계 · 입력</a> › 결과</div>
+    <h1>세금은 얼마인가요</h1>
+    <p id="rsLead">지금 내는 세금과, 앞으로 낼 세금을 함께 보세요.</p>
+  </div>
+
+  <nav class="rs-tabs no-print" aria-label="결과 순서">
+    <a href="#tax"><span class="k">2</span>세금</a>
+    <a href="#save"><span class="k">3</span>줄이기</a>
+    <a href="#ask"><span class="k">4</span>맡기기</a>
+    <a href="#next"><span class="k">5</span>그 다음</a>
+  </nav>
+
+  <div id="rsEmpty" class="card" hidden>
+    <h2>먼저 무엇을 물려받는지 알려 주세요</h2>
+    <p>가족과 재산을 넣으면 여기에 세금이 나옵니다. 아는 것만 넣어도 됩니다.</p>
+    <a class="btn" href="estate.html">입력하러 가기 →</a>
+  </div>
+
+  <div id="rsBody">
+    <!-- 2. 세금 -->
+    <section id="tax" class="rs-sec">
+      <h2 class="rs-h">세금은 얼마인가요</h2>
+      <div class="rs-big" id="bigCards"></div>
+      <div class="card">
+        <h3 class="rs-sub">가족별로 보면</h3>
+        <div class="table-scroll"><table class="mini rs-heirs" id="heirTable"></table></div>
+        <p class="es-note" id="heirNote"></p>
+        <p data-teach="T19"></p>
+        <p data-teach="T20"></p>
+        <p data-teach="T22"></p>
+      </div>
+      <div class="note warn" id="missingBox" hidden></div>
+      <details class="card rs-detail" id="dInh"><summary>상속세 계산 내역</summary><div id="inhDetail"></div></details>
+      <details class="card rs-detail" id="dAcq"><summary>취득세 내역</summary><div id="acqDetail"></div></details>
+      <details class="card rs-detail" id="dHold"><summary>재산세·종부세 내역 (10년)</summary><div id="holdDetail"></div></details>
+      <details class="card rs-detail" id="dTr"><summary>팔 때 양도세 내역</summary><div id="trDetail"></div></details>
+      <p class="rs-edit no-print"><a class="btn ghost sm" href="estate.html">← 입력 고치기</a> <a class="btn ghost sm" href="#" id="btnGold">20단계로 더 자세히 계산 →</a></p>
+    </section>
+
+    <!-- 3. 줄이기 -->
+    <section id="save" class="rs-sec">
+      <h2 class="rs-h">줄일 수 있나요</h2>
+      <p class="rs-lead">입력하신 상황에서 챙길 수 있는 것만 추렸습니다. 금액은 지금 계산과 바꾼 뒤 계산의 차이(10년 또는 팔 때까지 합계)입니다.</p>
+      <div id="undoBar" class="note" hidden></div>
+      <div id="saveList"></div>
+      <h3 class="rs-sub">확인해 보세요</h3>
+      <div id="checkList"></div>
+    </section>
+
+    <!-- 4. 맡기기 -->
+    <section id="ask" class="rs-sec">
+      <h2 class="rs-h">세무사에게 맡기기</h2>
+      <p class="rs-lead">직접 하셔도 됩니다. 맡기시면 이렇게 진행됩니다. 앞 단계에 낸 비용은 다음 단계에서 모두 빼 드립니다.</p>
+      <div class="rs-offer" id="offerLine"></div>
+      <div class="rs-products" id="products"></div>
+      <form class="card rs-form" id="askForm" novalidate>
+        <h3 class="rs-sub" id="askTitle">신청하기</h3>
+        <div class="es-row"><span class="lab">고른 것</span><div class="es-ctl radio-row" id="prodRadio"></div></div>
+        <div class="es-row"><label for="askName">이름</label><div class="es-ctl"><input type="text" id="askName" autocomplete="name" maxlength="20"></div></div>
+        <div class="es-row"><label for="askPhone">휴대폰</label><div class="es-ctl"><input type="tel" id="askPhone" autocomplete="tel" inputmode="tel" placeholder="010-0000-0000"></div></div>
+        <div class="es-row"><label for="askEmail">이메일 <small>신고서·답변서를 받을 주소</small></label><div class="es-ctl"><input type="email" id="askEmail" autocomplete="email"></div></div>
+        <div class="es-row"><label for="askQ">궁금한 점 <small>없으면 비워 두세요</small></label><div class="es-ctl"><textarea id="askQ" rows="3" maxlength="2000" placeholder="예: 어머니 몫을 얼마로 하는 게 좋을까요?"></textarea></div></div>
+        <div class="es-row"><span class="lab">결제 방법</span><div class="es-ctl radio-row">
+          <label><input type="radio" name="askPay" value="계좌이체" checked><span>계좌이체</span></label>
+          <label><input type="radio" name="askPay" value="카드"><span>카드 (결제 링크를 보내 드림)</span></label>
+        </div></div>
+        <label class="check rs-agree"><input type="checkbox" id="askAgree"> 신청 진행을 위한 개인정보(이름·연락처·이메일·입력한 재산 내용) 수집·이용에 동의합니다 <a href="privacy.html" target="_blank" rel="noopener">자세히</a></label>
+        <p class="es-note">결제 전에는 비용이 생기지 않습니다. 결제 확인 후 진행하며, 진행 전이면 전액 돌려 드립니다. 신청에 필요한 연락만 드리고 광고는 보내지 않습니다.</p>
+        <div class="actions"><button type="submit" class="btn" id="askSend">신청하기</button></div>
+        <div id="askMsg" class="note" hidden></div>
+      </form>
+      <div id="askDone" hidden></div>
+    </section>
+
+    <!-- 5. 그 다음 -->
+    <section id="next" class="rs-sec">
+      <h2 class="rs-h">신고 끝, 그 다음</h2>
+      <p class="rs-lead">상속세는 끝이 아니라 시작입니다. 날짜만 기억하세요.</p>
+      <div class="card"><ol class="rs-cal" id="calList"></ol></div>
+      <div class="card rs-alarm">
+        <h3 class="rs-sub">날짜를 문자로 알려 드릴까요? (무료)</h3>
+        <div class="rs-alarm-row"><input type="tel" id="alarmPhone" placeholder="010-0000-0000" inputmode="tel"><button type="button" class="btn" id="alarmSend">알림 받기</button></div>
+        <label class="check"><input type="checkbox" id="alarmAgree"> 알림 발송을 위한 휴대폰 번호 수집에 동의합니다</label>
+        <p id="alarmMsg" class="es-note"></p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="js/dh.js"></script>
+<script src="js/estate-calc.js"></script>
+<script src="js/estate.js"></script>
+<script src="js/savings.js"></script>
+<script src="js/teach.js"></script>
+<script src="js/result-ui.js"></script>
+</body>
+</html>
