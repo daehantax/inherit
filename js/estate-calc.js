@@ -118,12 +118,19 @@
   function assetValue(a) {
     if (TYPES[a.type] && TYPES[a.type].bunyang) return n0(a.paid) + n0(a.premium) || n0(a.value);
     if (a.type === 'insurance' && a.premiumByOther) return 0;   // 보험료를 돌아가신 분이 내지 않았으면 상속재산 아님
-    return n0(a.value) || n0(a.gongsi);
+    if (!isReal(a)) return n0(a.value) || n0(a.gongsi);
+    // 아파트·오피스텔: 유사매매사례가(시세)가 우선이라 시세, 없으면 공시가
+    // 단독주택·상가·땅: 매매사례가 드물어 보통 공시가(보충적 평가). 감정평가(또는 매매가)를 골랐을 때만 시세
+    if (MARKET_FIRST.indexOf(a.type) >= 0) return n0(a.value) || n0(a.gongsi);
+    if ((a.basis === 'appraisal' || a.basis === 'market') && n0(a.value)) return n0(a.value);
+    return n0(a.gongsi) || n0(a.value);
   }
+  const MARKET_FIRST = ['apt', 'officetel'];
   function valueBasis(a) {
     if (!isReal(a)) return 'value';
-    if (a.basis === 'appraisal') return 'appraisal';
-    return n0(a.value) ? 'market' : (n0(a.gongsi) ? 'gongsi' : 'none');
+    if (MARKET_FIRST.indexOf(a.type) >= 0) return n0(a.value) ? (a.basis === 'appraisal' ? 'appraisal' : 'market') : (n0(a.gongsi) ? 'gongsi' : 'none');
+    if ((a.basis === 'appraisal' || a.basis === 'market') && n0(a.value)) return a.basis;
+    return n0(a.gongsi) ? 'gongsi' : (n0(a.value) ? 'market' : 'none');
   }
 
   /* ---------- 상속세 ---------- */
@@ -150,6 +157,7 @@
       if (!h) return 0;
       if (h.rel === 'spouse') return 6e8;
       if (h.rel === 'child' || h.rel === 'grandchild') return n0(h.age) && h.age < 19 ? 2e7 : 5e7;
+      if (h.rel === 'parent') return 5e7;                       // 직계존속
       return 1e7;
     };
     const groups = {};
@@ -163,9 +171,10 @@
     // 세대생략: 대습이 아닌 손자녀가 받는 재산
     const skipHeirs = hs.filter(function (h) { return h.rel === 'grandchild' && !h.substitute; });
     const skipAmount = Math.min(sum(skipHeirs, function (h) { return byHeir[h.id]; }), totalProperty);
-    const skipBig = skipHeirs.some(function (h) { return n0(h.age) && h.age < 19; }) && skipAmount > 2e9;
     const skipDenom = totalProperty + giftsToHeirs;
     const skipRatio = skipDenom > 0 ? skipAmount / skipDenom : 0;
+    const skipRows = skipHeirs.map(function (h) { const amt = byHeir[h.id] || 0; return { id: h.id, ratio: skipDenom > 0 ? amt / skipDenom : 0, big: n0(h.age) > 0 && h.age < 19 && amt > 2e9 }; });
+    const skipBig = skipRows.some(function (r) { return r.big; });
 
     // 받는 사람별 채무 부담: 받은 재산 비율로 나눈다
     const debtShare = function (id) { return totalProperty > 0 ? debts * byHeir[id] / totalProperty : 0; };
@@ -215,7 +224,7 @@
     let taxBase = Math.max(0, taxable - applied - appraisalFee);
     if (taxBase < R.minTax) taxBase = 0;
     const calculatedTax = inheritTax(taxBase);
-    const surcharge = Math.floor(calculatedTax * skipRatio * (skipBig ? R.surchargeMinorBig : R.surcharge));
+    const surcharge = Math.floor(calculatedTax * sum(skipRows, function (r) { return r.ratio * (r.big ? R.surchargeMinorBig : R.surcharge); }));
     const withSurcharge = calculatedTax + surcharge;
     const giftCreditLimit = (taxBase > 0 && priorGiftTaxBase > 0) ? Math.floor(withSurcharge * Math.min(1, priorGiftTaxBase / taxBase)) : 0;
     const giftCredit = Math.min(giftTaxPaid, giftCreditLimit, withSurcharge);
@@ -224,7 +233,8 @@
 
     // 상속인별 상속세 부담(연대납부 의무가 있지만 보통 받은 비율로 나눔)
     const net = {}; let netSum = 0;
-    hs.forEach(function (h) { net[h.id] = Math.max(0, byHeir[h.id] - debtShare(h.id)); netSum += net[h.id]; });
+    const giftOf = function (id) { return sum(gifts.filter(function (g) { return g.to === id; }), function (g) { return n0(g.value); }); };
+    hs.forEach(function (h) { net[h.id] = Math.max(0, byHeir[h.id] - debtShare(h.id)) + giftOf(h.id); netSum += net[h.id]; });
     const taxShare = {}; hs.forEach(function (h) { taxShare[h.id] = netSum > 0 ? Math.round(payable * net[h.id] / netSum) : 0; });
 
     return {
@@ -243,11 +253,30 @@
   /* ---------- 취득세 (지방세법 11조·15조) ---------- */
   // 주택·건물·땅 2.8%(농지 2.3%) + 지방교육세 0.16%(농지 0.06%) + 농특세 0.2%(85㎡ 이하 주택 비과세)
   // 무주택 상속인이 상속으로 1주택이 되면 특례 0.8% + 교육세 0.16%, 농특세 없음
+  // 지방세법상 주택(오피스텔은 주거용이어도 취득세에서는 주택이 아님)
+  function isLocalHouse(a) { return isHouse(a) && a.type !== 'officetel'; }
   function acqRates(a, special) {
     if (TYPES[a.type] && TYPES[a.type].farm) return { acq: 230, agr: 20, edu: 6 };          // 1/10000 단위
-    if (isHouse(a) && special) return { acq: 80, agr: 0, edu: 16 };
-    if (isHouse(a)) return { acq: 280, agr: a.small === false ? 20 : 0, edu: 16 };
+    if (isLocalHouse(a) && special) return { acq: 80, agr: 0, edu: 16 };
+    if (isLocalHouse(a)) return { acq: 280, agr: a.small === false ? 20 : 0, edu: 16 };
     return { acq: 280, agr: 20, edu: 16 };
+  }
+  // 상속 1가구1주택 특례(지방세법 15조①2호가, 시행령 29조): 공동상속이면 주된 상속인(지분 최대 → 그 집 거주 → 연장자)의 세대 기준.
+  // 주된 상속인 세대가 무주택이고 상속으로 주택 1채만 갖게 될 때 그 집의 공동상속인 모두 0.8%.
+  function mainHeir(e, a, legal) {
+    const s = sharesOf(e, a, legal);
+    const hs = heirsOf(e).filter(function (h) { return (s[h.id] || 0) > 0; });
+    hs.sort(function (x, y) { return (s[y.id] - s[x.id]) || ((n0(y.livedYears) && a.lived ? 1 : 0) - (n0(x.livedYears) && a.lived ? 1 : 0)) || (n0(y.age) - n0(x.age)); });
+    return hs[0] || null;
+  }
+  function acqSpecial(e, legal) {
+    const out = {};
+    (e.assets || []).filter(function (a) { return isLocalHouse(a) && assetValue(a) > 0; }).forEach(function (a) {
+      const m = mainHeir(e, a, legal); if (!m || n0(m.houses)) { out[a.id] = false; return; }
+      const mHouses = (e.assets || []).filter(function (b) { return isLocalHouse(b) && assetValue(b) > 0 && (sharesOf(e, b, legal)[m.id] || 0) > 0; }).length;
+      out[a.id] = mHouses === 1;
+    });
+    return out;
   }
   // 상속 취득세의 과세표준은 시가가 아니라 시가표준액(주택 공시가격·개별공시지가 등, 지방세법 10조의2②1호).
   // 공시가를 모르면 시가의 69%(2026 공동주택 현실화율 근사)로 추정하고 guessed 로 표시한다.
@@ -255,22 +284,19 @@
   function standardPrice(a) { return n0(a.gongsi) || Math.round(n0(a.value) * GONGSI_RATIO); }
   function calcAcquisition(e, legal) {
     legal = legal || legalShares(e);
-    const out = {};
+    const out = {}, sp = acqSpecial(e, legal);
     const hs = heirsOf(e);
     hs.forEach(function (h) {
       const mine = (e.assets || []).filter(function (a) { return isReal(a) && assetValue(a) > 0 && (sharesOf(e, a, legal)[h.id] || 0) > 0; });
-      const myHouses = mine.filter(isHouse);
-      // 특례는 무주택 상속인이 상속주택 1채만 받을 때 (여러 채면 가장 비싼 1채만)
-      const pri = (!n0(h.houses) && myHouses.length) ? myHouses.slice().sort(function (x, y) { return assetValue(y) - assetValue(x); })[0] : null;
       const rows = mine.map(function (a) {
         const share = sharesOf(e, a, legal)[h.id];
         const v = standardPrice(a) * share;
-        const special = !!pri && pri === a;
+        const special = !!sp[a.id];
         const r = acqRates(a, special);
         const t = function (bp) { return Math.floor(v * bp / 10000); };
         return { asset: a.id, name: a.name || TYPES[a.type].label, share: share, value: v, guessed: !n0(a.gongsi), special: special, acq: t(r.acq), agr: t(r.agr), edu: t(r.edu), total: t(r.acq) + t(r.agr) + t(r.edu), rate: (r.acq + r.agr + r.edu) / 100 };
       });
-      out[h.id] = { rows: rows, total: sum(rows, function (r) { return r.total; }), specialUsed: !!pri };
+      out[h.id] = { rows: rows, total: sum(rows, function (r) { return r.total; }), specialUsed: rows.some(function (r) { return r.special; }) };
     });
     return out;
   }
@@ -408,7 +434,7 @@
     heirsOf(e).forEach(function (h) {
       const own = Math.floor(n0(h.houses));
       const mine = (e.assets || []).filter(function (a) { return isReal(a) && sells(a) && (sharesOf(e, a, legal)[h.id] || 0) > 0; });
-      const myHouses = mine.filter(isHouse);
+      const allMyHouses = (e.assets || []).filter(function (a) { return isHouse(a) && (sharesOf(e, a, legal)[h.id] || 0) > 0; });
       const rows = mine.map(function (a) {
         const share = sharesOf(e, a, legal)[h.id];
         const price = n0(a.sellPrice) || n0(a.value) || n0(a.gongsi);
@@ -416,7 +442,9 @@
         const years = holdYears(a);
         const gainAll = Math.max(0, price - cost);
         // 상속 전 무주택이고 상속주택이 이것 하나면, 2년 이상 보유 후 1세대1주택 비과세(12억 초과분만 과세)
-        const oneHouse = isHouse(a) && own === 0 && myHouses.length === 1 && years >= 2;
+        const oneHouse = isHouse(a) && own === 0 && allMyHouses.length === 1 && years >= 2;
+        // 다주택자가 상속주택을 상속일부터 5년 지나 팔면 조정대상지역에서 중과(+20~30%p, 장기보유공제 배제) 가능 — 계산에는 넣지 않고 표시만
+        const heavyRisk = isHouse(a) && (own + allMyHouses.length) >= 2 && years > 5;
         let taxableAll = gainAll;
         if (oneHouse) taxableAll = price > 1.2e9 ? Math.floor(gainAll * (price - 1.2e9) / price) : 0;
         const gain = Math.floor(taxableAll * share);
@@ -425,7 +453,7 @@
         const base = Math.max(0, gain - lt - 2.5e6);
         const tax = floor10(transferRateTax(base));
         const local = floor10(tax * 0.1);
-        return { asset: a.id, name: a.name || TYPES[a.type].label, share: share, price: price, cost: cost, years: years, gain: Math.floor(gainAll * share), oneHouse: oneHouse, ltRate: ltRate, base: base, tax: tax, local: local, total: tax + local, basis: valueBasis(a) };
+        return { asset: a.id, name: a.name || TYPES[a.type].label, share: share, price: price, cost: cost, years: years, gain: Math.floor(gainAll * share), oneHouse: oneHouse, ltRate: ltRate, base: base, tax: tax, local: local, total: tax + local, basis: valueBasis(a), heavyRisk: heavyRisk };
       });
       out[h.id] = { rows: rows, total: sum(rows, function (r) { return r.total; }) };
     });
@@ -476,7 +504,7 @@
     inheritTax: inheritTax, funeralAllowed: funeralAllowed, finDeduction: finDeduction,
     legalShares: legalShares, sharesOf: sharesOf, assetValue: assetValue, valueBasis: valueBasis,
     calcInheritance: calcInheritance, calcAcquisition: calcAcquisition, calcHolding: calcHolding, calcTransfer: calcTransfer,
-    propTaxHouse: propTaxHouse, standardPrice: standardPrice, GONGSI_RATIO: GONGSI_RATIO, comprehensive: comprehensive, transferRateTax: transferRateTax,
+    propTaxHouse: propTaxHouse, acqSpecial: acqSpecial, mainHeir: mainHeir, isLocalHouse: isLocalHouse, standardPrice: standardPrice, GONGSI_RATIO: GONGSI_RATIO, comprehensive: comprehensive, transferRateTax: transferRateTax,
     dates: dates, calcAll: calcAll, PLAN_YEARS: PLAN_YEARS, HORIZON: HORIZON, holdYears: holdYears, sells: sells
   };
   if (typeof module === 'object' && module.exports) module.exports = root.EC;

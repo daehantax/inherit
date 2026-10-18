@@ -36,13 +36,22 @@ expect('장례비 1천만 이상이면 S05 없음', has(r, 'S05'), 0);
 e = base(); e.debts = { loan: 1e8 }; r = S.evaluate(e);
 expect('대출 넣었으면 C01 없음', has(r, 'C01'), 0);
 
-// S03 감정평가: 공시가만 넣고 3년 뒤 15억에 팔 계획
-e = base(); Object.assign(e.assets[0], { value: 0, sellPlan: 'y3', sellPrice: 1.5e9 }); r = S.evaluate(e);
+// S03 감정평가: 땅(시세 6억·공시가 3억, 공시가로 평가됨)을 3년 뒤 7억에 팔 계획 → 지금 시세로 감정평가
+e = base(); e.assets.push({ id: 'l', type: 'land', name: '이천 땅', value: 6e8, gongsi: 3e8, sellPlan: 'y3', sellPrice: 7e8, split: [{ heir: 'c2', share: 1 }] }); r = S.evaluate(e);
 const s03 = r.save.find(x => x.code === 'S03');
 console.log('  S03:', s03 ? S.kor(s03.amount) + ' (상속세 ' + S.kor(s03.diff.inheritance) + ', 양도세 ' + S.kor(s03.diff.transfer) + ')' : '없음');
 expect('S03 감정평가 뜸(팔 계획 + 공시가 평가)', s03 ? 1 : 0, 1);
 if (s03) expect('S03: 양도세는 줄고 상속세는 늘어남', (s03.diff.transfer < 0 && s03.diff.inheritance >= 0) ? 1 : 0, 1);
 
+const s03m = s03 && s03.mod.assets.find(x => x.id === 'l');
+if (s03) expect('S03: 감정가 = 지금 시세(팔 가격 아님)', EC.assetValue(s03m), 6e8);
+// S01: 유증받은 손자녀 몫은 배우자 몫을 늘려도 그대로
+e = { deceased: { date: '2026-08-01' }, heirs: [H('s', 'spouse', { age: 70 }), H('c1', 'child', { age: 45 }), H('g', 'grandchild', { age: 20 })],
+  assets: [{ id: 'o', type: 'other', value: 4e9, split: [{ heir: 's', share: 0.1 }, { heir: 'c1', share: 0.7 }, { heir: 'g', share: 0.2 }] }] };
+r = S.evaluate(e);
+const s01 = r.save.find(x => x.code === 'S01');
+expect('S01 뜸', s01 ? 1 : 0, 1);
+if (s01) expect('S01 적용 후에도 손자녀 몫 20% 그대로', Math.round(EC.sharesOf(s01.mod, s01.mod.assets[0]).g * 1000), 200);
 // S07 손자녀 할증
 e = { heirs: [H('c1', 'child', { age: 50 }), H('g', 'grandchild', { age: 20 })], assets: [{ id: 'o', type: 'other', value: 3e9, split: [{ heir: 'c1', share: 0.7 }, { heir: 'g', share: 0.3 }] }] };
 r = S.evaluate(e);

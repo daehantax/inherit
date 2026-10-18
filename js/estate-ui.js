@@ -84,7 +84,7 @@
         (removable ? '<button type="button" class="es-del" data-del-heir="' + h.id + '">삭제</button>' : '') + '</div>';
       html += row('부르는 이름', textIn(base + 'name', 'name', EST.REL[h.rel]));
       html += row('나이', intIn(base + 'age', { unit: '세', ph: '만 나이' }), h.rel === 'spouse' ? '' : '19세 미만·65세 이상이면 공제가 늘어납니다');
-      html += row('지금 가진 집', sel(base + 'houses', [['0', '없음'], ['1', '1채'], ['2', '2채'], ['3', '3채 이상']], '고르세요'), '상속받는 집은 빼고, 같은 세대 기준');
+      html += row('지금 가진 집 (세대 전체)', sel(base + 'houses', [['0', '없음'], ['1', '1채'], ['2', '2채'], ['3', '3채 이상']], '고르세요'), '상속받는 집은 빼고, 함께 사는 배우자·자녀 집까지 합쳐서');
       if (Number(h.houses) >= 1) html += row('그 집 공시가격', money(base + 'ownGongsi', { ph: '모르면 비움' }), '여러 채면 합계 · 종부세 계산용');
       let more = '';
       if (h.rel === 'child' || h.rel === 'grandchild') more += row('돌아가신 분과 같이 산 햇수', intIn(base + 'livedYears', { unit: '년', max: 80 }), '10년 이상이면 같이 살던 집 공제 대상') + '<p data-teach="T06"></p>';
@@ -114,8 +114,10 @@
         html += row('프리미엄', money(base + 'premium', { ph: '모르면 비움' }), '지금 팔면 더 받을 수 있는 금액');
         html += '<p data-teach="T07"></p>';
       } else {
-        html += row('시세', money(base + 'value', { ph: '모르면 비움' }), a.type === 'apt' ? '최근 같은 단지·면적 거래가' : '감정가가 있으면 그 금액');
-        html += row('공시가격', money(base + 'gongsi', { ph: '모르면 비움' }), a.type === 'land' || a.type === 'farm' ? '개별공시지가 × 면적' : '주택 공시가격');
+        const mkt = a.type === 'apt' || a.type === 'officetel';
+        html += row('시세', money(base + 'value', { ph: '모르면 비움' }), mkt ? '최근 같은 단지·면적 거래가 (이 금액으로 평가)' : '참고용 · 땅·단독주택·상가는 보통 공시가격으로 평가');
+        html += row('공시가격', money(base + 'gongsi', { ph: '모르면 비움' }), a.type === 'land' || a.type === 'farm' ? '개별공시지가 × 면적' : '주택·건물 공시가격');
+        if (!mkt) html += row('감정평가', check(base + 'basis', '감정평가를 받았거나 받을 예정 (시세로 평가)'));
       }
       if (T.house) {
         html += row('같이 산 집인가요?', check(base + 'lived', '돌아가신 분과 자녀가 10년 넘게 같이 산 집'));
@@ -313,7 +315,7 @@
     }
     const path = el.dataset && el.dataset.path; if (!path) return;
     const t = el.dataset.type;
-    if (t === 'bool') setVal(path, el.dataset.invert ? (el.checked ? false : '') : (el.checked ? true : ''));
+    if (t === 'bool') setVal(path, /\.basis$/.test(path) ? (el.checked ? 'appraisal' : '') : el.dataset.invert ? (el.checked ? false : '') : (el.checked ? true : ''));
     else if (t === 'sel') setVal(path, el.value === '' ? '' : (/\.houses$/.test(path) ? Number(el.value) : el.value));
     else if (t === 'text' && path === 'd.date') setVal(path, el.value);
     if (RERENDER.test(path) || t === 'bool' || path === 'd.date') { RENDER[screen](); }

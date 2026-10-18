@@ -30,7 +30,15 @@
     const m = clone(e), L = EC.legalShares(m);
     const rest = 1 - (L[spId] || 0);
     m.assets.forEach(function (a) {
-      a.split = heirs(m).map(function (h) { return { heir: h.id, share: h.id === spId ? s : (rest > 0 ? (1 - s) * (L[h.id] || 0) / rest : 0) }; }).filter(function (x) { return x.share > 1e-9; });
+      const cur = EC.sharesOf(m, a, L);
+      const keep = heirs(m).filter(function (h) { return !(L[h.id] > 0) && h.id !== spId; });     // 유증받은 손자녀 등은 그대로
+      const kept = keep.reduce(function (t, h) { return t + (cur[h.id] || 0); }, 0);
+      const room = Math.max(0, 1 - kept), sp = Math.min(s, room);
+      a.split = heirs(m).map(function (h) {
+        if (h.id === spId) return { heir: h.id, share: sp };
+        if (!(L[h.id] > 0)) return { heir: h.id, share: cur[h.id] || 0 };
+        return { heir: h.id, share: rest > 0 ? (room - sp) * L[h.id] / rest : 0 };
+      }).filter(function (x) { return x.share > 1e-9; });
     });
     return m;
   }
@@ -48,7 +56,7 @@
       const netAll = Math.max(1, inh.totalProperty - inh.debts);
       const s = Math.min(1, inh.ded.spouseLimit / netAll);
       return { title: '배우자가 조금 더 받으면',
-        body: '지금은 배우자가 ' + kor(inh.ded.spouseActual) + '을 받는 것으로 계산했습니다. ' + kor(inh.ded.spouseLimit) + '(전체의 ' + Math.round(s * 100) + '%)까지 받으면 그만큼 공제가 늘어납니다. 다만 배우자가 나중에 돌아가실 때 그 재산에 다시 상속세가 나옵니다. 배우자 몫은 신고기한 다음 날부터 9개월 안에 등기·명의이전까지 끝내야 인정됩니다.',
+        body: '지금은 배우자가 ' + kor(inh.ded.spouseActual) + '을 받는 것으로 계산했습니다. 배우자 공제 한도는 법정상속분 상당액(최대 30억원)인 ' + kor(inh.ded.spouseLimit) + '이고, 여기까지 받으면(전체의 약 ' + Math.round(s * 100) + '%) 그만큼 공제가 늘어납니다. 다만 배우자가 나중에 돌아가실 때 그 재산에 다시 상속세가 나옵니다(이 계산에는 넣지 않았습니다). 배우자 몫은 신고기한 다음 날부터 9개월 안에 등기·명의이전까지 끝내야 인정됩니다.',
         mod: withSpouseShare(e, sp.id, s), action: '배우자 ' + Math.round(s * 100) + '%로 바꿔 다시 계산' };
     } },
     { code: 'S02', kind: 'save', teach: 'T06', run: function (e, cur) {
@@ -57,17 +65,17 @@
       if (!house || !q || (e.assets || []).filter(EC.isHouse).length !== 1) return null;
       if (cur.inheritance.ded.cohabit >= EC.R.cohabitMax || (EC.sharesOf(e, house)[q.id] || 0) >= 0.999) return null;
       return { title: '같이 살던 집은 같이 살던 자녀가 받으면',
-        body: nameOf(e, q.id) + '님이 10년 넘게 함께 산 집을 받으면 집값(담보대출 뺀 금액)에서 최대 6억원이 더 공제됩니다(동거주택 상속공제). 받는 사람이 그동안 집이 없었어야 합니다.',
+        body: nameOf(e, q.id) + '님이 함께 산 집을 받으면 집값(담보대출 뺀 금액)에서 최대 6억원이 더 공제됩니다(동거주택 상속공제). 요건: 돌아가신 분과 10년 이상 계속 같은 집에 살았고(미성년 기간은 빼고 셈), 그 10년 동안 1세대1주택이었으며, 받는 분이 돌아가신 날 무주택(또는 돌아가신 분과 공동소유)이어야 합니다.',
         mod: giveAssetTo(e, house.id, q.id), action: nameOf(e, q.id) + '님이 받는 것으로 다시 계산' };
     } },
     { code: 'S03', kind: 'save', teach: 'T05', run: function (e) {
-      const a = (e.assets || []).find(function (x) { return EC.isReal(x) && EC.valueBasis(x) === 'gongsi' && EC.sells(x) && n0(x.sellPrice) > n0(x.gongsi); });
+      const a = (e.assets || []).find(function (x) { return EC.isReal(x) && EC.valueBasis(x) === 'gongsi' && EC.sells(x) && n0(x.value) > n0(x.gongsi); });
       if (!a) return null;
       const m = clone(e); const ma = m.assets.find(function (x) { return x.id === a.id; });
-      ma.value = n0(a.sellPrice); ma.basis = 'appraisal';
+      ma.basis = 'appraisal';                          // 감정가 = 지금 시세(돌아가신 날 기준)
       m.misc = m.misc || {}; m.misc.appraisalFee = n0(m.misc.appraisalFee) + 3e6;
       return { title: assetName(a) + '을 감정평가 받으면',
-        body: '지금은 공시가격으로 평가했습니다. 그러면 지금 상속세는 적지만, 나중에 팔 때 "산 값"이 공시가격이 되어 양도세가 커집니다. 감정평가(약 300만원, 500만원까지 공제)를 받아 두면 지금 상속세는 조금 늘어도 팔 때 세금이 줄 수 있습니다. 계산은 감정가를 팔 예정 가격으로 가정했습니다.',
+        body: '땅·단독주택·상가는 보통 공시가격으로 평가합니다. 그러면 지금 상속세는 적지만, 나중에 팔 때 "산 값"이 공시가격이 되어 양도세가 커집니다. 돌아가신 날 기준으로 감정평가(약 300만원, 500만원까지 공제)를 받아 두면 지금 상속세는 늘어도 팔 때 세금이 줄 수 있습니다. 계산은 감정가를 입력하신 지금 시세로 가정했습니다. 고가 단독주택·꼬마빌딩은 국세청이 직접 감정평가할 수도 있습니다.',
         mod: m, action: '감정평가 받은 것으로 다시 계산' };
     } },
     { code: 'S05', kind: 'save', teach: 'T12', run: function (e) {
@@ -111,7 +119,7 @@
       });
       if (!best || best.t >= cur.parts.acquisition) return null;
       return { title: assetName(best.a) + '은 집 없는 ' + nameOf(e, best.f.id) + '님이 받으면',
-        body: '상속받은 집의 취득세는 보통 2.96%인데, 집 없는 사람이 받아 1주택이 되면 0.96%입니다(같은 세대 기준). 공시가격 기준으로 계산합니다.',
+        body: '상속받은 집의 취득세는 보통 2.96%인데, 세대 전원이 집이 없는 사람이 받아 1주택이 되면 0.96%입니다. 여럿이 나눠 받으면 지분이 가장 큰 사람(주된 상속인)의 세대로 판단합니다. 공시가격 기준으로 계산합니다.',
         mod: best.m, action: nameOf(e, best.f.id) + '님이 받는 것으로 다시 계산' };
     } },
     { code: 'L02', kind: 'save', teach: 'T20', run: function (e, cur) {
@@ -129,7 +137,7 @@
       others.forEach(function (o) { s[o.id] = (s[o.id] || 0) + extra / others.length; });
       ma.split = Object.keys(s).filter(function (id) { return s[id] > 1e-9; }).map(function (id) { return { heir: id, share: s[id] }; });
       return { title: nameOf(e, target.h.id) + '님 지분을 40% 이하로 하면',
-        body: '집이 있는 분이 상속주택을 받으면 5년 동안은 종부세 주택 수에서 빠지지만, 6년째부터는 다주택으로 계산됩니다. 지분을 40% 이하(또는 지분 공시가격 6억원, 수도권 밖 3억원 이하)로 받으면 계속 빠집니다.',
+        body: '집이 있는 분이 상속주택을 받으면 5년 동안은 종부세 1세대1주택 판정에서 빠지지만, 6년째부터는 다주택으로 계산됩니다. 지분을 40% 이하(또는 지분 공시가격 6억원, 수도권 밖 3억원 이하)로 받으면 계속 빠집니다. 주택 수에서 빠져도 공시가격은 종부세에 합산되고, 매년 9월 16~30일에 특례 신청을 해야 합니다.',
         mod: m, action: '지분 40%로 바꿔 다시 계산' };
     } },
 
@@ -147,16 +155,16 @@
     } },
     { code: 'C03', kind: 'check', teach: 'T24', run: function (e, cur) {
       if (cur.inheritance.payable <= EC.R.installmentMin) return null;
-      return { title: '한 번에 내기 어렵다면', body: '상속세가 2,000만원을 넘으면 최대 10년에 나눠 낼 수 있습니다(연부연납, 담보 필요). 현금이 부족하면 부동산으로 낼 수도 있습니다(물납).' };
+      return { title: '한 번에 내기 어렵다면', body: '상속세가 2,000만원을 넘으면 최대 10년에 나눠 낼 수 있습니다(연부연납, 담보 필요). 부동산·유가증권이 상속재산의 절반을 넘으면 예금 등으로 낼 수 없는 부분은 부동산으로 낼 수도 있습니다(물납).' };
     } },
     { code: 'C04', kind: 'check', teach: 'T23', run: function (e) {
       const h = heirs(e).find(function (x) { return Math.floor(n0(x.houses)) === 1 && (e.assets || []).some(function (a) { return EC.isHouse(a) && (EC.sharesOf(e, a)[x.id] || 0) > 0; }); });
       if (!h) return null;
-      return { title: nameOf(e, h.id) + '님, 원래 집을 먼저 파세요', body: '상속받은 집이 생겨도 원래 갖고 있던 집 1채를 먼저 팔면 1세대1주택 비과세(12억원까지)를 받을 수 있습니다. 상속받은 집을 먼저 팔면 세금이 나옵니다.' };
+      return { title: nameOf(e, h.id) + '님, 원래 집을 먼저 파세요', body: '돌아가신 분과 따로 사는 세대가 상속 전부터 갖고 있던 집 1채를 먼저 팔면, 상속받은 집이 있어도 1세대1주택 비과세(12억원까지)를 받을 수 있습니다. 상속받은 집을 먼저 팔면 세금이 나오고, 상속일부터 5년이 지나 조정대상지역 집을 팔면 다주택 중과가 될 수 있습니다.' };
     } },
     { code: 'C05', kind: 'check', teach: 'T07', run: function (e) {
       if (!(e.assets || []).some(function (a) { return a.type === 'bunyang'; })) return null;
-      return { title: '분양권은 누가 받느냐가 중요합니다', body: '분양권도 집 수에 들어갈 수 있고, 완공되면 받는 사람이 취득세(2.8%)를 냅니다. 이미 집이 있는 분이 받으면 나중에 팔 때 세금이 달라집니다. 세무사 확인을 권합니다.' };
+      return { title: '분양권은 누가 받느냐가 중요합니다', body: '분양권도 양도세 주택 수에 들어가고, 완공되면 받은 사람이 취득세를 따로 냅니다(세율은 그때 가진 주택 수에 따라 달라짐). 이미 집이 있는 분이 받으면 나중에 팔 때 세금이 달라집니다. 세무사 확인을 권합니다.' };
     } },
     { code: 'C06', kind: 'check', teach: 'T21', run: function (e) {
       const d = (e.deceased || {}).date; if (!d) return null;
@@ -169,8 +177,14 @@
       if (!heirs(e).some(function (h) { return h.rel === 'spouse'; }) || d.spouseActual <= d.spouseLimit + 1e6) return null;
       return { title: '배우자 몫이 공제 한도보다 많습니다', body: '배우자가 ' + kor(d.spouseActual) + '을 받지만 공제는 ' + kor(d.spouseLimit) + '까지입니다. 넘는 부분은 공제 없이 나중에 배우자 상속 때 다시 세금이 나옵니다. 자녀 몫을 늘리는 것도 검토해 보세요.' };
     } },
+    { code: 'C09', kind: 'check', teach: 'T22', run: function (e, cur) {
+      const risky = [];
+      Object.keys(cur.transfer).forEach(function (id) { cur.transfer[id].rows.forEach(function (r) { if (r.heavyRisk) risky.push(nameOf(e, id) + '님의 ' + r.name); }); });
+      if (!risky.length) return null;
+      return { title: '팔 때 다주택 중과를 확인하세요', body: risky.join(', ') + ': 집이 여러 채인 상태로 상속일부터 5년이 지나 조정대상지역(2026년 현재 서울 전역·경기 일부)의 집을 팔면 양도세가 20~30%p 더 붙고 장기보유공제도 없습니다. 위 양도세는 중과 없이 계산한 금액입니다. 5년 안에 팔지, 언제 팔지 세무사와 미리 정하세요.' };
+    } },
     { code: 'C08', kind: 'check', teach: 'T15', run: function (e) {
-      return { title: '돌아가시기 전 큰 출금이 있었나요?', body: '돌아가시기 1년 안에 2억원, 2년 안에 5억원이 넘게 통장에서 나가거나 재산을 팔았다면 어디에 썼는지 설명해야 합니다. 설명 못 한 돈은 상속재산으로 봅니다.' };
+      return { title: '돌아가시기 전 큰 출금이 있었나요?', body: '돌아가시기 1년 안에 2억원 이상, 2년 안에 5억원 이상 예금이 나가거나 부동산 등을 팔거나 빚을 졌다면(재산 종류별로 따짐) 어디에 썼는지 설명해야 합니다. 설명하지 못한 금액에서 일부(20%와 2억원 중 적은 금액)를 뺀 나머지가 상속재산에 더해집니다.' };
     } },
   ];
 

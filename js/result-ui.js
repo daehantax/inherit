@@ -48,7 +48,7 @@
         return '<tr><td>' + esc(heirName(h.id)) + '</td><td data-l="받는 재산">' + dash(h.received) + '</td><td data-l="상속세 몫">' + dash(h.inheritTax) + '</td><td data-l="취득세">' + dash(h.acquisition) + '</td><td data-l="집 세금(매년)">' + yearly + '</td><td data-l="팔 때 양도세">' + dash(h.transfer) + '</td></tr>';
       }).join('') +
       '<tr class="total"><td>합계</td><td data-l="받는 재산">' + dash(inh.totalProperty) + '</td><td data-l="상속세">' + dash(p.inheritance) + '</td><td data-l="취득세">' + dash(p.acquisition) + '</td><td data-l="집 세금(10년)">' + dash(p.holding) + '</td><td data-l="팔 때 양도세">' + dash(p.transfer) + '</td></tr></tbody>';
-    $('heirNote').textContent = '상속세는 받은 사람 모두가 함께 책임지는 세금이라(연대납부), 받은 비율로 나눈 금액입니다. 집 세금은 상속받은 집 때문에 늘어나는 재산세·종부세입니다.';
+    $('heirNote').textContent = '상속세는 받은 사람 모두가 함께 책임지는 세금이라(연대납부), 받은 재산(빚 뺀 금액)과 미리 받은 재산의 비율로 나눈 금액입니다. 집 세금은 상속받은 집 때문에 늘어나는 재산세·종부세입니다.';
 
     const miss = EST.missing(E);
     $('missingBox').hidden = !miss.length;
@@ -91,14 +91,14 @@
         hd.years.map(function (y) { const t = y.prop + y.compDelta + y.ownPropUp; return '<tr><td>' + y.y + '년째</td><td>' + dash(y.prop) + '</td><td>' + dash(y.compDelta) + '</td><td>' + dash(y.ownPropUp) + '</td><td>' + dash(t) + '</td></tr>'; }).join('') +
         '<tr class="total"><td>합계</td><td></td><td></td><td></td><td>' + kor(hd.total) + '</td></tr></tbody></table></div>' +
         (hd.own && !hd.ownG ? '<p class="es-note">원래 집의 공시가격을 넣으면 종부세를 계산합니다.</p>' : '');
-    }).join('') + '<p class="es-note">상속받은 집은 5년 동안 1세대1주택 판정에서 빠집니다(종부세는 지분 40% 이하 또는 지분 공시가 6억원·수도권 밖 3억원 이하면 계속 빠짐). 고령자·장기보유 세액공제와 세부담 상한은 반영하지 않아 실제 세금은 이보다 적을 수 있습니다. 팔 계획을 넣은 집은 판 뒤에는 계산하지 않습니다.</p>' : '<p class="es-note">상속받는 집이 없습니다.</p>';
+    }).join('') + '<p class="es-note">상속받은 집은 5년 동안 1세대1주택 판정에서 빠집니다(종부세는 지분 40% 이하 또는 지분 공시가 6억원·수도권 밖 3억원 이하면 계속 빠짐). 고령자·장기보유 세액공제와 세부담 상한은 반영하지 않아 실제 세금은 이보다 적을 수 있습니다. 2027년 이후는 현행 세법이 그대로라고 가정했습니다(2026년 8월 정부 개편안은 국회 통과 전이라 미반영). 팔 계획을 넣은 집은 판 뒤에는 계산하지 않습니다.</p>' : '<p class="es-note">상속받는 집이 없습니다.</p>';
 
     // 양도세 내역
     const trRows = [];
     all.heirs.forEach(function (h) { all.transfer[h.id].rows.forEach(function (r) { trRows.push([heirName(h.id), r]); }); });
     $('trDetail').innerHTML = trRows.length ? '<div class="table-scroll"><table class="mini"><thead><tr><th>파는 사람</th><th>재산</th><th>팔 값(지분)</th><th>산 값 = 상속 평가액</th><th>남는 돈</th><th>양도세+지방세</th></tr></thead><tbody>' +
-      trRows.map(function (x) { const r = x[1]; return '<tr><td>' + esc(x[0]) + '</td><td>' + esc(r.name) + '<small>' + r.years + '년 보유' + (r.oneHouse ? ' · 1세대1주택' : '') + '</small></td><td>' + kor(r.price * r.share) + '</td><td>' + kor(r.cost * r.share) + (r.basis === 'gongsi' ? '<small>공시가로 평가</small>' : '') + '</td><td>' + dash(r.gain) + '</td><td>' + dash(r.total) + '</td></tr>'; }).join('') +
-      '</tbody></table></div><p class="es-note">팔 때 "산 값"은 상속받을 때 평가한 금액입니다. 보유 기간은 상속일부터 셉니다(세율은 돌아가신 분이 가진 기간도 합산). 다주택 중과와 비사업용 토지 가산세율은 파는 시점 규정을 확인해야 합니다.</p>' : '<p class="es-note">팔 계획을 넣은 부동산이 없습니다. 입력 화면의 「앞으로 이 집은」에서 고르면 계산합니다.</p>';
+      trRows.map(function (x) { const r = x[1]; return '<tr><td>' + esc(x[0]) + '</td><td>' + esc(r.name) + '<small>' + r.years + '년 보유' + (r.oneHouse ? ' · 1세대1주택' : '') + (r.heavyRisk ? ' · <b style="color:var(--bad)">다주택 중과 가능</b>' : '') + '</small></td><td>' + kor(r.price * r.share) + '</td><td>' + kor(r.cost * r.share) + (r.basis === 'gongsi' ? '<small>공시가로 평가</small>' : '') + '</td><td>' + dash(r.gain) + '</td><td>' + dash(r.total) + '</td></tr>'; }).join('') +
+      '</tbody></table></div><p class="es-note">팔 때 "산 값"은 상속받을 때 평가한 금액입니다. 보유 기간은 상속일부터 셉니다(세율은 돌아가신 분이 가진 기간도 합산). 다주택 중과(2026년 5월 10일부터 다시 적용, 조정대상지역)·비사업용 토지 가산세율·조정지역 2년 거주 요건·필요경비는 넣지 않았습니다. 「다주택 중과 가능」 표시가 있으면 실제 세금은 이보다 훨씬 많을 수 있습니다.</p>' : '<p class="es-note">팔 계획을 넣은 부동산이 없습니다. 입력 화면의 「앞으로 이 집은」에서 고르면 계산합니다.</p>';
 
     $('btnGold').href = 'inheritGold.html#d=' + DH.encodeData(EST.toReport(E));
   }

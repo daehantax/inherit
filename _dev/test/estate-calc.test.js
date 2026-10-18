@@ -130,6 +130,39 @@ expect('배우자 분할기한 2027-11-30', dt.spouseSplit === '2027-11-30' ? 1 
 dt = EC.dates({ deceased: { date: '2026-01-31' } });
 expect('1월 사망 → 7월 31일', dt.report === '2026-07-31' ? 1 : 0, 1);
 
+/* ---------- 9-1. 검토 지적 사례 ---------- */
+// 공동상속 취득세: 주된 상속인(지분 최대)이 1주택이면 무주택 소수지분자도 특례 없음 → 7억×40%×2.96% = 8,288,000
+b = caseB('c1'); b.assets[0].split = [{ heir: 'c1', share: 0.6 }, { heir: 'c2', share: 0.4 }];
+expect('주된 상속인 1주택 → 무주택 소수지분자도 2.96%', EC.calcAcquisition(b).c2.total, 8288000);
+// 반대로 주된 상속인이 무주택이면 집 있는 소수지분자도 0.96% → 7억×40%×0.96% = 2,688,000
+b.assets[0].split = [{ heir: 'c1', share: 0.4 }, { heir: 'c2', share: 0.6 }];
+expect('주된 상속인 무주택 → 집 있는 소수지분자도 0.96%', EC.calcAcquisition(b).c1.total, 2688000);
+// 무주택자가 두 채를 받으면 특례 없음
+b = caseB('c2'); b.assets.push({ id: 'h2', type: 'house', gongsi: 2e8, split: [{ heir: 'c2', share: 1 }] });
+expect('무주택자가 2채 받으면 특례 없음: (7억+2억)×2.96%', EC.calcAcquisition(b).c2.total, 26640000);
+// 오피스텔은 지방세법상 주택 아님: 3억 × (2.8+0.2+0.16)%
+b = caseB('c2'); b.assets = [{ id: 'o', type: 'officetel', gongsi: 3e8, split: [{ heir: 'c2', share: 1 }] }];
+expect('주거용 오피스텔도 취득세는 3.16%', EC.calcAcquisition(b).c2.total, 9480000);
+// 양도세: 무주택자가 2채를 받고 1채만 팔면 1세대1주택 비과세 아님
+b = caseB('c2'); Object.assign(b.assets[0], { sellPlan: 'y3', sellPrice: 1.3e9 }); b.assets.push({ id: 'h2', type: 'apt', value: 5e8, split: [{ heir: 'c2', share: 1 }] });
+let trr = EC.calcTransfer(b).c2.rows[0];
+expect('2채 받으면 비과세 아님', trr.oneHouse ? 1 : 0, 0);
+b.assets[0].sellPlan = 'y10'; trr = EC.calcTransfer(b).c2.rows[0];
+expect('다주택·5년 넘게 보유 후 매도 → 중과 위험 표시', trr.heavyRisk ? 1 : 0, 1);
+// 세대생략: 성년 손자 25억 + 미성년 손자 1억 → 미성년자가 20억을 넘지 않으므로 모두 30%
+e = { heirs: [H('c1', 'child', { age: 50 }), H('g1', 'grandchild', { age: 25 }), H('g2', 'grandchild', { age: 10 })],
+  assets: [{ id: 'o', type: 'other', value: 5e9, split: [{ heir: 'c1', share: 0.48 }, { heir: 'g1', share: 0.5 }, { heir: 'g2', share: 0.02 }] }] };
+r = EC.calcInheritance(e);
+expect('세대생략: 20억 넘게 받은 미성년자 없으면 30%', r.surcharge, Math.floor(r.calculatedTax * (2.6e9 / 5e9) * 0.3));
+// 땅·단독주택: 시세와 공시가를 다 넣으면 공시가로 평가, 감정평가를 고르면 시세
+let la = { id: 'l', type: 'land', value: 5e8, gongsi: 3e8 };
+expect('땅은 공시가로 평가', EC.assetValue(la), 3e8);
+la.basis = 'appraisal'; expect('감정평가를 고르면 시세', EC.assetValue(la), 5e8);
+expect('아파트는 시세 우선', EC.assetValue({ type: 'apt', value: 9e8, gongsi: 6e8 }), 9e8);
+// 부모님께 드린 증여: 증여재산공제 5천만원 추정
+e = { heirs: [H('s', 'spouse'), H('p', 'parent')], assets: [{ id: 'd', type: 'deposit', value: 1e9 }], gifts: [{ to: 'p', value: 1e8 }] };
+expect('직계존속 증여공제 5천만', EC.calcInheritance(e).priorGiftTaxBase, 5e7);
+
 /* ---------- 10. 전체 합계 ---------- */
 const all = EC.calcAll(caseA());
 expect('calcAll: 지금 내는 세금 = 상속세 + 취득세', all.now, all.parts.inheritance + all.parts.acquisition);
