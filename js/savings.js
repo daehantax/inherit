@@ -81,6 +81,7 @@
     { code: 'S05', kind: 'save', teach: 'T12', run: function (e) {
       const f = e.funeral || {};
       if (!n0(f.cost) || n0(f.cost) >= EC.R.funeralMax) return null;
+      if (e.filing && (e.filing.funeral || []).length) return null;   // 건별로 적은 장례비는 영수증 항목을 「신고서 채우기」에서 추가해야 한다
       const m = clone(e); m.funeral = Object.assign({}, f, { cost: EC.R.funeralMax });
       return { title: '장례비 영수증을 모두 모으면(최대)',
         body: '장례비는 영수증 없이 500만원, 영수증이 있으면 1,000만원까지 빠집니다. 지금 ' + kor(f.cost) + '을 넣으셨습니다. 식대·상조·묘지 등 쓴 돈이 더 있으면 영수증을 모으세요. 봉안시설·자연장지 비용은 500만원까지 따로 빠집니다.',

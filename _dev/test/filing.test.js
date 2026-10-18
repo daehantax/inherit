@@ -41,8 +41,8 @@ function sample() {
   expect('재산 행 수 (아파트1 + 예금2 + 주식1)', r.assets.length, 4);
   const sumRows = r.assets.reduce((s, x) => s + (Number(x.qty) > 0 ? Math.floor(Number(x.qty) * x.price) : x.price), 0);
   expect('행 합계 = 엔진 상속재산', sumRows, Math.round(inh.totalProperty));
-  const st = r.assets.find(x => x.loc === '삼성전자');
-  expect('주식 행: 수량·단가·코드', st.qty + '/' + st.price + '/' + st.ptype + '/' + st.eval, '1000/60000/09/05');
+  const st = r.assets.find(x => /삼성전자/.test(x.loc));
+  expect('주식 행: ⑤비움·⑦평가액·코드 (소수 단가 차이 방지)', st.qty + '/' + st.price + '/' + st.ptype + '/' + st.eval, '/60000000/09/05');
   const dp = r.assets.find(x => /KB국민/.test(x.loc));
   expect('예금 행: 계좌번호는 비밀 저장소에서', dp.reg, '12345678901234');
   expect('아파트 행: 주소·면적(소재지 칸에)', /정자일로/.test(r.assets[0].loc) && /84\.97㎡/.test(r.assets[0].loc) && r.assets[0].qty === '' ? 1 : 0, 1);
@@ -51,6 +51,25 @@ function sample() {
   expect('장례 행 2개 · ㉘봉안', r.step2.rows.funeral.length + '/' + r.step2.enshrineAmount, '2/4,000,000');
   expect('4단계 신고인·피상속인', r.step4.applicant_name + '/' + r.step4.applicant_ssn + '/' + r.step4.deceased_name + '/' + r.step4.deceased_ssn + '/' + r.step4.relationship, '홍자녀/8001011234567/홍길동/4001011234567/자녀');
   expect('비밀 없이 열면 주민번호 빈칸', EST.toReturn(E, {}).step4.deceased_ssn, '');
+
+  // 검토 2회차: 소수 단가·펀드·되돌리기·채권자번호·false 왕복
+  const E2 = sample(); const F2 = FIL.get(E2);
+  F2.fin.stock = [{ id: 'k1', name: '삼성전자', listed: '09', qty: '1000', unitPrice: 60123.45 }, { id: 'k2', name: 'KODEX 200', listed: 'fund', value: 5e6 }];
+  FIL.sync(E2);
+  expect('소수 단가: 엔진 = floor(수량×단가)', E2.assets.find(a => a.id === 'fin_stock').value, 60123450 + 5e6);
+  const r2 = EST.toReturn(E2, {}); const sr = r2.assets.filter(x => x.ptype === '09');
+  expect('서식 주식 행 합계 = 엔진', sr.reduce((t, x) => t + x.price, 0), 60123450 + 5e6);
+  expect('펀드: 종류 09 · 평가 06', sr.find(x => /KODEX/.test(x.loc)).eval, '06');
+  F2.fin.stock = []; FIL.sync(E2);
+  expect('건별을 모두 지우면 1단계 금액 복원(5천만)', E2.assets.find(a => a.id === 'fin_stock').value, 5e7);
+  F2.debts = []; FIL.sync(E2);
+  expect('빚 건별 모두 지우면 1단계 빚 복원', E2.debts.loan + '/' + E2.debts.deposit + '/' + (E2.debts.other || 0), '200000000/0/0');
+  F2.debts = [{ id: 'z', kind: '04', creditor: '김개인', creditorNo: '8001011234567', amount: 1e7 }]; FIL.sync(E2);
+  expect('채권자 주민번호(13자리)는 버림 · 저당권채무(개인)는 기타로', (F2.debts[0].creditorNo || '') + '/' + E2.debts.other, '/10000000');
+  const seeded = sample(); FIL.get(seeded).debts = []; FIL.sync(seeded); FIL.seedRows(seeded, 'debts');
+  expect('빚 건별 시작 시 1단계 금액이 행으로 옮겨짐', FIL.get(seeded).debts.map(x => x.kind + ':' + x.amount).join(','), '01:200000000');
+  const chk = sample(); chk.assets[0].metro = false; chk.assets[0].small = false;
+  expect('링크 왕복에 false 유지(수도권 아님·85㎡ 초과)', JSON.stringify([EST.decode(EST.encode(chk)).assets[0].metro, EST.decode(EST.encode(chk)).assets[0].small]), '[false,false]');
 
   console.log('[3] 전산매체 (EF.build) — 고객 입력만으로 어디까지 가는지, 세무사가 비밀 칸을 넣으면 통과하는지');
   let b = EF.build(E, {});
@@ -74,7 +93,14 @@ function sample() {
   expect('10 장례 2건(일반·봉안) · 공제액 = 04', by('10').map(x => x.values[4] + ':' + x.values[8]).join(',') + '/' + by('10')[0].values[9] + '/' + by('04')[0].values[16], '1:9000000,2:4000000/' + Math.round(inh.funeral) + '/' + Math.round(inh.funeral));
   expect('02 기본사항: 피상속인·법정동·신고인 전화', by('02')[0].values[10] + '/' + by('02')[0].values[12] + '/' + by('02')[0].values[8] + '/' + by('02')[0].values[7], '홍길동/4113510300/010-1111-2222/05');
   expect('06 상속인 성명·관계', by('06').map(x => x.values[5] + x.values[4]).join(','), '김배우02,홍자녀05,홍둘째05');
-  expect('19 금융재산 행: 예금2 + 주식1 + 금융채무', by('19').length, 4);
+  expect('19 금융재산 행: 예금2 + 주식1 + 금융채무1', by('19').length, 4);
+  // 유증(비대습 손자녀)이 섞이면 05가 두 레코드로
+  const E9 = sample(); E9.heirs.push(H('g1', 'grandchild', { age: 20 })); E9.assets[0].split = [{ heir: 'c1', share: 0.5 }, { heir: 'g1', share: 0.5 }]; E9.assets[0].splitMode = 'custom'; FIL.sync(E9);
+  const S9 = JSON.parse(JSON.stringify(S)); S9.heirs.g1 = { ssn: '0601013234567', name: '홍손주' };
+  const b9 = EF.build(E9, S9);
+  const apt9 = b9.records.filter(x => x.code === '05' && x.values[5] === '05');
+  expect('유증 사례: 검산·형식 오류 없음', b9.problems.join('|') + EF.render(b9).errors.join('|'), '');
+  expect('유증 섞인 아파트 → A11·A12 두 레코드, 합 = 평가액', apt9.map(x => x.values[4]).join(',') + '/' + apt9.reduce((t, x) => t + x.values[7], 0), 'A11,A12/' + Math.round(EC.assetValue(E9.assets[0])));
   expect('03 납부세액 = 엔진', by('03')[0].values[26], Math.round(inh.payable));
   const S2 = JSON.parse(JSON.stringify(S)); S2.deceased.name = '홍길동(정정)'; S2.assets = { a1: { area: '85.00' } };
   const b2 = EF.build(E, S2);

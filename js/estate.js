@@ -71,7 +71,7 @@
     if (Array.isArray(o)) return o.map(compact);
     if (!o || typeof o !== 'object') return o;
     const out = {};
-    Object.keys(o).forEach(function (k) { const v = o[k]; if (v === '' || v === null || v === undefined || v === false) return; if (Array.isArray(v) && !v.length) return; out[k] = (typeof v === 'object') ? compact(v) : v; });
+    Object.keys(o).forEach(function (k) { const v = o[k]; if (v === '' || v === null || v === undefined) return; /* false 는 남긴다(「수도권 아님」 체크) */ if (Array.isArray(v) && !v.length) return; out[k] = (typeof v === 'object') ? compact(v) : v; });
     return out;
   }
   EST.encode = function (e) {
@@ -209,7 +209,7 @@
   /* ---------- 셀프 신고서(inherit-tax-report.html) 서식으로 바꾸기 ----------
      신고서 페이지의 저장 모양 { assets:[행], step2:{칸·rows}, step4:{칸} } 을 만든다.
      ② 재산종류코드·⑧ 평가기준코드는 국세청 서식 코드표 기준. */
-  const PTYPE = { apt: '05', house: '04', officetel: '06', shop: '06', land: '02', farm: '02', bunyang: '08', deposit: '11', stock: '09', insurance: '11', retire: '12', car: '12', other: '12' };
+  const PTYPE = { apt: '05', house: '04', officetel: '06', shop: '06', land: '02', farm: '02', bunyang: '08', deposit: '11', stock: '09', insurance: '11', retire: '12', car: '12', other: '12' };   // 퇴직금은 12 기타재산 + 간주상속 10 (전산매체와 같음)
   EST.toReturn = function (e, secret) {
     const EC = root.EC, FIL = root.FIL; if (!EC) return {};
     secret = secret || {};
@@ -243,7 +243,7 @@
           const sec = (secret.fin || {})[it.id] || {};
           const base = { eval: ev };
           if (a.type === 'deposit') { base.loc = (FIL.BANK_NAME(it.bankCode) || it.bank || '은행') + ' 예금'; base.reg = sec.account || ''; }
-          else if (a.type === 'stock') { base.loc = it.name || '주식'; base.reg = it.bizNo || ''; base.qty = Number(it.qty) > 0 ? String(it.qty) : ''; base.ptype = it.listed === '10' ? '10' : '09'; base.eval = it.listed === '10' ? '08' : '05'; }
+          else if (a.type === 'stock') { const sc = FIL.stockCodes(it); base.loc = (it.name || '주식') + (Number(it.qty) > 0 && Number(it.unitPrice) > 0 ? ' (' + Number(it.qty).toLocaleString('ko-KR') + '주 × ' + Number(it.unitPrice).toLocaleString('ko-KR') + '원)' : ''); base.reg = it.bizNo || ''; base.ptype = sc.kind; base.eval = sc.ev; }   // ⑤수량은 비우고 ⑦에 평가액(소수 단가 반올림 차이 방지)
           else if (a.type === 'insurance') base.loc = (it.company ? it.company + ' ' : '') + '사망보험금';
           else if (a.type === 'retire') base.loc = (it.company ? it.company + ' ' : '') + '퇴직금';
           else base.loc = it.name || it.desc || EC.TYPES[a.type].label;
@@ -262,7 +262,7 @@
       pushRows(a, v, base);
     });
     (e.gifts || []).filter(function (g) { return Number(g.value) > 0; }).forEach(function (g) {
-      assets.push({ atype: heirIds.indexOf(g.to) >= 0 ? 'A21' : 'A22', ptype: '12', foreign: 'no', country: '', loc: '사전증여' + (g.year ? ' (' + g.year + '년)' : ''), reg: '', qty: '', price: Math.round(Number(g.value)), eval: '' });
+      assets.push({ atype: heirIds.indexOf(g.to) >= 0 && nonHeir.indexOf(g.to) < 0 ? 'A21' : 'A22', ptype: '12', /* 대습이 아닌 손자녀는 상속인 외(A22) */ foreign: 'no', country: '', loc: '사전증여' + (g.year ? ' (' + g.year + '년)' : ''), reg: '', qty: '', price: Math.round(Number(g.value)), eval: '' });
     });
     const d = e.debts || {}, fu = e.funeral || {};
     const KIND = { '01': 'finance', '02': 'other', '03': 'personal', '04': 'finance', '05': 'other', '06': 'other', '07': 'deposit', '08': 'deposit', '09': 'other' };
@@ -283,7 +283,7 @@
     const step4 = { inheritance_date: e.deceased.date || '', skipValue: won(inh.skipAmount), skipMinor: !!inh.skipBig, giftTaxCredit: won(inh.giftTaxPaid), shortTermCredit: won(inh.shortTermCredit), appraisalFee: won((e.misc || {}).appraisalFee) };
     if (f) {
       const REL = { spouse: '배우자', child: '자녀', grandchild: '손자녀', parent: '부모', other: '기타 상속인' };
-      const filer = e.heirs.find(function (h) { return h.id === f.filer.heirId; });
+      const filer = e.heirs.find(function (h) { return h.id === f.filer.heirId; }) || e.heirs.find(function (h) { return h.rel === 'spouse'; }) || e.heirs[0];
       if (filer) {
         const x = f.heirs[filer.id] || {};
         step4.applicant_name = x.name || filer.name || ''; step4.applicant_email = f.filer.email || ''; step4.applicant_address = f.filer.address || '';

@@ -386,8 +386,9 @@
       return;
     }
     if (b.id === 'btnReset') {
-      if (!confirm('입력한 내용을 모두 지우고 처음부터 할까요?')) return;
-      EST.clear(); location.href = 'estate.html'; return;
+      if (!confirm('입력한 내용을 모두 지우고 처음부터 할까요? (신고서 채우기 내용, 주민등록번호·계좌번호, 채워 둔 신고서 서식, 열쇠 코드도 이 기기에서 지워집니다)')) return;
+      EST.clear(); ['dh.estate.secret.v1', 'dh.inherit-tax-report.v1', 'dh.estate.key', 'dh.estate.ask', 'dh.estate.product'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
+      location.href = 'estate.html'; return;
     }
   });
 

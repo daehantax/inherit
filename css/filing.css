@@ -49,3 +49,4 @@
   .fl-page .es-sum .es-note,.fl-page .es-sum .btn{display:none}
   .fl-page .es-sum .kv.show{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0}
 }
+.es-item-head em.diff{font-style:normal;color:var(--bad)}

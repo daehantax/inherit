@@ -29,12 +29,12 @@
   <div class="dh-head">
     <div class="crumb">세무사용 · 링크 없이 직접 주소로만 엽니다</div>
     <h1>상속세 전자신고 파일 만들기</h1>
-    <p>고객이 「신고서 채우기」에 적은 값이 먼저 들어가고, 세무사가 적은 값이 우선합니다. 국세청 「홈택스 상속세 전자신고 파일제출 설명서」(2026.10) 규격의 EUC-KR 고정길이 파일을 만듭니다. 주민등록번호·주소는 이 탭에만 잠시 남고(sessionStorage), 탭을 닫으면 지워집니다. 서버로 보내지 않습니다.</p>
+    <p>고객이 「신고서 채우기」에 적은 값이 먼저 들어가고, 세무사가 적은 값이 우선합니다. 국세청 「홈택스 상속세 전자신고 파일제출 설명서」(2026.10) 규격의 EUC-KR 고정길이 파일을 만듭니다. 주민등록번호·주소·계좌번호는 이 탭에만 잠시 남고(sessionStorage), 탭을 닫으면 지워집니다. 「신고서 서식 열기」로 연 서식도 같습니다. 서버로 보내지 않습니다. 공용 PC라면 작업 후 탭을 닫으세요.</p>
   </div>
 
   <section class="card">
     <h2>1. 상속 파일 불러오기</h2>
-    <p class="es-note">시트 「신고 접수」의 「입력 내용 보기」 링크를 붙여 넣거나, 이 기기에서 입력한 내용을 씁니다. 세무사가 수정한 링크를 쓰세요.</p>
+    <p class="es-note">시트 「신고 접수」의 「입력 내용 보기」 셀에서 링크 주소를 복사해 붙여 넣으세요(링크를 열어 주소창에서 복사하면 #e= 부분이 지워져 있습니다). 링크를 열면 고객 파일이 이 PC의 입력으로 저장되므로, 고치려면 그 뒤 「신고서 채우기」에서 고치고 「이 기기의 입력 쓰기」를 누르세요.</p>
     <div class="es-ctl"><input type="text" id="efLink" placeholder="https://daehantax.github.io/inherit/result.html#e=…" style="max-width:none;flex:1"><button type="button" class="btn sm" id="efLoadLink">불러오기</button><button type="button" class="btn ghost sm" id="efLoadLocal">이 기기의 입력 쓰기</button></div>
     <p id="efLoaded" class="es-note"></p>
   </section>

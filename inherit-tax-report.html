@@ -759,7 +759,14 @@
 
   buildAll({}); codeLegend();
   document.addEventListener('DOMContentLoaded', function () {
-    migrateOld(); DH.load(true); estateExtras();
+    migrateOld();
+    let agentData = null; try { agentData = JSON.parse(sessionStorage.getItem('dh.inherit-tax-report.agent') || 'null'); } catch (e) { }
+    if (agentData && /agent/.test(location.hash)) {
+      // 세무사용: sessionStorage 로 받은 서식 데이터. 이 PC의 localStorage 에는 저장하지 않는다(주민등록번호·계좌번호 보호)
+      DH.noAutosave = true; DH.apply(agentData);
+      const n = document.getElementById('estateNote'); if (n) { n.hidden = false; n.innerHTML = '<b>세무사용 보기</b> — 전자신고 파일 화면에서 넘어온 서식입니다. 이 탭에만 있고 저장되지 않습니다(저장·불러오기 버튼을 눌러도 이 PC에 남기지 않습니다). 인쇄·PDF 저장 후 탭을 닫으세요.'; }
+      document.querySelectorAll('[data-action="save"],[data-action="load"]').forEach(function (b) { b.disabled = true; });
+    } else { DH.load(true); estateExtras(); }
     const t = new Date(); ['signY', 'signM', 'signD'].forEach(function (id, i) { const el = document.getElementById(id); if (!el.value) el.value = [t.getFullYear(), t.getMonth() + 1, t.getDate()][i]; });
     go(1);
   });

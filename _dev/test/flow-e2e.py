@@ -12,9 +12,12 @@ def ok(label, cond, extra=''):
     if not cond: fails.append(label)
 
 posts = []
+server_mode = {'text': None}          # None = 정상 JSON, 아니면 그 글자를 그대로 돌려줌(옛 배포본 'OK', 'ERROR: …')
 def fake_server(route, request):
     if request.method == 'POST':
         posts.append(json.loads(request.post_data))
+        if server_mode['text'] is not None:
+            route.fulfill(status=200, content_type='text/plain', body=server_mode['text']); return
         route.fulfill(status=200, content_type='application/json', body=json.dumps({'ok': True, 'no': 'F-20261019-07'}))
     else:
         route.fulfill(status=200, content_type='application/json', body=json.dumps({'ok': True}))
@@ -57,7 +60,7 @@ with sync_playwright() as p:
         pg.fill(sel, v); pg.dispatch_event(sel, 'input'); pg.dispatch_event(sel, 'change')
     typ('#f_deceased_name', '홍길동'); typ('[data-sec="deceased.ssn"]', '4001011234567')
     typ('#f_deceased_road', '경기 성남시 분당구 정자일로 1, 101동 1001호')
-    pg.select_option('#f_filer_heirId', index=2)        # 첫째 자녀
+    pg.select_option('#f_filer_heirId', index=1)        # 첫째 자녀 (0은 배우자)
     typ('#f_filer_phone', '010-1111-2222'); typ('#f_filer_email', 'kid@example.com'); typ('#f_filer_address', '서울 강남구 테헤란로 1')
     heir_ids = [h['id'] for h in est['heirs']]
     names = ['김배우', '홍자녀', '홍둘째']
@@ -158,6 +161,10 @@ with sync_playwright() as p:
     rows2 = rp.evaluate('Array.from(document.querySelectorAll("#assetBody tr")).map(tr => tr.querySelector(".price").value).filter(Boolean)')
     ok('세무사 쪽 신고서 서식도 같은 행 수', len(rows2) == 3, rows2)
     ok('세무사 쪽 서식에 주민번호(세무사가 넣은 값)', rp.input_value('#deceased_ssn') == '4001011234567')
+    ok('세무사 PC localStorage 에 서식(주민번호) 남지 않음', rp.evaluate('localStorage.getItem("dh.inherit-tax-report.v1")') is None)
+    rp.evaluate('document.getElementById("applicant_phone_home").value="02-000-0000"; document.getElementById("applicant_phone_home").dispatchEvent(new Event("input",{bubbles:true})); window.dispatchEvent(new Event("pagehide"))'); rp.wait_for_timeout(300)
+    ok('세무사 쪽 입력해도 자동 저장 안 됨', rp.evaluate('localStorage.getItem("dh.inherit-tax-report.v1")') is None)
+    ok('세무사용 보기 안내', '세무사용 보기' in (rp.text_content('#estateNote') or ''))
 
     print('[고객] 맡기기: 「함께 보내기」 끄면 링크에서 건별 내용 제거')
     pg.goto(URL + 'result.html?p=file'); pg.wait_for_timeout(500)
@@ -165,6 +172,14 @@ with sync_playwright() as p:
     typ('#askName', '홍자녀'); typ('#askPhone', '010-1111-2222'); typ('#askEmail', 'kid@example.com'); pg.click('label:has(#askAgree)'); pg.click('#askSend'); pg.wait_for_timeout(600)
     pay2 = posts[-1]
     ok('맡기기 전송 · 링크에 filing 없음', pay2['product'] == 'file' and 'filing' not in json.dumps(pay2.get('summary', '')) and len(pay2['link']) < len(link), (len(pay2['link']), len(link)))
+
+    print('[고객] 접수 서버가 옛 배포본/오류 글자를 돌려주면 → 접수 실패로 표시')
+    server_mode['text'] = 'OK'
+    pg.goto(URL + 'result.html?p=review'); pg.wait_for_timeout(500)
+    typ('#askName', '홍자녀'); typ('#askPhone', '010-1111-2222'); typ('#askEmail', 'kid@example.com'); pg.click('label:has(#askAgree)'); pg.click('#askSend'); pg.wait_for_timeout(800)
+    done = pg.text_content('#askDone') or ''
+    ok('임시번호(T-)와 실패 안내', '임시번호 T-' in done and '자동 접수가 되지 않았습니다' in done, done[:200])
+    server_mode['text'] = None
 
     ok('자바스크립트 오류 없음', not errors, errors)
     b.close()

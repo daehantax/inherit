@@ -44,7 +44,7 @@
     }
     const num = {}; ids.forEach(function (id) { num[id] = Math.round(L[id] * 1000); }); return { num: num, den: 1000 };
   }
-  const PT = { apt: '05', house: '04', officetel: '06', shop: '06', land: '02', farm: '02', bunyang: '08', deposit: '11', stock: '09', insurance: '11', retire: '11', car: '12', other: '12' };
+  const PT = { apt: '05', house: '04', officetel: '06', shop: '06', land: '02', farm: '02', bunyang: '08', deposit: '11', stock: '09', insurance: '11', retire: '12', car: '12', other: '12' };   // 서식(estate.js PTYPE)과 같아야 한다
   const REAL = ['02', '03', '04', '05', '06', '07', '08'];
 
   function build(e, S) {
@@ -90,10 +90,15 @@
       (items || [null]).forEach(function (it) {
         const v = it ? FIL.finItemValue(a.type, it) : EC.assetValue(a); if (!v) return;
         const sec = it ? ((S.fin || {})[it.id] || {}) : {};
-        let kind = PT[a.type] || '12', ev = x.evalCode || FIL.evalCode(a);
-        if (it && a.type === 'stock') { kind = it.listed === '10' ? '10' : '09'; ev = kind === '10' ? '08' : '05'; }
+        let kind = PT[a.type] || '12', ev = x.evalCode || FIL.evalCode(a), secKind = '01';
+        if (it && a.type === 'stock') { const sc = FIL.stockCodes(it); kind = sc.kind; ev = sc.ev; secKind = sc.sec; }
+        // 상속인 몫(A11)과 상속인 외(유증, A12) 몫이 섞이면 레코드를 둘로 나눈다 (서식 별지와 같게)
+        const parts = toNon >= 0.999 ? [['A12', 1]] : toNon > 0 ? [['A11', 1 - toNon], ['A12', toNon]] : [['A11', 1]];
+        const amounts = allocate(Math.round(v), parts.map(function (q) { return q[1]; }));
+        parts.forEach(function (part, pi) {
         aNo += 1; const no = seq(aNo);
-        const vals = { 3: no, 4: toNon >= 0.999 ? 'A12' : 'A11', 5: kind, 6: ev, 7: Math.round(v), 21: 'N' };
+        const isNonPart = part[0] === 'A12', pv = amounts[pi];
+        const vals = { 3: no, 4: part[0], 5: kind, 6: ev, 7: pv, 21: 'N' };
         const label = it ? (it.name || it.company || FIL.BANK_NAME(it.bankCode) || it.bank || it.desc || EC.TYPES[a.type].label) : (a.name || EC.TYPES[a.type].label);
         if (REAL.indexOf(kind) >= 0) {
           Object.assign(vals, { 9: Number(x.area) || 0, 11: digits(x.bjd), 12: x.bjdName, 13: x.san || '0', 14: x.bunji || 0, 15: x.ho || 0, 16: x.block, 17: x.dong, 18: x.unit, 19: x.uniqNo, 20: x.sharePct !== undefined && x.sharePct !== '' ? Number(x.sharePct) : 100 });
@@ -101,8 +106,9 @@
           if (!Number(x.area) && a.type !== 'bunyang') add(label + ': 면적(㎡)을 넣어 주세요.');
         }
         if (kind === '09' || kind === '10') {
-          const qty = it && Number(it.qty) > 0 ? Number(it.qty) : 1, unit = it && Number(it.qty) > 0 && Number(it.unitPrice) > 0 ? Math.round(Number(it.unitPrice)) : Math.round(v);
-          Object.assign(vals, { 8: qty, 10: unit, 24: digits(it ? it.bizNo : x.bizNo), 25: '01' });
+          const share = parts.length > 1 ? part[1] : 1;
+          const qty = it && Number(it.qty) > 0 ? Math.round(Number(it.qty) * share * 1000) / 1000 : 1, unit = it && Number(it.qty) > 0 && Number(it.unitPrice) > 0 ? Math.round(Number(it.unitPrice)) : pv;
+          Object.assign(vals, { 8: qty, 10: unit, 24: digits(it ? it.bizNo : x.bizNo), 25: secKind });
         }
         if (kind === '11') {
           const bank = it ? (it.bankCode || x.bankCode) : x.bankCode, acct = it ? (sec.account || x.account) : x.account;
@@ -113,13 +119,16 @@
         if (a.type === 'insurance') vals[30] = '20';
         if (a.type === 'retire') vals[30] = '10';
         R.push({ code: '05', values: vals });
-        assetRows.push({ a: a, no: no, value: Math.round(v), shares: s, area: Number(x.area) || 0 });
+        // 07 레코드용 지분: 이 레코드가 가리키는 사람들(상속인 / 상속인 외)만, 합이 1이 되게
+        const sh = {}; heirs.forEach(function (h) { const isNon = nonHeir.indexOf(h.id) >= 0; if (isNon === isNonPart && (s[h.id] || 0) > 0) sh[h.id] = s[h.id] / (part[1] || 1); });
+        assetRows.push({ a: a, no: no, value: pv, shares: sh, area: Math.round((Number(x.area) || 0) * (part[1] || 1) * 1000) / 1000 });
+        });
       });
     });
     const heirIds = heirs.map(function (h) { return h.id; });
     (e.gifts || []).filter(function (g) { return Number(g.value) > 0; }).forEach(function (g) {
       aNo += 1;
-      R.push({ code: '05', values: { 3: seq(aNo), 4: heirIds.indexOf(g.to) >= 0 ? 'A21' : 'A22', 5: '12', 6: '06', 7: Math.round(Number(g.value)), 8: 1, 21: 'N', 29: '사전증여재산' + (g.year ? ' ' + g.year + '년' : '') } });
+      R.push({ code: '05', values: { 3: seq(aNo), 4: heirIds.indexOf(g.to) >= 0 && nonHeir.indexOf(g.to) < 0 ? 'A21' : 'A22', 5: '12', 6: '06', 7: Math.round(Number(g.value)), 8: 1, 21: 'N', 29: '사전증여재산' + (g.year ? ' ' + g.year + '년' : '') } });
     });
 
     /* 04 과세가액 */
@@ -160,7 +169,7 @@
     if (F.debts.length) {
       F.debts.forEach(function (r) {
         const amt = Math.round(Number(r.amount) || 0); if (!amt) return;
-        dNo += 1; const no = seq(dNo); if (FIL.debtGroup(r.kind) === 'loan' && !debtNos.loan) debtNos.loan = no;
+        dNo += 1; const no = seq(dNo); if (FIL.debtGroup(r.kind, r) === 'loan') { debtNos.loanList = debtNos.loanList || []; debtNos.loanList.push({ no: no, name: r.creditor || '금융채무' }); }
         R.push({ code: '08', values: { 3: no, 4: r.kind || '06', 5: ymd(r.from) || ymd(date), 6: ymd(r.to), 7: r.creditor, 8: digits(r.creditorNo) || '9999999999', 9: amt, 10: f24 } });
         if (!r.creditor) add('채무 ' + dNo + '번: 채권자 이름을 넣어 주세요.');
       });
@@ -212,7 +221,7 @@
     if (d.fin > 0) {
       let fNo = 0;
       assetRows.filter(function (r) { return EC.isFin(r.a); }).forEach(function (r) { const fr = finRows.find(function (q) { return q.no === r.no; }); fNo += 1; R.push({ code: '19', values: { 3: seq(fNo), 4: r.no, 6: fr ? fr.name : (r.a.name || EC.TYPES[r.a.type].label), 7: fr ? fr.account : (as[r.a.id] || {}).account } }); });
-      if (debtNos.loan) { fNo += 1; R.push({ code: '19', values: { 3: seq(fNo), 5: debtNos.loan, 6: '금융채무' } }); }
+      (debtNos.loanList || (debtNos.loan ? [{ no: debtNos.loan, name: '금융채무' }] : [])).forEach(function (q) { fNo += 1; R.push({ code: '19', values: { 3: seq(fNo), 5: q.no, 6: q.name } }); });
       const finA = Math.round(e.assets.filter(EC.isFin).reduce(function (s, a) { return s + EC.assetValue(a); }, 0)), finD = Math.round(inh.debtParts.loan);
       const net = Math.max(0, finA - finD);
       R.push({ code: '20', values: { 3: finA, 4: finD, 5: net, 6: EC.finDeduction(net), 7: Math.round(d.fin) } });

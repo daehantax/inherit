@@ -50,7 +50,9 @@
     return '<div class="fl-f' + (opt.wide ? ' wide' : '') + '"><label for="' + fid(path) + '">' + label + (opt.hint ? '<small>' + opt.hint + '</small>' : '') + '</label><div class="fl-money"><input type="text" inputmode="numeric" id="' + fid(path) + '" data-f="' + path + '" data-type="won" value="' + (v ? v.toLocaleString('ko-KR') : '') + '" placeholder="0" autocomplete="off"><span class="unit">원</span><span class="kor">' + kor(v) + '</span></div></div>';
   }
   function select(path, label, list, def, opt) {
-    opt = opt || {}; const v = getF(path) || def || '';
+    opt = opt || {}; let v = getF(path);
+    if (!v && def) { setF(path, def); v = def; }       // 화면에 보이는 기본값 = 저장값 (신고인·성별·평가방법이 빈 채로 서식에 가지 않게)
+    v = v || '';
     return '<div class="fl-f"><label for="' + fid(path) + '">' + label + (opt.hint ? '<small>' + opt.hint + '</small>' : '') + '</label><select id="' + fid(path) + '" data-f="' + path + '">' + (opt.blank ? '<option value="">' + opt.blank + '</option>' : '') + list.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === v ? ' selected' : '') + '>' + esc(o[1]) + (opt.code ? ' (' + o[0] + ')' : '') + '</option>'; }).join('') + '</select></div>';
   }
   function secret(path, label, opt) {
@@ -74,9 +76,11 @@
     $('flDeceased').innerHTML = '<div class="fl-grid">' + text('deceased.name', '성명', { ph: '홍길동' }) + secret('deceased.ssn', '주민등록번호', { ph: '13자리, - 없이', maxlength: 13 }) +
       select('deceased.cause', '상속이 열린 원인', EF_CODES.cause, '01') + select('deceased.sex', '성별 <small>배우자 관계코드를 정합니다</small>', [['m', '남'], ['f', '여']], 'm') + '</div>' + addrFields('deceased');
     const opts = E.heirs.map(function (h) { return [h.id, heirName(h) + ' (' + EST.REL[h.rel] + ')']; });
-    $('flFiler').innerHTML = '<div class="fl-grid">' + select('filer.heirId', '신고인', opts, E.heirs[0] && E.heirs[0].id, { blank: '고르세요' }) +
+    const sp = E.heirs.find(function (h) { return h.rel === 'spouse'; });
+    $('flFiler').innerHTML = '<div class="fl-grid">' + select('filer.heirId', '신고인', opts, (sp || E.heirs[0] || {}).id) +
       text('filer.phone', '휴대폰', { ph: '010-0000-0000', type: 'tel' }) + text('filer.email', '이메일', { ph: 'name@example.com', type: 'email' }) +
       text('filer.address', '신고인 주소 (한 줄)', { wide: true, ph: '주민등록상 주소' }) + '</div>';
+    E.heirs.forEach(function (h) { if (h.name && !FIL.NAME_DEFAULT.test(h.name) && !(F.heirs[h.id] || {}).name) setF('heirs.' + h.id + '.name', h.name); });   // 1단계에서 적은 이름을 성명으로
     $('flHeirs').innerHTML = E.heirs.map(function (h) {
       const p = 'heirs.' + h.id;
       return '<div class="es-item"><div class="es-item-head"><div><span class="rel">' + esc(EST.REL[h.rel]) + '</span><b>' + esc(heirName(h)) + '</b></div></div><div class="fl-grid">' +
@@ -104,7 +108,7 @@
     const p = 'fin.' + t + '.' + it.id;
     let f = '';
     if (t === 'deposit') f = select(p + '.bankCode', '은행', FIL.BANKS, '', { blank: '고르세요' }) + secret('fin.' + it.id + '.account', '계좌번호', { ph: '- 없이' , maxlength: 20 }) + moneyIn(p + '.value', '돌아가신 날 잔액');
-    else if (t === 'stock') f = text(p + '.name', '종목명(펀드명)', { ph: '삼성전자' }) + select(p + '.listed', '구분', [['09', '상장'], ['10', '비상장·펀드']], '09') + text(p + '.qty', '수량(주)', { num: true }) + moneyIn(p + '.unitPrice', '1주 평가액', { hint: '상장: 돌아가신 날 앞뒤 2개월 종가 평균' }) + text(p + '.bizNo', '발행법인 사업자번호', { num: true, maxlength: 10, hint: '모르면 비움' }) + moneyIn(p + '.value', '평가액 합계', { hint: '수량×단가가 있으면 자동' });
+    else if (t === 'stock') f = text(p + '.name', '종목명(펀드명)', { ph: '삼성전자' }) + select(p + '.listed', '구분', FIL.STOCK_KIND, '09') + text(p + '.qty', '수량(주)', { num: true }) + moneyIn(p + '.unitPrice', '1주 평가액', { hint: '상장: 돌아가신 날 앞뒤 2개월 종가 평균' }) + text(p + '.bizNo', '발행법인 사업자번호', { num: true, maxlength: 10, hint: '모르면 비움' }) + moneyIn(p + '.value', '평가액 합계', { hint: '수량×단가가 있으면 자동' });
     else if (t === 'insurance') f = text(p + '.company', '보험회사') + moneyIn(p + '.value', '받는 보험금');
     else if (t === 'retire') f = text(p + '.company', '회사(지급처)') + moneyIn(p + '.value', '퇴직금·퇴직연금');
     else if (t === 'car') f = text(p + '.name', '차종·연식', { ph: '그랜저 2021' }) + moneyIn(p + '.value', '중고 시세');
@@ -117,8 +121,9 @@
       const a = E.assets.find(function (x) { return x.id === 'fin_' + t; }), total = a ? Number(a.value) || 0 : 0;
       const rows = F.fin[t];
       if (!total && !rows.length) return '';
-      const sum = FIL.finSum(F, t);
-      return '<div class="es-item"><div class="es-item-head"><div><b>' + FIL.FIN_LABEL[t] + '</b> <small>1단계 금액 ' + won(total) + (rows.length ? ' · 건별 합계 ' + won(sum) : '') + '</small></div></div>' +
+      const sum = FIL.finSum(F, t), base = rows.length ? FIL.baseOf(E, t) : total;
+      const note = (t === 'insurance' && a && a.premiumByOther) ? '<p class="es-note bad">1단계에서 「보험료를 다른 사람이 냈다」고 하셨으므로 이 보험금은 상속재산에 넣지 않고 계산합니다. 돌아가신 분이 낸 보험이면 1단계 C에서 체크를 푸세요.</p>' : '';
+      return '<div class="es-item"><div class="es-item-head"><div><b>' + FIL.FIN_LABEL[t] + '</b> <small>1단계에 적은 금액 ' + won(base || 0) + (rows.length ? ' → 건별 합계 ' + won(sum) + (Math.round(base || 0) !== sum ? ' <em class="diff">(다름 — 건별 합계로 계산합니다)</em>' : ' ✓') : '') + '</small></div></div>' + note +
         rows.map(function (it) { return itemRow(t, it); }).join('') +
         (!rows.length ? '<p class="es-note">아직 건별로 나누지 않았습니다. 「+ 추가」로 한 건씩 적으면 합계가 1단계 금액이 됩니다.</p>' : '') +
         '<button type="button" class="es-add sm" data-add-fin="' + t + '">+ ' + FIL.FIN_LABEL[t] + ' 추가</button></div>';
@@ -130,23 +135,26 @@
   function renderDebt() {
     const d = E.debts || {}, fu = E.funeral || {};
     const sumD = (Number(d.loan) || 0) + (Number(d.deposit) || 0) + (Number(d.other) || 0);
-    let h = '<div class="es-item"><div class="es-item-head"><div><b>빚</b> <small>1단계 금액 ' + won(sumD) + '</small></div></div>';
+    const bD = FIL.baseOf(E, 'debts'); const baseD = bD ? bD.loan + bD.deposit + bD.other : sumD;
+    let h = '<div class="es-item"><div class="es-item-head"><div><b>빚</b> <small>1단계에 적은 금액 ' + won(baseD) + (F.debts.length ? ' → 건별 합계 ' + won(sumD) : '') + '</small></div></div>';
     h += F.debts.map(function (r) {
       const p = 'debts.' + r.id;
-      return '<div class="fl-item"><div class="fl-grid">' + select(p + '.kind', '종류', EF_CODES.debtKind, '01', { code: true }) + text(p + '.creditor', '채권자 (은행·세입자·병원 이름)') + text(p + '.creditorNo', '채권자 사업자번호·주민번호', { num: true, maxlength: 13, hint: '모르면 비움' }) +
+      return '<div class="fl-item"><div class="fl-grid">' + select(p + '.kind', '종류', EF_CODES.debtKind, '01', { code: true }) + text(p + '.creditor', '채권자 (은행·세입자·병원 이름)') + text(p + '.creditorNo', '채권자 사업자등록번호', { num: true, maxlength: 10, hint: '은행·병원 등 사업자만 · 개인이면 비움(주민번호는 받지 않습니다)' }) +
         text(p + '.from', '빌린 날(계약일)', { type: 'date' }) + text(p + '.to', '갚을 날(만기)', { type: 'date', hint: '없으면 비움' }) + moneyIn(p + '.amount', '돌아가신 날 잔액') + '</div><button type="button" class="es-del" data-del="debts|' + r.id + '">지우기</button></div>';
     }).join('');
-    h += (!F.debts.length && sumD ? '<p class="es-note">채권자별로 한 건씩 적으면 합계가 1단계 금액이 됩니다. 종류: 은행 대출 → 금융채무, 세입자 보증금 → 주택임대보증금, 병원비 → 기타채무.</p>' : '') + '<button type="button" class="es-add sm" data-add="debts">+ 빚 추가</button></div>';
+    h += (!F.debts.length && sumD ? '<p class="es-note">「+ 빚 추가」를 누르면 1단계 금액이 종류별 한 줄로 옮겨집니다. 채권자별로 나누고 이름·날짜를 채우세요. 종류: 은행 대출 → 금융채무, 세입자 보증금 → 주택임대보증금, 병원비 → 기타채무.</p>' : '') + '<button type="button" class="es-add sm" data-add="debts">+ 빚 추가</button></div>';
 
-    h += '<div class="es-item"><div class="es-item-head"><div><b>밀린 세금·공과금</b> <small>1단계 금액 ' + won(d.tax) + '</small></div></div>';
+    const bT = FIL.baseOf(E, 'tax');
+    h += '<div class="es-item"><div class="es-item-head"><div><b>밀린 세금·공과금</b> <small>1단계에 적은 금액 ' + won(bT !== undefined ? bT : d.tax) + (F.charges.length ? ' → 건별 합계 ' + won(d.tax) : '') + '</small></div></div>';
     h += F.charges.map(function (r) {
       const p = 'charges.' + r.id;
       return '<div class="fl-item"><div class="fl-grid">' + select(p + '.kind', '종류', EF_CODES.publicCharge, '06', { code: true }) + text(p + '.year', '연도', { ph: (E.deceased.date || '').slice(0, 4), num: true, maxlength: 4 }) + select(p + '.quarter', '분기', [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4']], '1') +
-        text(p + '.taxCode', '세목코드 (국세일 때)', { hint: '예: 종합소득세 10', maxlength: 2 }) + moneyIn(p + '.amount', '금액') + '</div><button type="button" class="es-del" data-del="charges|' + r.id + '">지우기</button></div>';
+        select(p + '.taxCode', '세목 (국세일 때)', FIL.TAX_CODES, '', { blank: '국세가 아니면 비움', code: true }) + moneyIn(p + '.amount', '금액') + '</div><button type="button" class="es-del" data-del="charges|' + r.id + '">지우기</button></div>';
     }).join('');
     h += '<button type="button" class="es-add sm" data-add="charges">+ 세금·공과금 추가</button></div>';
 
-    h += '<div class="es-item"><div class="es-item-head"><div><b>장례비</b> <small>1단계 금액 ' + won((Number(fu.cost) || 0) + (Number(fu.grave) || 0)) + ' · 공제는 일반 장례비 1,000만원·봉안 500만원까지</small></div></div>';
+    const bF = FIL.baseOf(E, 'funeral'); const curF = (Number(fu.cost) || 0) + (Number(fu.grave) || 0);
+    h += '<div class="es-item"><div class="es-item-head"><div><b>장례비</b> <small>1단계에 적은 금액 ' + won(bF ? bF.cost + bF.grave : curF) + (F.funeral.length ? ' → 건별 합계 ' + won(curF) : '') + ' · 공제는 일반 장례비 1,000만원(영수증 없으면 500만원)·봉안 500만원까지</small></div></div>';
     h += F.funeral.map(function (r) {
       const p = 'funeral.' + r.id;
       return '<div class="fl-item"><div class="fl-grid">' + select(p + '.kind', '구분', EF_CODES.funeralKind, '1') + text(p + '.payee', '지급처 (장례식장·상조·납골당)') + text(p + '.payeeNo', '지급처 사업자번호', { num: true, maxlength: 10, hint: '영수증에 있음 · 모르면 비움' }) +
@@ -167,7 +175,7 @@
     const r = EST.toReturn(E, SEC);
     const sumRows = r.assets.reduce(function (s, x) { return s + (Number(x.qty) > 0 ? Math.floor(Number(x.qty) * x.price) : x.price); }, 0);
     $('flPreview').innerHTML = '<thead><tr><th>번호</th><th>① 구분</th><th>② 종류</th><th>③ 소재지·명칭</th><th>④ 번호·지분</th><th>⑤ 수량</th><th>⑦ 평가가액</th><th>⑧ 평가</th></tr></thead><tbody>' +
-      r.assets.map(function (x, i) { return '<tr><td>' + (i + 1) + '</td><td>' + x.atype + '</td><td>' + x.ptype + '</td><td>' + esc(x.loc) + '</td><td>' + esc(x.reg ? FIL.mask(x.reg) || x.reg : '') + '</td><td class="num">' + esc(x.qty || '') + '</td><td class="num">' + (Number(x.qty) > 0 ? Math.floor(Number(x.qty) * x.price) : x.price).toLocaleString('ko-KR') + '</td><td>' + x.eval + '</td></tr>'; }).join('') +
+      r.assets.map(function (x, i) { return '<tr><td>' + (i + 1) + '</td><td>' + x.atype + '</td><td>' + x.ptype + '</td><td>' + esc(x.loc) + '</td><td>' + esc(x.ptype === '11' && x.reg ? FIL.mask(x.reg) || '' : (x.reg || '')) + '</td><td class="num">' + esc(x.qty || '') + '</td><td class="num">' + (Number(x.qty) > 0 ? Math.floor(Number(x.qty) * x.price) : x.price).toLocaleString('ko-KR') + '</td><td>' + x.eval + '</td></tr>'; }).join('') +
       '<tr class="total"><td colspan="6">계</td><td class="num">' + sumRows.toLocaleString('ko-KR') + '</td><td></td></tr></tbody>';
     // 다음 단계 (상품별)
     const inh = EC.calcInheritance(E), over = FIL.overLimit(E, inh);
@@ -175,7 +183,8 @@
     let h = '';
     if (!product) {
       h = '<h3 class="subhead">어떻게 진행할까요?</h3><div class="fl-choice">' +
-        '<a class="btn" href="filing.html?p=self#s=done">셀프 신고서로</a><a class="btn" href="filing.html?p=review#s=done">세무사 검토로</a><a class="btn ghost" href="result.html?p=file#ask">신고까지 맡기기</a></div>';
+        (over ? '' : '<a class="btn" href="filing.html?p=self#s=done">셀프 신고서로</a><a class="btn" href="filing.html?p=review#s=done">세무사 검토로</a>') + '<a class="btn' + (over ? '' : ' ghost') + '" href="result.html?p=file#ask">신고까지 맡기기</a></div>' +
+        (over ? '<p class="es-note">총 상속재산이 15억원을 넘어 셀프 신고서·세무사 검토는 진행하지 않습니다.</p>' : '');
     } else if (product === 'self') {
       h = '<h3 class="subhead">셀프 신고서 — 이렇게 끝냅니다</h3><ol class="fl-steps">' +
         '<li><b>신청·결제</b> ' + (key ? '<span class="ok">완료 (접수번호 ' + esc(key.no) + ')</span>' : '<a class="btn sm" href="result.html?p=self#ask">셀프 신고서 신청하기 →</a> <small>9만 9천원 · 결제 확인 후 열쇠 코드를 이메일로 보내 드립니다</small>') + '</li>' +
@@ -188,7 +197,7 @@
         '<li><b>신청</b> <a class="btn sm" href="result.html?p=review#ask">세무사 검토 신청하기 →</a> <small>33만원 · 여기 적은 내용이 「입력 내용 보기」 링크로 담당 세무사에게 갑니다(주민등록번호·계좌번호 제외)</small></li>' +
         '<li><b>서류 보내기</b> <small>아래 서류를 이메일로 보내 주세요. 세무사가 주민등록번호·계좌번호·법정동코드를 서류에서 채웁니다.</small><ul class="fl-docs">' + EST.docs(E).map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul></li>' +
         '<li><b>검토</b> <small>입력값·평가액·공제를 확인하고, 절세 포인트 적용 여부를 확정한 서면 답변서 + 30분 통화</small></li>' +
-        '<li><b>신고서</b> <small>검토가 끝난 신고서 서식(PDF)을 보내 드립니다. 직접 홈택스로 내시거나, 신고까지 맡기기(차액만 추가)로 바꾸실 수 있습니다.</small></li></ol>';
+        '<li><b>신고서</b> <small>입금이 확인되면 셀프 신고서 열쇠 코드를 먼저 보내 드리고, 검토가 끝나면 세무사가 확인한 신고서 서식(PDF)을 보내 드립니다. 직접 홈택스로 내시거나, 신고까지 맡기기(차액만 추가)로 바꾸실 수 있습니다.</small></li></ol>';
     } else {
       h = '<h3 class="subhead">신고까지 맡기기</h3><p class="es-lead">여기 적은 내용이 있으면 함께 보내 드릴 수 있습니다. 세무사가 서류로 나머지를 채우고 전자신고까지 합니다.</p><a class="btn" href="result.html?p=file#ask">신고까지 맡기기 신청하기 →</a>';
     }
@@ -197,14 +206,14 @@
   }
   function hometaxGuide() {
     return '<ol class="fl-ht">' +
-      '<li>홈택스 로그인(신고인 본인 공동인증서·간편인증) → <b>세금신고 › 상속세 › 일반증여·상속세 신고 › 정기신고</b> (메뉴 이름은 홈택스 화면 기준이며 바뀔 수 있습니다)</li>' +
+      '<li>홈택스 로그인(신고인 본인 공동인증서·간편인증) → <b>세금신고 › 상속세 신고 › 정기신고</b> <small>(아래 화면 이름은 예시입니다. 홈택스 개편으로 이름이 다를 수 있으니 「상속세」로 검색하세요)</small></li>' +
       '<li><b>기본사항</b>: 피상속인 성명·주민등록번호·주소, 상속개시일, 신고인(상속인) 정보 — 신고서 4단계 ①~⑫ 칸 그대로</li>' +
       '<li><b>상속인 입력</b>: 상속인마다 성명·주민등록번호·관계 — 이 화면 「1. 사람」의 내용</li>' +
       '<li><b>상속재산 명세</b>: 재산을 한 건씩 추가 — 위 「신고서에 이렇게 들어갑니다」 표의 행 순서대로. 부동산은 주소 검색, 예금은 은행·계좌번호, 주식은 종목·수량·단가</li>' +
       '<li><b>채무·공과금·장례비</b>: 「4. 빚·공과금·장례비」의 건별 내용. 증빙은 신고 후 첨부서류로 올립니다</li>' +
       '<li><b>상속공제</b>: 신고서 2단계(부표3)의 금액 — 일괄공제/기초+인적공제, 배우자공제, 금융재산공제, 동거주택공제</li>' +
       '<li><b>세액계산·신고서 제출</b>: 홈택스가 계산한 금액이 신고서 4단계 ⑳~㉛과 같은지 확인하고 제출. 다르면 어느 칸이 다른지 보고 sjlee@taxdh.net 으로 물어보세요</li>' +
-      '<li><b>첨부서류</b>: 가족관계증명서, 등기부등본, 잔액증명서, 채무 증빙, 장례비 영수증, 협의분할서를 PDF로 올립니다</li>' +
+      '<li><b>첨부서류</b>: 신고서를 낸 뒤 「신고부속서류 제출」(화면명 예시)에서 가족관계증명서, 등기부등본, 잔액증명서, 채무 증빙, 장례비 영수증, 협의분할서를 PDF로 올립니다</li>' +
       '<li><b>납부</b>: 납부·고지·환급 › 자진납부. 신고기한 안에 신고와 납부를 모두 마쳐야 3% 신고세액공제가 유지됩니다</li></ol>';
   }
 
@@ -265,13 +274,13 @@
   document.addEventListener('click', function (ev) {
     const b = ev.target.closest('button, a'); if (!b) return;
     if (b.dataset.go) { ev.preventDefault(); show(b.dataset.go, true); return; }
-    if (b.dataset.addFin) { const it = { id: FIL.id('i') }; if (b.dataset.addFin === 'stock') it.listed = '09'; F.fin[b.dataset.addFin].push(it); save(true); renderFin(); return; }
-    if (b.dataset.delFin) { const x = b.dataset.delFin.split('|'); F.fin[x[0]] = F.fin[x[0]].filter(function (it) { return it.id !== x[1]; }); if (SEC.fin) delete SEC.fin[x[1]]; if (!F.fin[x[0]].length) { const a = E.assets.find(function (q) { return q.id === 'fin_' + x[0]; }); if (a) delete a.itemized; } save(true); renderFin(); return; }
-    if (b.dataset.add) { const DEF = { debts: { kind: '01' }, charges: { kind: '06', quarter: '1', year: (E.deceased.date || '').slice(0, 4) }, funeral: { kind: '1' } }; F[b.dataset.add].push(Object.assign({ id: FIL.id('r') }, DEF[b.dataset.add] || {})); save(true); renderDebt(); return; }
+    if (b.dataset.addFin) { FIL.seedRows(E, b.dataset.addFin); save(true); renderFin(); return; }
+    if (b.dataset.delFin) { const x = b.dataset.delFin.split('|'); F.fin[x[0]] = F.fin[x[0]].filter(function (it) { return it.id !== x[1]; }); if (SEC.fin) delete SEC.fin[x[1]]; save(true); renderFin(); return; }
+    if (b.dataset.add) { FIL.seedRows(E, b.dataset.add); save(true); renderDebt(); return; }
     if (b.dataset.del) { const x = b.dataset.del.split('|'); F[x[0]] = F[x[0]].filter(function (it) { return it.id !== x[1]; }); save(true); renderDebt(); return; }
     if (b.id === 'btnPrev') { const i = SCREENS.indexOf(screen); if (i > 0) show(SCREENS[i - 1], true); return; }
     if (b.id === 'btnNext') { const i = SCREENS.indexOf(screen); if (i < SCREENS.length - 1) show(SCREENS[i + 1], true); else { save(true); location.href = product ? 'result.html?p=' + product + '#ask' : 'result.html'; } return; }
-    if (b.id === 'btnClearSecret') { if (confirm('이 기기에 저장된 주민등록번호·계좌번호를 모두 지울까요?')) { SEC = {}; FIL.clearSecret(); render(); DH.toast('지웠습니다.'); } return; }
+    if (b.id === 'btnClearSecret') { if (confirm('이 기기에 저장된 주민등록번호·계좌번호를 모두 지울까요? (채워 둔 신고서 서식도 함께 지워지며, 다시 「신고서 서식 열기」를 누르면 다시 채워집니다)')) { SEC = {}; FIL.clearSecret(); try { localStorage.removeItem('dh.inherit-tax-report.v1'); } catch (e) { } render(); DH.toast('지웠습니다.'); } return; }
     if (b.id === 'btnOpenReturn') { openReturn(); return; }
   });
   function openReturn() {
@@ -285,7 +294,10 @@
     location.href = 'inherit-tax-report.html#from=estate';
   }
 
+  window.addEventListener('pagehide', function () { if (timer) { clearTimeout(timer); timer = null; FIL.save(E); FIL.saveSecret(SEC); } });
   if (cur.from === 'link') { try { history.replaceState(null, '', location.pathname + location.search + location.hash); } catch (err) { } }
+  // 비밀 저장소: 지워진 상속인·예금의 흔적 정리
+  (function () { const ids = E.heirs.map(function (h) { return h.id; }); Object.keys(SEC.heirs || {}).forEach(function (id) { if (ids.indexOf(id) < 0) delete SEC.heirs[id]; }); const fin = []; FIL.FIN_TYPES.forEach(function (t) { F.fin[t].forEach(function (it) { fin.push(it.id); }); }); Object.keys(SEC.fin || {}).forEach(function (id) { if (fin.indexOf(id) < 0) delete SEC.fin[id]; }); })();
   render(); show(screen, false);
   window.FILING_UI = { get E() { return E; }, get F() { return F; }, get SEC() { return SEC; }, render: render, show: show, product: product };
 })();

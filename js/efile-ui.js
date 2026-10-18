@@ -52,7 +52,7 @@
     const d = E.debts || {}, F2 = FIL.get(E);
     let dh = '';
     const won = function (n) { return Number(n || 0).toLocaleString('ko-KR') + '원'; };
-    if (F2.debts.length) dh += '<div class="ef-item"><h4>채무 <small>고객이 ' + F2.debts.length + '건으로 적음 — 08 레코드에 그대로 들어감. 고치려면 고객 링크로 「신고서 채우기」를 여세요</small></h4><ul class="ef-rows">' + F2.debts.map(function (r) { return '<li>' + esc(r.kind) + ' ' + esc(r.creditor || '(채권자 없음)') + ' · ' + esc(r.creditorNo || '9999999999') + ' · ' + esc(r.from || '') + '~' + esc(r.to || '') + ' · ' + won(r.amount) + '</li>'; }).join('') + '</ul></div>';
+    if (F2.debts.length) dh += '<div class="ef-item"><h4>채무 <small>고객이 ' + F2.debts.length + '건으로 적음 — 08 레코드에 그대로 들어감. 고치려면 고객 링크로 「신고서 채우기」를 여세요</small></h4><ul class="ef-rows">' + F2.debts.map(function (r) { return '<li>' + esc(r.kind) + ' ' + esc(r.creditor || '(채권자 없음)') + ' · ' + esc(r.creditorNo || '9999999999(번호 없음)') + ' · ' + esc(r.from || '(발생일 없음 → 상속개시일로)') + '~' + esc(r.to || '') + ' · ' + won(r.amount) + '</li>'; }).join('') + '</ul></div>';
     if (F2.charges.length) dh += '<div class="ef-item"><h4>공과금 <small>고객이 ' + F2.charges.length + '건으로 적음 (09 레코드)</small></h4><ul class="ef-rows">' + F2.charges.map(function (r) { return '<li>' + esc(r.kind) + ' ' + esc(r.year) + '년 ' + esc(r.quarter) + '분기 ' + (r.taxCode ? '세목 ' + esc(r.taxCode) + ' ' : '') + won(r.amount) + '</li>'; }).join('') + '</ul></div>';
     if (F2.funeral.length) dh += '<div class="ef-item"><h4>장례비 <small>고객이 ' + F2.funeral.length + '건으로 적음 (10 레코드)</small></h4><ul class="ef-rows">' + F2.funeral.map(function (r) { return '<li>' + (r.kind === '2' ? '봉안' : '일반') + ' ' + esc(r.payee || '') + ' ' + esc(r.payeeNo || '') + ' · ' + won(r.amount) + '</li>'; }).join('') + '</ul></div>';
     [['loan', '은행 대출'], ['deposit', '돌려줄 보증금'], ['other', '그 밖의 빚']].forEach(function (k) {
@@ -69,7 +69,7 @@
     if (!e || !e.heirs || !e.heirs.length) { $('efLoaded').textContent = '불러올 상속 파일이 없거나 상속인이 없습니다.'; return; }
     E = e; const inh = EC.calcInheritance(E);
     $('efLoaded').innerHTML = '<b>' + from + '</b>에서 불러옴 · 상속인 ' + E.heirs.length + '명 · 재산 ' + Math.round(inh.totalProperty).toLocaleString('ko-KR') + '원 · 납부세액 ' + Math.round(inh.payable).toLocaleString('ko-KR') + '원 · 상속개시일 ' + (E.deceased.date || '(없음)') +
-      (FIL.has(E) ? '<br><span class="ef-ok">' + esc(FIL.summary(E)) + '</span> — 고객이 적은 값은 칸에 연하게 보입니다. 비워 두면 그 값이 쓰이고, 적으면 세무사 값이 우선합니다.' : '<br>고객이 「신고서 채우기」를 하지 않았습니다. 아래 칸을 모두 세무사가 채웁니다.') +
+      (FIL.has(E) ? '<br><span class="ef-ok">' + esc(FIL.summary(E)) + '</span> — 고객이 적은 값은 칸에 연하게 보입니다. 비워 두면 그 값이 쓰이고, 적으면 세무사 값이 우선합니다. 건별 금액·은행을 고쳐야 하면 「입력 내용 보기」 링크 → <b>신고서 채우기</b>에서 고친 뒤 이 화면의 「이 기기의 입력 쓰기」를 누르세요.' : '<br>고객이 「신고서 채우기」를 하지 않았습니다. 아래 칸을 모두 세무사가 채웁니다.') +
       ' <button type="button" class="btn ghost sm" id="efOpenReturn">신고서 서식 열기</button>';
     render();
   }
@@ -98,8 +98,15 @@
       const sec = { deceased: { ssn: get('deceased.ssn') }, heirs: {}, fin: {} };
       Object.keys(S.heirs || {}).forEach(function (id) { sec.heirs[id] = { ssn: (S.heirs[id] || {}).ssn }; });
       Object.keys(S.fin || {}).forEach(function (id) { sec.fin[id] = { account: (S.fin[id] || {}).account }; });
-      try { localStorage.setItem('dh.inherit-tax-report.v1', JSON.stringify(Object.assign(EST.toReturn(E, sec), { _agent: true }))); } catch (e) { }
-      window.open('inherit-tax-report.html#from=estate', '_blank');
+      // 세무사가 efile 에서 고친 값(성명·주소·면적 등)을 서식에도 반영
+      const E2 = JSON.parse(JSON.stringify(E)); const F2 = FIL.get(E2);
+      const over = function (base, top) { const o = Object.assign({}, base || {}); Object.keys(top || {}).forEach(function (k) { const v = top[k]; if (v !== '' && v !== undefined && v !== null) o[k] = v; }); return o; };
+      F2.deceased = over(F2.deceased, S.deceased); F2.filer = over(F2.filer, S.filer);
+      Object.keys(S.heirs || {}).forEach(function (id) { F2.heirs[id] = over(F2.heirs[id], S.heirs[id]); });
+      Object.keys(S.assets || {}).forEach(function (id) { F2.assets[id] = over(F2.assets[id], S.assets[id]); });
+      // 주민등록번호·계좌번호가 들어간 서식 데이터는 sessionStorage 로만 넘긴다(세무사 PC localStorage 에 남지 않게)
+      try { sessionStorage.setItem('dh.inherit-tax-report.agent', JSON.stringify(Object.assign(EST.toReturn(E2, sec), { _agent: true }))); } catch (e) { DH.toast('이 브라우저에서 서식을 넘길 수 없습니다.', true); return; }
+      window.open('inherit-tax-report.html#agent', '_blank');
     }
     if (b.id === 'efDownload' && lastBytes) {
       const name = EF.fileName(new Date().toISOString().slice(0, 10));

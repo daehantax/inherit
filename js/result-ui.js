@@ -170,8 +170,10 @@
       return '<div class="pd' + (p.key === product ? ' pick' : '') + (limited ? ' off' : '') + '" data-pd="' + p.key + '"><div class="name">' + p.name + (p.key === rec && !limited ? ' <span class="badge ok">추천</span>' : '') + '</div><div class="say">' + p.say + '</div>' +
         '<div class="price">' + priceText(p.price) + '<small>' + p.priceNote + '</small></div><ul>' + p.items.map(function (i) { return '<li>' + i + '</li>'; }).join('') + '</ul>' + act + '</div>';
     }).join('');
-    // 15억 초과면 셀프·검토는 고를 수 없음
+    // 15억 초과면 셀프·검토는 고를 수 없음. 상속세도 0원이라 맡기기도 없으면 신청 폼 대신 문의 안내
     if (over && product !== 'file') { product = 'file'; }
+    const noForm = over && !inh.payable;
+    $('askForm').hidden = noForm; $('askNoProduct').hidden = !noForm;
     const cnt = FIL.count(E);
     $('askWith').hidden = !filled;
     if (filled) $('askWithText').textContent = '신고서 채우기에서 적은 내용을 함께 보냅니다 (' + FIL.summary(E).replace(/^신고서 채우기: /, '') + ') · 주민등록번호·계좌번호는 빠집니다';
@@ -191,7 +193,7 @@
   }
   function withFiling() { const c = $('askWithCheck'); return !c || $('askWith').hidden || c.checked; }
   function sendE() { return withFiling() ? E : FIL.strip(E); }
-  function localNo() { const d = new Date(); return 'F-' + d.toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0'); }
+  function localNo() { const d = new Date(); return 'T-' + d.toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0'); }   // T- = 임시번호(자동 접수 실패)
   function showDone(no, prod, c, failed) {
     const p = products().find(function (x) { return x.key === prod; });
     const bank = EST.FIRM.bank;
@@ -201,12 +203,12 @@
       file: ['담당 세무사가 <b>' + esc(c.phone) + '</b>로 전화드려 최종 금액과 일정을 확인합니다.', '아래 서류를 이메일 또는 사무실로 보내 주세요.', '세무사가 검토한 신고서를 보내 드리고, 확인을 받은 뒤 홈택스로 전자신고합니다. 접수증을 보내 드립니다.']
     }[prod];
     const docs = prod === 'file' || prod === 'review' ? '<h4>준비할 서류</h4><ul>' + EST.docs(E).map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul>' : '';
-    $('askDone').innerHTML = '<div class="rs-done"><p class="no">접수번호 ' + esc(no) + '</p><p>' + esc(c.name || '고객') + '님, <b>' + esc(p.name) + '</b> 신청이 접수되었습니다.</p>' +
+    $('askDone').innerHTML = '<div class="rs-done"><p class="no">' + (failed ? '임시번호 ' : '접수번호 ') + esc(no) + '</p><p>' + esc(c.name || '고객') + '님, <b>' + esc(p.name) + '</b> 신청이 접수되었습니다.</p>' +
       '<h4>결제</h4><p>' + (c.pay === '카드' ? '카드 결제 링크를 문자·이메일로 보내 드립니다.' : (bank ? '입금 계좌: <b>' + esc(bank) + '</b> · 입금자명에 접수번호를 적어 주세요.' : '입금 계좌는 확인 메일로 안내드립니다. 입금자명에 접수번호를 적어 주세요.')) + ' 금액: <b>' + won(p.price) + '</b></p>' +
       '<h4>이렇게 진행됩니다</h4><ol>' + steps.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol>' + docs +
-      (failed ? '<p class="es-note">자동 접수가 되지 않아 이메일 앱으로 보냈습니다. 메일이 열리지 않았다면 031-783-8877로 연락 주세요.</p>' : '<p class="es-note">확인 메일을 ' + esc(c.email) + '로 보냈습니다. 문의 031-783-8877</p>') + '</div>';
+      (failed ? '<p class="note bad">자동 접수가 되지 않았습니다(임시번호). 이메일 앱이 열렸다면 그 메일을 보내 주시고, 열리지 않았다면 031-783-8877 또는 ' + esc(EST.FIRM.email) + '로 연락 주세요. 정식 접수번호(F-…)는 담당자가 알려 드립니다.</p>' : '<p class="es-note">확인 메일을 ' + esc(c.email) + '로 보냈습니다. 문의 031-783-8877</p>') + '</div>';
     $('askDone').hidden = false; $('askForm').hidden = true;
-    try { localStorage.setItem('dh.estate.ask', JSON.stringify({ no: no, prod: prod, at: new Date().toISOString() })); } catch (e) { }
+    if (!failed) try { localStorage.setItem('dh.estate.ask', JSON.stringify({ no: no, prod: prod, at: new Date().toISOString() })); } catch (e) { }
     try { $('askDone').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { }
   }
   async function submitAsk(ev) {
@@ -228,8 +230,11 @@
     try {
       const res = await fetch(DH.CONSULT_URL, { method: 'POST', body: JSON.stringify(payload) });
       if (!res.ok) throw new Error('http ' + res.status);
-      try { const j = await res.json(); if (j && j.ok === false) throw new Error('server'); if (j && j.no) no = String(j.no); } catch (pe) { if (/server/.test(String(pe.message))) throw pe; }
-      showDone(no || localNo(), product, c, false);
+      // 접수 서버는 반드시 { ok:true, no:'F-…' } 를 돌려준다. 'OK'·'ERROR: …' 같은 글자가 오면 접수가 안 된 것이다.
+      let j = null; try { j = await res.json(); } catch (pe) { throw new Error('server-text'); }
+      if (!j || j.ok !== true || !j.no) throw new Error('server');
+      no = String(j.no);
+      showDone(no, product, c, false);
     } catch (err) {
       no = localNo();
       const body = '[' + p.name + ' 신청 ' + no + ']\n이름: ' + c.name + '\n휴대폰: ' + c.phone + '\n이메일: ' + c.email + '\n결제: ' + c.pay + ' ' + won(p.price) + '\n질문: ' + c.question + '\n\n' + summary() + '\n\n입력 내용 보기: ' + payload.link;

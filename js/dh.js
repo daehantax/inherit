@@ -160,6 +160,7 @@
     document.querySelectorAll('[data-save] select, [data-save] input[type=checkbox], [data-save] input[type=radio]:checked').forEach(function (el) { el.dispatchEvent(new Event('change', { bubbles: true })); });
   };
   DH.save = function (extra) {
+    if (DH.noAutosave) { DH.toast('세무사용 보기에서는 이 PC에 저장하지 않습니다.', true); return null; }
     try {
       const data = Object.assign({ _savedAt: new Date().toISOString() }, DH.collect(), extra || {});
       localStorage.setItem(DH.storeKey(), JSON.stringify(data));
@@ -170,7 +171,11 @@
   // 조용히 저장(자동 저장용) — 알림 없음
   DH.saveQuiet = function () {
     if (!document.querySelector('[data-save]')) return;
-    try { localStorage.setItem(DH.storeKey(), JSON.stringify(Object.assign({ _savedAt: new Date().toISOString(), _auto: 1 }, DH.collect()))); } catch (e) { }
+    if (DH.noAutosave) return;                          // 세무사용(sessionStorage 전달) 등 자동 저장을 끈 경우
+    try {
+      let keep = {}; try { const old = JSON.parse(localStorage.getItem(DH.storeKey()) || 'null'); if (old) ['_from', '_key', '_agent'].forEach(function (k) { if (old[k] !== undefined) keep[k] = old[k]; }); } catch (e2) { }
+      localStorage.setItem(DH.storeKey(), JSON.stringify(Object.assign({ _savedAt: new Date().toISOString(), _auto: 1 }, keep, DH.collect())));
+    } catch (e) { }
   };
   // 입력값을 주소에 싣기 (#d=base64url(JSON)) — 상담 접수 시트의 「다시 보기」 링크, 계산기 간 이동에 사용
   DH.encodeData = function (obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
