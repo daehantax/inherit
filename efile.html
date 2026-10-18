@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>전자신고 파일 만들기 (세무사용) · 대한세무법인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<link rel="stylesheet" href="css/estate.css">
+<style>
+  .ef-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 12px}
+  .ef-grid label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
+  .ef-grid input,.ef-grid select{max-width:none}
+  .ef-item{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0 0 10px;background:#fff}
+  .ef-item h4{margin:0 0 8px;font-size:14.5px}
+  .ef-out pre{white-space:pre-wrap;font-size:12px;background:#faf7f8;border:1px solid var(--line);border-radius:8px;padding:10px;max-height:320px;overflow:auto}
+  .ef-ok{color:var(--ok);font-weight:700}.ef-bad{color:var(--bad);font-weight:700}
+</style>
+</head>
+<body data-chrome="off">
+<main class="wrap">
+  <div class="dh-head">
+    <div class="crumb">세무사용 · 링크 없이 직접 주소로만 엽니다</div>
+    <h1>상속세 전자신고 파일 만들기</h1>
+    <p>국세청 「홈택스 상속세 전자신고 파일제출 설명서」(2026.10) 규격의 EUC-KR 고정길이 파일을 만듭니다. 주민등록번호·주소는 이 탭에만 잠시 남고(sessionStorage), 탭을 닫으면 지워집니다. 서버로 보내지 않습니다.</p>
+  </div>
+
+  <section class="card">
+    <h2>1. 상속 파일 불러오기</h2>
+    <p class="es-note">시트 「신고 접수」의 「입력 내용 보기」 링크를 붙여 넣거나, 이 기기에서 입력한 내용을 씁니다. 세무사가 수정한 링크를 쓰세요.</p>
+    <div class="es-ctl"><input type="text" id="efLink" placeholder="https://daehantax.github.io/inherit/result.html#e=…" style="max-width:none;flex:1"><button type="button" class="btn sm" id="efLoadLink">불러오기</button><button type="button" class="btn ghost sm" id="efLoadLocal">이 기기의 입력 쓰기</button></div>
+    <p id="efLoaded" class="es-note"></p>
+  </section>
+
+  <div id="efForm" hidden>
+    <section class="card"><h2>2. 세무대리인 <small>이 기기에 기억합니다</small></h2><div class="ef-grid" id="efAgent"></div></section>
+    <section class="card"><h2>3. 신고인 · 피상속인</h2><div id="efPeople"></div></section>
+    <section class="card"><h2>4. 상속인</h2><div id="efHeirs"></div></section>
+    <section class="card"><h2>5. 재산 소재지 · 계좌</h2>
+      <p class="es-note">법정동코드 10자리는 <a href="https://www.code.go.kr/stdcode/regCodeL.do" target="_blank" rel="noopener">행정표준코드관리시스템 › 법정동코드</a>에서 찾습니다(2026.7 인천 구 개편, 강원 51·전북 52 코드 주의). 면적은 ㎡, 지분율은 피상속인 지분(%)입니다.</p>
+      <div id="efAssets"></div></section>
+    <section class="card"><h2>6. 채무 · 공과금 · 장례비</h2><div id="efDebts"></div></section>
+    <section class="card ef-out">
+      <h2>7. 검사하고 파일 만들기</h2>
+      <div class="actions"><button type="button" class="btn" id="efBuild">검사하기</button><button type="button" class="btn ghost" id="efDownload" disabled>파일 내려받기</button></div>
+      <div id="efResult"></div>
+    </section>
+  </div>
+</main>
+<script src="js/dh.js"></script>
+<script src="js/estate-calc.js"></script>
+<script src="js/estate.js"></script>
+<script src="js/euckr.js"></script>
+<script src="js/efile-layout.js"></script>
+<script src="js/efile-codes.js"></script>
+<script src="js/efile.js"></script>
+<script src="js/efile-map.js"></script>
+<script src="js/efile-ui.js"></script>
+</body>
+</html>

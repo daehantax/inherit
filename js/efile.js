@@ -26,10 +26,13 @@
     const L = layout[code]; if (!L) throw new Error('레이아웃 없음: ' + code);
     const out = [], errors = [], warn = [];
     L.fields.forEach(function (f) {
-      let v = values[f.key];
+      let v = values[f.no] !== undefined ? values[f.no] : values[f.key];      // 칸 번호 또는 이름으로
       if ((v === undefined || v === null || v === '') && f.fixed) v = f.fixed;
+      if ((v === undefined || v === null || v === '') && f.def) v = f.def;      // ZZ · N · 0 · 1 같은 기본값
       if (isNum(f)) {
-        const r = numField(v, f.len);
+        // 소수 칸(DEC 5,2 등)은 소수점 없이 자릿수만큼 곱해 적는다: 53.05 → 05305
+        const scaled = f.decimals ? Math.round((Number(v) || 0) * Math.pow(10, f.decimals)) : v;
+        const r = numField(scaled, f.len);
         if (r.over) errors.push(code + '-' + f.no + ' ' + f.label + ': 자릿수 초과');
         if (f.required && (v === undefined || v === '')) { /* 숫자는 0 으로 채움 */ }
         for (let i = 0; i < r.text.length; i++) out.push(r.text.charCodeAt(i));
@@ -50,7 +53,7 @@
     records.forEach(function (r) { Array.prototype.push.apply(all, r.bytes); all.push(13, 10); });
     return new Uint8Array(all);
   }
-  function fileName(dateYmd) { return String(dateYmd || '').replace(/-/g, '') + 'G101000' + '01'; }
+  function fileName(dateYmd) { return String(dateYmd || '').replace(/-/g, '') + 'G101000.01'; }   // 예) 20261018G101000.01
 
   root.EF = { record: record, fileBytes: fileBytes, fileName: fileName, numField: numField };
   if (typeof module === 'object' && module.exports) module.exports = root.EF;

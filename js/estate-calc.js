@@ -232,7 +232,8 @@
       priorGiftTaxBase: priorGiftTaxBase, giftBaseGuessed: giftBaseGuessed, taxable: taxable,
       skipAmount: skipAmount, skipRatio: skipRatio, skipBig: skipBig,
       ded: { lumpOrPersonal: lumpOrPersonal, personal: personal, spouseOnly: spouseOnly, children: children, minorYears: minorYears, seniors: seniors, disabledYears: disabledYears,
-        spouse: spouseDed, spouseLimit: spouseLimit, spouseActual: spouseActual, cohabit: cohabit, fin: finDed, finNet: finNet, requested: requested, limit: limit, applied: applied },
+        spouse: spouseDed, spouseLimit: spouseLimit, spouseActual: spouseActual, giftToSpouseBase: giftToSpouseBase, cohabit: cohabit, fin: finDed, finNet: finNet, requested: requested, limit: limit, applied: applied },
+      funeralGeneral: n0(f.cost), funeralGrave: n0(f.grave), debtParts: { loan: n0(d.loan), deposit: n0(d.deposit), tax: n0(d.tax), other: n0(d.other) },
       appraisalFee: appraisalFee, taxBase: taxBase, rate: inheritRateOf(taxBase), calculatedTax: calculatedTax, surcharge: surcharge,
       giftCredit: giftCredit, giftCreditLimit: giftCreditLimit, giftTaxPaid: giftTaxPaid, reportCredit: reportCredit, payable: payable,
       byHeir: byHeir, net: net, taxShare: taxShare, legal: legal
