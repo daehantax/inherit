@@ -44,3 +44,8 @@
   .fl-item{padding-right:12px;padding-bottom:30px}
   .fl-item .es-del{top:auto;bottom:4px}
 }
+@media (max-width:720px){
+  /* 폰: 아래 고정 요약은 한 줄(예상 상속세 + 비운 칸)만 */
+  .fl-page .es-sum .es-note,.fl-page .es-sum .btn{display:none}
+  .fl-page .es-sum .kv.show{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0}
+}
