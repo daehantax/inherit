@@ -58,7 +58,7 @@
   // 순수 계산: 상속공제액(ded)을 넣으면 결과 객체를 돌려준다 (화면은 건드리지 않음)
   function computeInheritance(ded) {
     ded = DH.clamp0(ded);
-    const houseValue = num('houseValue'), buildingValue = num('buildingValue'),
+    const houseValue = houseTotal(), buildingValue = num('buildingValue'),
       agriculturalLandValue = num('agriculturalLandValue'), forestLandValue = num('forestLandValue'),
       otherProperty = num('otherProperty'), debts = num('debts');
     // 장례비용 (상증령 9조②): 일반 5백만~1천만, 봉안시설·자연장지 별도 5백만 한도
@@ -157,10 +157,53 @@
     return r.payableTax;
   }
 
+  /* ===================== 1단계: 상속주택 여러 채 ===================== */
+  const MAX_HOUSES = 4;
+  function houseCount() { const el = $('houseCount'); if (!el) return 1; const n = Number(el.value); return isNaN(n) ? 1 : Math.max(0, Math.min(MAX_HOUSES, n)); }
+  function houseId(k) { return k === 1 ? 'houseValue' : 'houseValue_' + k; }
+  // 상속주택 목록: {no, value(시가), gongsi(공시가격), hold(보유년), lived(거주)}
+  function inhHouses() {
+    const out = [];
+    for (let k = 1; k <= houseCount(); k++) out.push({ no: k, value: num(houseId(k)), gongsi: num('houseGongsi_' + k), hold: Number((($('houseHold_' + k) || {}).value) || 0), lived: !!($('houseLived_' + k) && $('houseLived_' + k).checked) });
+    return out;
+  }
+  function houseTotal() { return inhHouses().reduce(function (a, h) { return a + h.value; }, 0); }
+  function houseGongsiTotal() { return inhHouses().reduce(function (a, h) { return a + h.gongsi; }, 0); }
+  // 선순위 상속주택 (소득세법 시행령 155조③): 피상속인 보유기간 → 거주기간(거주 여부) → 기준시가(공시가격) 순. 같으면 1번
+  function priorityHouse() {
+    const hs = inhHouses(); if (!hs.length) return null;
+    return hs.slice().sort(function (a, b) { return (b.hold - a.hold) || ((b.lived ? 1 : 0) - (a.lived ? 1 : 0)) || (b.gongsi - a.gongsi) || (a.no - b.no); })[0];
+  }
+  const MULTI_NOTES = {
+    step1: function (n, p) { return '주택이 <b>' + n + '채</b>입니다. 취득세·재산세·종부세·청약·기초연금은 ' + n + '채를 모두 반영하고, 양도세 비과세 특례는 <b>선순위 상속주택(주택 ' + p.no + ')</b> 1채에만 적용합니다.'; },
+    step12: function (n, p) { return '상속주택이 ' + n + '채입니다. 양도 순서·누가 받을지에 따라 양도세가 크게 달라지므로 16·17단계는 선순위 상속주택(주택 ' + p.no + ') 기준으로만 계산합니다. 정확한 설계는 <b>세무사 문의</b>를 이용하세요.'; },
+    step14: function (n) { return '상속주택 ' + n + '채의 공시가격 합계로 계산합니다. 2채 이상을 상속받으면 <b>무주택 1가구 특례(0.8%)는 적용되지 않습니다</b>.'; },
+    step15: function (n) { return '상속주택 ' + n + '채를 각각 계산해 합산합니다. 재산세 1세대1주택 특례는 선순위 상속주택 1채에만, 종부세 상속주택 특례(5년·지분 40%·공시가 6억/3억 이하)는 각 주택에 적용된다고 가정합니다.'; },
+    step16: function (n, p) { return '1세대1주택 비과세 특례는 <b>선순위 상속주택(주택 ' + p.no + ', 보유 ' + p.hold + '년' + (p.lived ? '·거주' : '') + ')</b>에만 적용됩니다. 나머지 ' + (n - 1) + '채는 양도 시 일반 과세(비과세·특례 없음)이며, 아래 계산은 주택 ' + p.no + ' 기준입니다.'; },
+    step17: function (n, p) { return '종전주택 양도 시 상속주택 특례는 <b>선순위 상속주택(주택 ' + p.no + ') 1채</b>만 주택 수에서 뺍니다. 나머지 ' + (n - 1) + '채는 주택 수에 포함되므로 종전주택 비과세는 어렵습니다. 상속 지분·시기를 나누는 설계가 필요하면 세무사 문의를 이용하세요.'; },
+    step18: function (n) { return '상속주택 ' + n + '채 중 공동상속 소수지분 등 예외에 해당하지 않는 한 <b>무주택자로 보지 않습니다</b>. 아래 내용은 1채 기준이며, 2채 이상이면 청약 무주택 요건은 사실상 충족이 어렵습니다.'; },
+    step19: function (n) { return '기초연금 재산 평가에는 배우자가 받는 상속주택 ' + n + '채가 모두 들어갑니다. 아래 「부동산등」에 배우자 상속분 시가 합계를 넣으세요.'; }
+  };
+  function syncInhHouses() {
+    const n = houseCount(), p = priorityHouse();
+    document.querySelectorAll('[data-ihouse]').forEach(function (f) { f.hidden = Number(f.dataset.ihouse) > n; });
+    // 14단계 공시가격·15단계 상속주택분 공시가격: 사용자가 손대지 않았으면 1단계 합계로
+    const g = houseGongsiTotal();
+    ['houseValue1', 'gongsi_2'].forEach(function (id) { const el = $(id); if (!el) return; if (!el.dataset.user && (el.dataset.auto === '1' || num(id) === 0)) { el.value = g ? fmt(g) : ''; el.dispatchEvent(new Event('input', { bubbles: true })); el.dataset.auto = '1'; } });
+    const sp = $('houseSpecial'); if (sp) { const opt = sp.querySelector('option[value="special"]'); if (opt) { opt.disabled = n >= 2; if (n >= 2 && sp.value === 'special') sp.value = 'normal'; } }
+    const after = $('ownedHousesAfter'); if (after) after.value = isBlank('owned_houses') ? '' : String(ownedHouseCount() + n);
+    const ph = $('psHouseTotal'); if (ph) ph.textContent = houseTotal() ? DH.won(houseTotal()) + (n >= 2 ? ' (' + n + '채)' : '') : '-';
+    document.querySelectorAll('[data-multi]').forEach(function (el) {
+      const sec = el.closest('.step'); const key = sec ? sec.id : '';
+      const f = MULTI_NOTES[key];
+      if (n >= 2 && f && p) { el.innerHTML = '※ ' + f(n, p); el.hidden = false; } else el.hidden = true;
+    });
+  }
+
   /* ===================== 13단계: 상속공제 ===================== */
   function calculateSpouseInheritanceDeduction() {
     if (!hasSpouse()) { setText('spouseInheritanceDeductionCell', 0); setText('spouseNoteCell', '배우자 없음: 배우자상속공제 해당 없음'); updateTotalDeduction(); return 0; }
-    const total = num('houseValue') + num('buildingValue') + num('agriculturalLandValue') + num('forestLandValue') + num('otherProperty');
+    const total = houseTotal() + num('buildingValue') + num('agriculturalLandValue') + num('forestLandValue') + num('otherProperty');
     const giftFromMother = num('giftFromMother');
     const n = intOf('childrensNumber');
     // 상속재산가액 = 상속재산 + 상속인에게 10년 내 증여한 재산 − 채무·공과금
@@ -310,19 +353,25 @@
   function syncHouseFields() {
     const n = ownedHouseCount();
     document.querySelectorAll('[data-house]').forEach(function (f) { f.hidden = Number(f.dataset.house) > Math.max(1, n); });
-    if ($('ownedHousesAfter')) $('ownedHousesAfter').value = isBlank('owned_houses') ? '' : String(n + 1);
+    if ($('ownedHousesAfter')) $('ownedHousesAfter').value = isBlank('owned_houses') ? '' : String(n + Math.max(1, houseCount()));
   }
   // 재산세는 주택별로 따로 계산(물건별 과세). 상속주택은 상속개시일부터 5년간 1세대1주택 판정 시 주택수에서 제외되므로
   // 상속 전 1주택자는 상속 후에도 기존 주택의 1세대1주택 특례가 유지되고, 상속 전 무주택이면 상속주택이 1세대1주택이 된다.
-  function calc_property_tax(values, gongsiInherited, ownedHouses) {
+  // inherited: 상속주택 공시가격 배열 (1단계 주택별). 한 채만 넣으면 gongsi_2 값을 쓴다
+  function calc_property_tax(values, gongsiInherited, ownedHouses, inherited) {
     const one = ownedHouses === 1;
     const rows = values.map(function (g, i) { return { label: '기존주택 ' + (i + 1), gongsi: g, tax: propertyTaxOfHouse(g, one) }; });
-    const inh = { label: '상속주택', gongsi: gongsiInherited, tax: propertyTaxOfHouse(gongsiInherited, ownedHouses === 0) };
-    const sum = function (list, k) { return list.reduce(function (a, r) { return a + r.tax[k]; }, 0); };
+    const list = (inherited && inherited.length > 1) ? inherited : [{ no: 1, gongsi: gongsiInherited }];
+    const pri = priorityHouse();
+    const inhRows = list.map(function (h, i) {
+      const isPri = list.length === 1 || (pri && pri.no === h.no);
+      return { label: '상속주택' + (list.length > 1 ? ' ' + h.no : ''), gongsi: h.gongsi, tax: propertyTaxOfHouse(h.gongsi, ownedHouses === 0 && isPri) };
+    });
+    const sum = function (l, k) { return l.reduce(function (a, r) { return a + r.tax[k]; }, 0); };
     const before = { property: sum(rows, 'property'), dosi: sum(rows, 'dosi'), edu: sum(rows, 'edu') };
-    const after = { property: before.property + inh.tax.property, dosi: before.dosi + inh.tax.dosi, edu: before.edu + inh.tax.edu };
+    const after = { property: before.property + sum(inhRows, 'property'), dosi: before.dosi + sum(inhRows, 'dosi'), edu: before.edu + sum(inhRows, 'edu') };
     return {
-      rows: rows.concat([inh]),
+      rows: rows.concat(inhRows), ownedRows: rows.length,
       propertyTaxBefore: before.property, dosiTaxBefore: before.dosi, eduTaxBefore: before.edu, totalTaxBefore: before.property + before.dosi + before.edu,
       propertyTaxAfter: after.property, dosiTaxAfter: after.dosi, eduTaxAfter: after.edu, totalTaxAfter: after.property + after.dosi + after.edu
     };
@@ -330,7 +379,11 @@
   function comparePropertyTax() {
     syncHouseFields();
     const n = ownedHouseCount();
-    const t = calc_property_tax(ownedHouseValues(), num('gongsi_2'), n);
+    // 상속주택이 여러 채면 1단계 공시가격을 주택별로, 사용자가 gongsi_2 를 직접 고쳤으면(지분 등) 그 비율로 안분
+    let inh = inhHouses().filter(function (h) { return h.gongsi > 0; });
+    const g2 = num('gongsi_2'), gsum = inh.reduce(function (a, h) { return a + h.gongsi; }, 0);
+    if (inh.length > 1 && gsum > 0 && g2 > 0 && Math.abs(g2 - gsum) > 1) inh = inh.map(function (h) { return { no: h.no, gongsi: Math.floor(h.gongsi * g2 / gsum) }; });
+    const t = calc_property_tax(ownedHouseValues(), g2, n, inh);
     const tbl = $('resultTableProperty'); if (tbl) tbl.hidden = false;
     setText('property_tax_1', t.propertyTaxBefore); setText('dosi_tax_1', t.dosiTaxBefore); setText('p_edu_tax_1', t.eduTaxBefore); setText('total_tax_1', t.totalTaxBefore);
     setText('property_tax_2', t.propertyTaxAfter); setText('dosi_tax_2', t.dosiTaxAfter); setText('p_edu_tax_2', t.eduTaxAfter); setText('total_tax_2', t.totalTaxAfter);
@@ -397,7 +450,7 @@
     const pt = comparePropertyTax();
     // 상속 전: 1주택이면 1세대1주택
     const hb = function (r) { return { gongsi: r.gongsi, base: r.tax.base || 0 }; };
-    const rowsBefore = pt.result.rows.slice(0, -1).map(hb), rowsAfter = pt.result.rows.map(hb);
+    const rowsBefore = pt.result.rows.slice(0, pt.result.ownedRows).map(hb), rowsAfter = pt.result.rows.map(hb);
     const result1 = calculateComprehensiveTax(gongsi_1, n === 1, n, age, period, pt.before, 1, rowsBefore);
     // 상속 후: 상속주택 특례(5년 이내·지분 40% 이하·지분 공시가 6억(수도권 밖 3억) 이하 중 하나)를 충족하고 신청했다고 가정
     //          → 1세대1주택 유지, 세율 판정 시 상속주택 제외
@@ -549,6 +602,7 @@
   }
   function updatePrintSummary() {
     const ps = $('psSpouse'); if (ps) ps.textContent = hasSpouse() ? '배우자 있음' : '배우자 없음';
+    const ph = $('psHouseTotal'); if (ph) { const n = houseCount(); ph.textContent = houseTotal() ? DH.won(houseTotal()) + (n >= 2 ? ' (' + n + '채)' : '') : '-'; }
     document.querySelectorAll('[data-ps]').forEach(function (td) {
       const el = $(td.dataset.ps); if (!el) { td.textContent = ''; return; }
       const raw = String(el.value || '').trim();
@@ -812,6 +866,10 @@
     on('btnPropTax', 'click', comparePropertyTax);
     on('btnCompTax', 'click', compareComprehensiveTax);
     on('owned_houses', 'input', syncHouseFields);
+    on('houseCount', 'change', function () { syncInhHouses(); if (lastResult) calculateInheritanceTax(); else updatePrintSummary(); });
+    ['houseValue1', 'gongsi_2'].forEach(function (id) { const el = $(id); if (el) el.addEventListener('input', function (e) { if (e.isTrusted) { el.dataset.user = '1'; delete el.dataset.auto; } }); });
+    document.addEventListener('input', function (e) { if (e.target.closest && e.target.closest('[data-ihouse]')) syncInhHouses(); });
+    document.addEventListener('change', function (e) { if (e.target.closest && e.target.closest('[data-ihouse]')) syncInhHouses(); });
     on('btnTransfer', 'click', calculateAllTaxes);
     ['transferPrice2', 'holdingPeriod2', 'residencePeriod2'].forEach(function (id) { on(id, 'input', syncTransfer); });
     ['oneHouse2', 'nonBusinessUse2'].forEach(function (id) { on(id, 'change', syncTransfer); });
@@ -824,7 +882,7 @@
     const fromLink = applyLinkData();
     bindCarryLinks();
     setupQa();
-    renderProgress(); syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); updatePrintSummary();
+    renderProgress(); syncInhHouses(); syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); updatePrintSummary();
     if (fromLink) { calculateInheritanceTax(); goStep(TIER.qaMode === 'answer' || TIER.qaMode === 'consult' ? 20 : 11); }
     window.addEventListener('beforeprint', function () { calculateInheritanceTax(); updatePrintSummary(); });
   }
@@ -833,12 +891,12 @@
     return '절세보고서 ' + (window.REPORT_TIER && REPORT_TIER.key ? REPORT_TIER.key : '') + ': 재산 ' + DH.won(r.totalProperty) + ', 채무 ' + DH.won(r.debts) + ', 공제 ' + DH.won(r.appliedDeduction) + ', 예상 상속세 ' + DH.won(r.payableTax) + ', 배우자 ' + (hasSpouse() ? '있음' : '없음');
   };
   // 불러오기·지우기 뒤 dh.js 가 호출
-  window.DH_recalc = function () { syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); calculateInheritanceTax(); };
+  window.DH_recalc = function () { syncInhHouses(); syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); calculateInheritanceTax(); };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
   // 테스트·디버깅용 공개
-  window.REPORT = { tier: TIER, goStep: goStep, reportLink: reportLink, encodeData: encodeData, decodeData: decodeData, computeInheritance: computeInheritance, calculateInheritanceTax: calculateInheritanceTax,
+  window.REPORT = { tier: TIER, goStep: goStep, inhHouses: inhHouses, priorityHouse: priorityHouse, reportLink: reportLink, encodeData: encodeData, decodeData: decodeData, computeInheritance: computeInheritance, calculateInheritanceTax: calculateInheritanceTax,
     calculateSpouseInheritanceDeduction: calculateSpouseInheritanceDeduction, performDeductionComparison: performDeductionComparison,
     calculateInheritAcquisionTax: calculateInheritAcquisionTax, propertyTaxOfHouse: propertyTaxOfHouse, comparePropertyTax: comparePropertyTax,
     calculateComprehensiveTax: calculateComprehensiveTax, compareComprehensiveTax: compareComprehensiveTax, calculateAllTaxes: calculateAllTaxes,

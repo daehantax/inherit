@@ -202,5 +202,31 @@ const fakeStorage = (w, init) => { const s = Object.assign({}, init || {}); Obje
   expect('골드답변: 접수번호 표시', p.text('qaContent').includes('R-20261018-01') ? 1 : 0, 1);
   expect('골드답변: 입력값 복원 → 납부세액', p.num('payableTaxValueCell'), 113490000);
 
+  /* ---------- 14. 상속주택 여러 채 ---------- */
+  // 주택 2채: 주택1 시가 8억(공시 5억, 보유 3년), 주택2 시가 7억(공시 6억, 보유 10년·거주) → 선순위 = 주택2(보유기간 우선)
+  // 총재산 15억 − 장례비 최소 500만 → 과세가액 14.95억, 공제 10억 → 과표 4.95억 → 8,900만 → ×0.97 = 86,330,000
+  p = await open('inheritGold.html');
+  p.set('houseCount', 2); p.set('houseValue', 8e8); p.set('houseGongsi_1', 5e8); p.set('houseHold_1', 3);
+  p.set('houseValue_2', 7e8); p.set('houseGongsi_2', 6e8); p.set('houseHold_2', 10); p.d.getElementById('houseLived_2').checked = true; p.d.getElementById('houseLived_2').dispatchEvent(new p.w.Event('change', { bubbles: true }));
+  p.click('#btnCalc');
+  expect('2채: 과세가액(시가 합계 15억 − 장례비 500만)', p.num('taxableAmountValueCell'), 1495000000);
+  expect('2채: 납부세액', p.num('payableTaxValueCell'), 86330000);
+  expect('2채: 선순위 = 주택2', p.w.REPORT.priorityHouse().no, 2);
+  expect('2채: 14단계 공시가격 자동 합계 11억', p.num('houseValue1'), 1100000000);
+  expect('2채: 15단계 상속주택분 공시가격 자동 11억', p.num('gongsi_2'), 1100000000);
+  expect('2채: 안내문 표시(16단계)', p.d.querySelector('#step16 [data-multi]').hidden ? 0 : 1, 1);
+  expect('2채: 취득세 특례 선택 불가', p.d.querySelector('#houseSpecial option[value="special"]').disabled ? 1 : 0, 1);
+  // 취득세: 공시 11억 × 2.8% = 30,800,000 + 교육 0.16% 1,760,000 (국민주택규모 이하 → 농특세 0) = 32,560,000
+  p.click('#btnAcq');
+  expect('2채: 취득세 합계', p.num('totalTax'), 32560000);
+  // 재산세: 상속 전 무주택 → 상속주택 2채 중 선순위(주택2, 공시 6억)만 1세대1주택 특례, 주택1(5억)은 일반
+  p.set('owned_houses', 0); p.click('#btnPropTax');
+  expect('2채: 재산세 표에 상속주택 2줄', p.d.querySelectorAll('#propertyTaxDetail tbody tr').length, 2);
+  expect('2채: 상속 후 주택 수 자동', p.d.getElementById('ownedHousesAfter').value, '2');
+  // 1채로 돌리면 안내문 사라지고 합계는 주택1만
+  p.set('houseCount', 1); p.click('#btnCalc');
+  expect('1채 복귀: 과세가액 8억 − 500만', p.num('taxableAmountValueCell'), 795000000);
+  expect('1채 복귀: 안내문 숨김', p.d.querySelector('#step16 [data-multi]').hidden ? 1 : 0, 1);
+
   console.log(process.exitCode ? '\n실패한 검사가 있습니다.' : '\n모두 통과');
 })();

@@ -31,7 +31,7 @@
     <ol class="tips">
       <li>재산·채무는 <b>상속개시일(사망일) 현재 금액</b>으로 넣습니다. 사망신고일이 아닙니다. 시가가 없으면 공시가격·기준시가를 넣고, 나중에 감정가로 바꿔 다시 확인하세요.</li>
       <li>상속인은 <b>배우자(1단계에서 있음/없음 선택)와 자녀</b>를 기준으로 공제를 계산합니다. 자녀 없이 부모·형제가 상속하거나 손자녀가 유증받는 경우는 공제가 달라지므로 10단계와 세무사 확인이 필요합니다.</li>
-      <li>주택·건물·농지·임야·금융재산을 모두 넣을 수 있습니다. 다만 <b>취득세·보유세·양도세·청약·기초연금(14~19단계)은 1단계의 주택 1채</b>를 기준으로 계산하므로, 주택이 여러 채면 주된 1채 금액을 넣으세요.</li>
+      <li>주택은 <b>4채까지</b> 넣을 수 있습니다. 취득세·재산세·종부세·청약·기초연금은 모든 주택을 반영하고, <b>양도세 비과세 특례(16·17단계)는 선순위 상속주택 1채</b>에만 적용합니다. 2채 이상이면 각 단계에 노란 안내가 붙습니다.</li>
     </ol>
   </section>
 
@@ -48,8 +48,49 @@
         <label><input type="radio" name="hasSpouse" value="yes" checked><span>배우자 있음</span></label>
         <label><input type="radio" name="hasSpouse" value="no"><span>배우자 없음</span></label>
       </div></div>
-    <div class="field"><label for="houseValue">주택가격 <small>상속개시일 현재 시가</small></label>
-      <div class="ctl"><input type="text" id="houseValue" data-money placeholder="주택가격"><span class="unit">원</span><span class="won"></span></div></div>
+    <div class="field"><label for="houseCount">주택 수 <small>돌아가신 분 명의의 주택. 지분 주택도 1채로</small></label>
+      <div class="ctl"><select id="houseCount" class="short"><option value="0">없음</option><option value="1" selected>1채</option><option value="2">2채</option><option value="3">3채</option><option value="4">4채</option></select></div></div>
+    <div class="ihouse" data-ihouse="1">
+      <div class="ihouse-head">주택 1 <small>돌아가신 분이 사시던 주택을 1번에 넣으세요</small></div>
+      <div class="field"><label for="houseValue">시가 <small>상속개시일 현재. 감정가·매매사례가액</small></label>
+        <div class="ctl"><input type="text" id="houseValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseGongsi_1">공시가격 <small>취득세·재산세·종부세 계산용</small></label>
+        <div class="ctl"><input type="text" id="houseGongsi_1" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseHold_1">돌아가신 분 보유기간 · 거주 <small>여러 채일 때 선순위 상속주택 판정용</small></label>
+        <div class="ctl"><input type="number" id="houseHold_1" class="short" min="0" step="0.5" placeholder="년"><span class="unit">년</span>
+          <label class="check"><input type="checkbox" id="houseLived_1"> 돌아가신 분이 거주</label></div></div>
+    </div>
+    <div class="ihouse" data-ihouse="2">
+      <div class="ihouse-head">주택 2</div>
+      <div class="field"><label for="houseValue_2">시가 <small>상속개시일 현재. 감정가·매매사례가액</small></label>
+        <div class="ctl"><input type="text" id="houseValue_2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseGongsi_2">공시가격 <small>취득세·재산세·종부세 계산용</small></label>
+        <div class="ctl"><input type="text" id="houseGongsi_2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseHold_2">돌아가신 분 보유기간 · 거주 <small>여러 채일 때 선순위 상속주택 판정용</small></label>
+        <div class="ctl"><input type="number" id="houseHold_2" class="short" min="0" step="0.5" placeholder="년"><span class="unit">년</span>
+          <label class="check"><input type="checkbox" id="houseLived_2"> 돌아가신 분이 거주</label></div></div>
+    </div>
+    <div class="ihouse" data-ihouse="3">
+      <div class="ihouse-head">주택 3</div>
+      <div class="field"><label for="houseValue_3">시가 <small>상속개시일 현재. 감정가·매매사례가액</small></label>
+        <div class="ctl"><input type="text" id="houseValue_3" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseGongsi_3">공시가격 <small>취득세·재산세·종부세 계산용</small></label>
+        <div class="ctl"><input type="text" id="houseGongsi_3" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseHold_3">돌아가신 분 보유기간 · 거주 <small>여러 채일 때 선순위 상속주택 판정용</small></label>
+        <div class="ctl"><input type="number" id="houseHold_3" class="short" min="0" step="0.5" placeholder="년"><span class="unit">년</span>
+          <label class="check"><input type="checkbox" id="houseLived_3"> 돌아가신 분이 거주</label></div></div>
+    </div>
+    <div class="ihouse" data-ihouse="4">
+      <div class="ihouse-head">주택 4</div>
+      <div class="field"><label for="houseValue_4">시가 <small>상속개시일 현재. 감정가·매매사례가액</small></label>
+        <div class="ctl"><input type="text" id="houseValue_4" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseGongsi_4">공시가격 <small>취득세·재산세·종부세 계산용</small></label>
+        <div class="ctl"><input type="text" id="houseGongsi_4" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="houseHold_4">돌아가신 분 보유기간 · 거주 <small>여러 채일 때 선순위 상속주택 판정용</small></label>
+        <div class="ctl"><input type="number" id="houseHold_4" class="short" min="0" step="0.5" placeholder="년"><span class="unit">년</span>
+          <label class="check"><input type="checkbox" id="houseLived_4"> 돌아가신 분이 거주</label></div></div>
+    </div>
+    <div class="note multi-note" data-multi hidden></div>
             <div class="actions"><button class="btn" data-go="2">다음</button></div>
   </section>
 
@@ -157,7 +198,7 @@
     <h2 class="subhead">입력 요약</h2>
     <table class="dh" id="printSummary">
       <tbody>
-        <tr><td class="lab">주택가격</td><td class="num" data-ps="houseValue"></td><td class="lab">비주거용건물</td><td class="num" data-ps="buildingValue"></td></tr>
+        <tr><td class="lab">주택가격(합계)</td><td class="num" id="psHouseTotal"></td><td class="lab">비주거용건물</td><td class="num" data-ps="buildingValue"></td></tr>
         <tr><td class="lab">농지</td><td class="num" data-ps="agriculturalLandValue"></td><td class="lab">임야</td><td class="num" data-ps="forestLandValue"></td></tr>
         <tr><td class="lab">금융자산 등 그외</td><td class="num" data-ps="otherProperty"></td><td class="lab">채무 및 공과금</td><td class="num" data-ps="debts"></td></tr>
         <tr><td class="lab">장례비용</td><td class="num" data-ps="funeralExpense"></td><td class="lab">봉안시설·자연장지</td><td class="num" data-ps="funeralEnshrine"></td></tr>
@@ -198,6 +239,7 @@
   <!-- ================= 12 단계 : 절세 목록 ================= -->
   <section class="card step menu-step no-print" id="step12">
     <h2 class="title">상속세 신고시 반드시 알아야 할 절세 목록</h2>
+    <div class="note multi-note" data-multi hidden></div>
     <div class="tax-tips">
       <button class="tip" data-go="13"><span class="n">1</span>상속세 ! 확실히 줄일 수 있습니다.</button>
       <button class="tip" data-go="14"><span class="n">2</span>취득세! 70% 까지 줄일 수 있습니다.</button>

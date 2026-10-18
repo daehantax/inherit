@@ -166,3 +166,14 @@ table.dh td.rem{font-size:12.5px;color:var(--muted);text-align:center}
 .consult-done .no{font-size:20px;font-weight:900;color:var(--main);margin:0 0 6px}
 .consult-done ol{margin:8px 0 0;padding-left:20px;font-size:14.5px;line-height:1.7}
 @media print{.fee-card .actions,.consent-box{display:none!important}}
+
+/* ---- 1단계 주택 여러 채 ---- */
+.ihouse{margin:10px 0 4px;padding:4px 14px 2px;border:1px solid var(--line);border-radius:10px;background:#fcfafa}
+.ihouse-head{font-weight:700;color:var(--main);padding:6px 0 2px}
+.ihouse-head small{font-weight:400;color:var(--muted);margin-left:6px}
+.ihouse .field{padding:7px 0}
+.ihouse .field:last-child{border-bottom:0}
+.ihouse .check{margin-left:10px;font-size:13.5px}
+.multi-note{margin:8px 0 12px;background:#fff7e6;border:1px solid #f1d9a0;color:#6b4a00}
+.multi-note b{color:#8a4b00}
+@media print{.multi-note{background:#f5f5f5;border-color:#999;color:#000}}
