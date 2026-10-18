@@ -231,3 +231,25 @@ footer a.staff{color:var(--muted)}
 .ask-mini .dh-consult-row input{border:1px solid var(--line-strong)}
 .ask-mini .dh-consult-opts .check input{accent-color:var(--main)}
 .ask-mini .dh-consult-msg.bad{color:var(--bad)}
+
+/* ---- 추모 히어로: 국화 배경 위에 비석 사진을 겹친다 ---- */
+.hero.memorial{min-height:min(78vh,620px);display:flex;align-items:center;background:#f3f1ee url("../images/hero-bg.jpg") center 40%/cover no-repeat}
+.hero.memorial::before{background:linear-gradient(90deg,rgba(248,246,243,.97) 0%,rgba(248,246,243,.92) 38%,rgba(248,246,243,.55) 60%,rgba(248,246,243,.15) 100%)}
+.hero.memorial .hero-stone{position:absolute;top:0;bottom:0;right:clamp(40px,22vw,330px);width:clamp(200px,30vw,380px);pointer-events:none}
+.hero.memorial .hero-stone img{width:100%;height:100%;object-fit:cover;object-position:center 30%;mix-blend-mode:multiply;opacity:.62;filter:grayscale(.55) contrast(1.08);
+  -webkit-mask-image:radial-gradient(ellipse 50% 52% at 50% 50%,#000 25%,rgba(0,0,0,.5) 60%,transparent 100%);mask-image:radial-gradient(ellipse 50% 52% at 50% 50%,#000 25%,rgba(0,0,0,.5) 60%,transparent 100%)}
+.hero.memorial .wrap{width:100%}
+.hero.memorial .hero-text{padding:90px 0 96px;max-width:560px}
+.hero.memorial h1{font-size:clamp(30px,4.6vw,46px);font-weight:700;letter-spacing:-.02em;color:#2b2628;margin:0 0 34px}
+.hero-go{display:inline-flex;align-items:center;gap:8px;font-size:15px;color:#6a5f63;text-decoration:none;border-bottom:1px solid rgba(106,95,99,.45);padding-bottom:3px;transition:color .2s,border-color .2s}
+.hero-go span{transition:transform .2s}
+.hero-go:hover{color:var(--main);border-color:var(--main)}
+.hero-go:hover span{transform:translateX(4px)}
+@media (max-width:720px){
+  .hero.memorial{min-height:0;background-position:center 35%}
+  .hero.memorial::before{background:linear-gradient(180deg,rgba(248,246,243,.94) 0%,rgba(248,246,243,.82) 60%,rgba(248,246,243,.6) 100%)}
+  .hero.memorial .hero-stone{right:28px;width:150px;top:0;bottom:0}
+  .hero.memorial .hero-stone img{opacity:.55}
+  .hero.memorial .hero-text{padding:96px 150px 96px 0}
+  .hero.memorial h1{font-size:27px;margin-bottom:24px}
+}
