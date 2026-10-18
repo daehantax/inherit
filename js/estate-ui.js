@@ -305,8 +305,9 @@
       out.textContent = c.years ? (c.years + '년 이내 · 공제율 ' + Math.round(c.rate * 100) + '%' + (c.amount ? ' · 공제액 약 ' + kor(c.amount) + ' (이번 상속세 한도 안에서)' : '')) : (q.date && E.deceased.date ? '10년이 지나 공제 대상이 아닙니다.' : '두 날짜를 넣으면 공제율이 나옵니다.');
     });
   }
-  window.addEventListener('pagehide', function () { EST.save(E); });
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') EST.save(E); });
+  let resetting = false;   // 「처음부터」 뒤에는 떠나면서 다시 저장하지 않는다
+  window.addEventListener('pagehide', function () { if (!resetting) EST.save(E); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden' && !resetting) EST.save(E); });
 
   /* ---------- 입력 처리 ---------- */
   // 구조가 바뀌는 칸(다시 그려야 하는 칸)
@@ -387,6 +388,7 @@
     }
     if (b.id === 'btnReset') {
       if (!confirm('입력한 내용을 모두 지우고 처음부터 할까요? (신고서 채우기 내용, 주민등록번호·계좌번호, 채워 둔 신고서 서식, 열쇠 코드도 이 기기에서 지워집니다)')) return;
+      resetting = true; clearTimeout(timer);
       EST.clear(); ['dh.estate.secret.v1', 'dh.inherit-tax-report.v1', 'dh.estate.key', 'dh.estate.ask', 'dh.estate.product'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
       location.href = 'estate.html'; return;
     }
