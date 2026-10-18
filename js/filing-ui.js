@@ -265,9 +265,9 @@
   document.addEventListener('click', function (ev) {
     const b = ev.target.closest('button, a'); if (!b) return;
     if (b.dataset.go) { ev.preventDefault(); show(b.dataset.go, true); return; }
-    if (b.dataset.addFin) { F.fin[b.dataset.addFin].push({ id: FIL.id('i') }); save(true); renderFin(); return; }
+    if (b.dataset.addFin) { const it = { id: FIL.id('i') }; if (b.dataset.addFin === 'stock') it.listed = '09'; F.fin[b.dataset.addFin].push(it); save(true); renderFin(); return; }
     if (b.dataset.delFin) { const x = b.dataset.delFin.split('|'); F.fin[x[0]] = F.fin[x[0]].filter(function (it) { return it.id !== x[1]; }); if (SEC.fin) delete SEC.fin[x[1]]; if (!F.fin[x[0]].length) { const a = E.assets.find(function (q) { return q.id === 'fin_' + x[0]; }); if (a) delete a.itemized; } save(true); renderFin(); return; }
-    if (b.dataset.add) { F[b.dataset.add].push({ id: FIL.id('r') }); save(true); renderDebt(); return; }
+    if (b.dataset.add) { const DEF = { debts: { kind: '01' }, charges: { kind: '06', quarter: '1', year: (E.deceased.date || '').slice(0, 4) }, funeral: { kind: '1' } }; F[b.dataset.add].push(Object.assign({ id: FIL.id('r') }, DEF[b.dataset.add] || {})); save(true); renderDebt(); return; }
     if (b.dataset.del) { const x = b.dataset.del.split('|'); F[x[0]] = F[x[0]].filter(function (it) { return it.id !== x[1]; }); save(true); renderDebt(); return; }
     if (b.id === 'btnPrev') { const i = SCREENS.indexOf(screen); if (i > 0) show(SCREENS[i - 1], true); return; }
     if (b.id === 'btnNext') { const i = SCREENS.indexOf(screen); if (i < SCREENS.length - 1) show(SCREENS[i + 1], true); else { save(true); location.href = product ? 'result.html?p=' + product + '#ask' : 'result.html'; } return; }
