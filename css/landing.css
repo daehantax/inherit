@@ -270,3 +270,4 @@ footer a.staff{color:var(--muted)}
 .hero.memorial h1{animation:memUp 1.4s ease-out .4s both}
 .hero.memorial .hero-go{animation:memIn 1s ease-out 1.4s both}
 @media (prefers-reduced-motion:reduce){.hero.memorial *{animation:none!important}}
+.sec-title .heart{font-style:normal;color:var(--main)}
