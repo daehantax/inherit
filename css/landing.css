@@ -235,12 +235,11 @@ footer a.staff{color:var(--muted)}
 /* ---- 추모 히어로: [글] [국화] [비석] 나란히, 경계는 그라데이션으로 이어 붙임 ---- */
 .hero.memorial{--bg:#f6f4f1;background:var(--bg);height:min(80vh,640px);min-height:440px}
 .hero.memorial::before{display:none}
-/* 순서: [글] [비석] [국화] — 비석 왼쪽은 바탕으로, 국화 왼쪽은 비석으로 그라데이션 */
-.hero.memorial .hero-pics{position:absolute;top:0;right:0;bottom:0;width:56%;display:flex}
-.hero.memorial .pic-flower{flex:1;background:url("../images/hero-bg.jpg") 53% 40%/cover no-repeat;margin-left:-70px;
+.hero.memorial .hero-pics{position:absolute;top:0;right:0;bottom:0;width:66%;display:flex;justify-content:flex-end}
+.hero.memorial .pic-flower{flex:1;background:url("../images/hero-bg.jpg") 38% 40%/cover no-repeat;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 45%);mask-image:linear-gradient(90deg,transparent 0%,#000 45%)}
+.hero.memorial .pic-stone{position:relative;height:100%;width:clamp(280px,31vw,400px);flex:none;margin-left:-70px;overflow:hidden;
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 70px);mask-image:linear-gradient(90deg,transparent 0,#000 70px)}
-.hero.memorial .pic-stone{position:relative;height:100%;width:clamp(280px,31vw,400px);flex:none;overflow:hidden;
-  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 90px);mask-image:linear-gradient(90deg,transparent 0,#000 90px)}
 /* 비석 폭 넓히기: 같은 사진을 흐리게 깔아 양옆을 돌결로 채우고, 그 위에 선명한 원본을 가운데 둔다 */
 .hero.memorial .stone-in{position:absolute;inset:0;transform-origin:50% 44%;background:#55585c radial-gradient(ellipse at 50% 40%,#6a6d71 0%,#4a4d51 100%)}
 .hero.memorial .stone-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(3px) brightness(.84) contrast(1.05)}
@@ -259,8 +258,8 @@ footer a.staff{color:var(--muted)}
   .hero.memorial h1{font-size:28px;margin-bottom:20px}
   .hero.memorial .hero-pics{order:2;position:relative;width:100%;height:440px;
     -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 50px);mask-image:linear-gradient(180deg,transparent 0,#000 50px)}
-  .hero.memorial .pic-flower{background-position:50% 40%;margin-left:-50px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 50px);mask-image:linear-gradient(90deg,transparent 0,#000 50px)}
-  .hero.memorial .pic-stone{width:58%;-webkit-mask-image:none;mask-image:none}
+  .hero.memorial .pic-flower{background-position:45% 40%}
+  .hero.memorial .pic-stone{width:58%;margin-left:-50px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 50px);mask-image:linear-gradient(90deg,transparent 0,#000 50px)}
 }
 /* 첫 화면 묵념: 국화 → 비석 → 글 순서로 천천히 나타남 */
 @keyframes memIn{from{opacity:0}to{opacity:1}}
