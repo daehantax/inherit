@@ -13,7 +13,7 @@ const NOTIFY_EMAIL = '';   // 접수 알림 메일 주소 (비워두면 안 보�
 
 const HEADERS = ['접수일시', '이름', '휴대폰', '체납세목', '체납총액',
                  '최초체납연도', '사업상태', '현재상황', '판정유형', '유입경로', '연락여부'];
-const INHERIT_HEADERS = ['접수일시', '이름', '휴대폰', '페이지', '계산 요약', '유입경로', '연락여부', '메모'];
+const INHERIT_HEADERS = ['접수일시', '이름', '휴대폰', '페이지', '계산 요약', '유입경로', '연락여부', '메모', '다시 보기'];
 
 /* ── 「계산 후 세무사 문의」(33만원) 접수 ──────────────────────────────── */
 const ROYAL_SHEET = '상속 문의';
@@ -40,7 +40,10 @@ function doPost(e) {
         sh.setFrozenRows(1);
         sh.setColumnWidths(1, 1, 150); sh.setColumnWidth(3, 120); sh.setColumnWidth(4, 180); sh.setColumnWidth(5, 420);
       }
-      sh.appendRow([new Date(), s(d.name), "'" + s(d.phone), s(d.page), s(d.summary), s(d.source), '', '']);
+      if (sh.getRange(1, 9).getValue() === '') sh.getRange(1, 9).setValue('다시 보기').setFontWeight('bold').setBackground('#f8eded');
+      const link = String(d.link || '').replace(/"/g, '');
+      sh.appendRow([new Date(), s(d.name), "'" + s(d.phone), s(d.page), s(d.summary), s(d.source), '', '',
+                    link ? '=HYPERLINK("' + link + '";"입력 내용 보기")' : '']);
       if (NOTIFY_EMAIL) {
         MailApp.sendEmail(NOTIFY_EMAIL, '[상속 상담] 신규 접수 - ' + s(d.name),
           '이름: ' + s(d.name) + '\n휴대폰: ' + s(d.phone) + '\n페이지: ' + s(d.page) +

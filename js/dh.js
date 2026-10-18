@@ -157,6 +157,7 @@
     });
     DH.bindMoney();
     document.querySelectorAll('input[data-money]').forEach(function (i) { i.dispatchEvent(new Event('input')); });
+    document.querySelectorAll('[data-save] select, [data-save] input[type=checkbox], [data-save] input[type=radio]:checked').forEach(function (el) { el.dispatchEvent(new Event('change', { bubbles: true })); });
   };
   DH.save = function (extra) {
     try {
@@ -165,6 +166,33 @@
       DH.toast('저장했습니다. 이 브라우저에서 다시 열면 불러올 수 있습니다.');
       return data;
     } catch (e) { DH.toast('저장할 수 없습니다. (브라우저 저장 공간 차단)', true); return null; }
+  };
+  // 조용히 저장(자동 저장용) — 알림 없음
+  DH.saveQuiet = function () {
+    if (!document.querySelector('[data-save]')) return;
+    try { localStorage.setItem(DH.storeKey(), JSON.stringify(Object.assign({ _savedAt: new Date().toISOString(), _auto: 1 }, DH.collect()))); } catch (e) { }
+  };
+  // 입력값을 주소에 싣기 (#d=base64url(JSON)) — 상담 접수 시트의 「다시 보기」 링크, 계산기 간 이동에 사용
+  DH.encodeData = function (obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  DH.decodeData = function (str) { try { str = String(str).replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; return JSON.parse(decodeURIComponent(escape(atob(str)))); } catch (e) { return null; } };
+  // 빈 값·체크 안 된 칸은 빼서 링크를 짧게 (받는 쪽은 resetFields 후 적용하므로 빠진 칸 = 빈칸)
+  DH.compact = function (obj) {
+    if (Array.isArray(obj)) return obj.map(DH.compact);
+    if (!obj || typeof obj !== 'object') return obj;
+    const o = {}; Object.keys(obj).forEach(function (k) { const v = obj[k]; if (v === '' || v === false || v == null) return; o[k] = (typeof v === 'object') ? DH.compact(v) : v; }); return o;
+  };
+  DH.resetFields = function () {
+    document.querySelectorAll('[data-save] input, [data-save] select, [data-save] textarea').forEach(function (el) {
+      if (el.type === 'checkbox' || el.type === 'radio') el.checked = el.defaultChecked;
+      else if (el.tagName === 'SELECT') Array.prototype.forEach.call(el.options, function (o) { o.selected = o.defaultSelected; });
+      else if (el.type !== 'hidden' || el.defaultValue !== undefined) el.value = el.defaultValue || '';
+      delete el.dataset.user; delete el.dataset.auto;
+    });
+  };
+  DH.pageUrl = function (file) { const base = location.href.replace(/[#?].*$/, ''); return file ? base.replace(/[^/]*$/, '') + file : base; };
+  DH.shareLink = function (file, data) {
+    const d = data || (document.querySelector('[data-save]') ? DH.collect() : null);
+    return DH.pageUrl(file) + (d ? '#d=' + DH.encodeData(DH.compact(d)) : '');
   };
   DH.load = function (silent) {
     try {
@@ -326,11 +354,15 @@
       '<input type="text" id="dhName" placeholder="성함" autocomplete="name" maxlength="20">' +
       '<input type="tel" id="dhPhone" placeholder="연락처 (010-0000-0000)" autocomplete="tel" inputmode="tel" required>' +
       '<button type="submit" class="btn" id="dhSend">무료 상담 신청</button></div>' +
+      '<p class="dh-consult-paid">입력한 내용을 세무사가 검토한 <b>서면 답변서</b>가 필요하면 <a href="inheritRoyal.html" id="dhPaidLink">계산 후 세무사 문의 · 33만원 →</a></p>' +
       '<div class="dh-consult-opts">' +
       '</div><div class="dh-consult-msg" id="dhMsg" hidden></div></form>';
   };
   DH.bindConsult = function () {
     const f = document.getElementById('dhConsult'); if (!f || f.dataset.bound) return; f.dataset.bound = '1';
+    const paid = document.getElementById('dhPaidLink');
+    if (paid) paid.addEventListener('click', function (e) { if (typeof window.DH_carryRoyal === 'function') { e.preventDefault(); location.href = window.DH_carryRoyal(); } });
+    if (document.body.dataset.tier === 'royal' && paid) paid.parentElement.hidden = true;
     const msg = document.getElementById('dhMsg');
     const show = function (t, bad) { msg.hidden = false; msg.textContent = t; msg.className = 'dh-consult-msg' + (bad ? ' bad' : ' ok'); };
     f.addEventListener('submit', async function (e) {
@@ -345,7 +377,8 @@
       const tags = ['[상속 랜딩] ' + page, name ? '이름: ' + name : '', summary].filter(Boolean).join(' / ');
       const btn = document.getElementById('dhSend'); btn.disabled = true; btn.textContent = '보내는 중…';
       try {
-        await fetch(DH.CONSULT_URL, { method: 'POST', body: JSON.stringify({ form: 'inherit', page: page, phone: phone, tags: tags, name: name, source: 'inherit/' + location.pathname.split('/').pop(), summary: summary, at: new Date().toISOString() }) });
+        let link = ''; try { link = (typeof window.DH_shareLink === 'function') ? window.DH_shareLink() : DH.shareLink(); } catch (e) { link = location.href; }
+        await fetch(DH.CONSULT_URL, { method: 'POST', body: JSON.stringify({ form: 'inherit', page: page, link: link, phone: phone, tags: tags, name: name, source: 'inherit/' + location.pathname.split('/').pop(), summary: summary, at: new Date().toISOString() }) });
         show('접수되었습니다. 담당자가 영업일 기준 1일 안에 연락드립니다.' + (name ? ' (' + name + '님)' : ''));
         f.reset(); if (withCalc) withCalc.checked = true;
         try { localStorage.setItem('dh.consult.sent', new Date().toISOString()); } catch (e) { }
@@ -475,7 +508,23 @@
     document.querySelectorAll('[data-action="load"]').forEach(function (b) { b.addEventListener('click', function () { DH.load(); if (window.DH_recalc) window.DH_recalc(); }); });
     document.querySelectorAll('[data-action="clear"]').forEach(function (b) { b.addEventListener('click', function () { DH.clear(); if (window.DH_recalc) window.DH_recalc(); }); });
     document.querySelectorAll('[data-action="print"]').forEach(function (b) { b.addEventListener('click', DH.print); });
-    if (document.body.dataset.autoload === '1') { DH.load(true); if (window.DH_recalc) window.DH_recalc(); }
+    const hasSave = !!document.querySelector('[data-save]'), auto = document.body.dataset.autoload;
+    if (auto === '1' || (hasSave && auto !== '0')) { DH.load(true); if (window.DH_recalc) window.DH_recalc(); }
+    // 상담 시트·다른 계산기에서 넘어온 값(#d=) — 절세보고서는 report-engine 이 따로 처리
+    if (hasSave && !document.body.dataset.tier) {
+      const m = /[#&]d=([A-Za-z0-9_-]+)/.exec(location.hash);
+      const data = m && DH.decodeData(m[1]);
+      if (data) { if (!document.body.dataset.store || document.body.dataset.store !== 'inherit-tax-report') DH.resetFields(); DH.apply(data); if (window.DH_recalc) window.DH_recalc(); DH.saveQuiet(); DH.toast('보내 주신 입력값을 불러왔습니다.'); }
+    }
+    // 입력할 때마다 자동 저장 (저장 버튼을 누르지 않아도 다시 오면 그대로)
+    if (hasSave) {
+      let t = null; const later = function () { clearTimeout(t); t = setTimeout(DH.saveQuiet, 400); };
+      document.addEventListener('input', function (e) { if (e.target.closest && e.target.closest('[data-save]')) later(); });
+      document.addEventListener('change', function (e) { if (e.target.closest && e.target.closest('[data-save]')) later(); });
+      document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-save] button')) later(); });
+      window.addEventListener('pagehide', DH.saveQuiet);
+      document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') DH.saveQuiet(); });
+    }
   });
 
   window.DH = DH;

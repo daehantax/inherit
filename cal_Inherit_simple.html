@@ -125,10 +125,12 @@
     <div class="note" id="r_note"></div>
   </section>
 
-  <div class="actions no-print">
-    <a class="btn" href="inheritGold.html">이 조건으로 절세보고서 만들기 →</a>
+  <div class="actions no-print carry-actions">
+    <a class="btn" href="inheritGold.html" data-carry-simple>이 조건으로 셀프 절세 이어가기 →</a>
+    <a class="btn ghost" href="inheritRoyal.html" data-carry-simple>세무사에게 물어보기 (33만원)</a>
     <a class="btn ghost" href="inheritClass.html">셀프 신고 교실</a>
   </div>
+  <p class="muted no-print" style="margin:-4px 0 14px;font-size:13px">입력한 값은 다음 단계로 그대로 넘어갑니다. 다시 입력하지 않아도 됩니다.</p>
 
   <details class="dh"><summary>계산 근거 (상속세 및 증여세법)</summary>
     <ul>
@@ -223,6 +225,39 @@
   document.addEventListener('input', e => { if (e.target.closest('[data-save]')) recalc(); });
   document.addEventListener('change', e => { if (e.target.closest('[data-save]')) recalc(); });
   document.addEventListener('DOMContentLoaded', recalc);
+</script>
+
+<script>
+  /* 간단 계산기 입력값 → 절세보고서(셀프 절세·세무사 문의) 칸 이름으로 바꿔 넘긴다 */
+  (function () {
+    const v = function (id) { const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; };
+    const n = function (id) { return DH.val(id); };
+    const money = function (x) { return x ? DH.fmt(x) : ''; };
+    window.DH_simpleToReport = function () {
+      const sp = document.querySelector('input[name="spouse"]:checked');
+      const d = {
+        hasSpouse: sp && sp.value === 'no' ? 'no' : 'yes',
+        houseCount: n('houseValue') > 0 ? '1' : '0', houseValue: v('houseValue'),
+        buildingValue: v('buildingValue'), agriculturalLandValue: v('landValue'),
+        otherProperty: money(n('financialValue') + n('otherValue')),
+        debts: money(n('debtValue') + n('publicCharge')),
+        funeralExpense: v('funeralSpent'), funeralEnshrine: v('enshrineSpent'),
+        giftToChildren: v('giftValue'), priorGiftTaxBase: v('giftTaxBase'), giftTaxDeduction: v('giftTaxPaid'),
+        appraisalFee: v('appraisalFee'),
+        childrensNumber: v('childCount'), children: v('childCount'), minorYears: v('minorYears'), seniors: v('seniorCount'), disabledYears: v('disabledYears'),
+        financialAssets: v('financialValue'), financialDebts: v('financialDebt'),
+        _from: 'simple'
+      };
+      Object.keys(d).forEach(function (k) { if (d[k] === '' || d[k] == null) delete d[k]; });
+      return d;
+    };
+    const go = function (file) { return DH.pageUrl(file) + '#d=' + DH.encodeData(window.DH_simpleToReport()); };
+    window.DH_carryRoyal = function () { return go('inheritRoyal.html'); };
+    document.addEventListener('click', function (e) {
+      const a = e.target.closest('a[data-carry-simple]'); if (!a) return;
+      e.preventDefault(); DH.saveQuiet(); location.href = go(a.getAttribute('href'));
+    });
+  })();
 </script>
 </body>
 </html>

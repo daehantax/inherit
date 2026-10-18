@@ -328,10 +328,7 @@
     <div class="field"><label for="childrensNumber">상속인이 되는 자녀수</label>
       <div class="ctl"><input type="number" id="childrensNumber" class="short" min="0" placeholder="자녀 명"><span class="unit">명</span></div></div>
     <div class="actions no-print"><button class="btn" id="btnSpouse">배우자 상속공제 한도</button></div>
-    <table class="dh">
-      <thead><tr><th>구분</th><th>금액</th><th>비고</th></tr></thead>
-      <tbody><tr><td class="lab">배우자 상속공제 한도</td><td class="num" id="spouseInheritanceDeductionCell"></td><td class="rem" id="spouseNoteCell">한도</td></tr></tbody>
-    </table>
+    <div class="hl-result"><span class="hl-k">배우자 상속공제 한도</span><b class="hl-v"><span id="spouseInheritanceDeductionCell">-</span><small>원</small></b><span class="hl-note" id="spouseNoteCell">자녀 수를 넣으면 바로 계산됩니다</span></div>
 
     <details class="dh"><summary>배우자공제 받으면서 반드시 해야 할 일</summary>
       <ul>
@@ -440,8 +437,8 @@
       <div class="ctl"><input type="text" id="inheritanceDeduction1" data-money value="1,000,000,000" readonly><span class="unit">원</span></div></div>
     <div class="field"><label for="inheritanceDeduction2">상속공제 모두 받을경우 상속공제 합계액</label>
       <div class="ctl"><input type="text" id="inheritanceDeduction2" readonly><span class="unit">원</span></div></div>
-    <div class="actions no-print"><button class="btn" id="btnCompare">계산</button></div>
-    <div id="result"></div>
+    <div class="actions no-print"><button class="btn" id="btnCompare">비교 계산</button></div>
+    <div id="result" class="cmp-wrap"></div>
 
     <h3>▶ 평가액을 높여 향후 양도세를 줄여요 !</h3>
     <details class="dh"><summary>취득가를 높이세요 !!</summary>
@@ -496,12 +493,13 @@
         <li>예) 아버지가 돌아가셔서 아버지 소유주택 1개를 어머니와 아들이 50%씩 상속받았음. 돌아가시기 전 어머니와 자녀는 같이 그 집에 거주하고 있었고, 그때 당시 어머니와 자녀 모두 다른 소유주택은 없는 경우 : 한사람만 공제가 되는데, 판단순서는 먼저 지분으로 판단, 50% 로 동일하기 때문에, 다음으로 상속당시 거주하는 사람, 둘다 거주하고 있었기 때문에, 그 다음은 연장자 순, 따라서 어머니만 0.8% 취득세율을 적용하고 아들은 2.8% 를 내야 함.</li>
       </ul>
     </details>
-    <details class="dh"><summary>2) 사망일전에 세대분리를 분리하여 무주택세대를 만듭니다.</summary>
+    <details class="dh"><summary>2) 특례(0.8%)는 「상속받은 뒤 그 세대가 이 주택 1채만 가진 경우」입니다 — 다른 주택이 있는 세대원은 사망일 전에 세대분리</summary>
       <ul>
-        <li>상속받을 세대는 무주택세대가 받아야 특례를 받을수 있습니다.</li>
-        <li>어머니가 상속받는 경우, 주택이 있는 자녀가 주민등록표상에 같이 있다면 세대분리를 하는 것이 좋습니다.</li>
-        <li>무주택 자녀가 상속받는 경우, 같이 사는 30세 이상인 세대원이 주택을 소유하고 있다면 그 세대원을 세대분리 해야 합니다.</li>
-        <li>즉, 주택상속받을 사람을 사망일 전에 무주택자로 만드는 것입니다.</li>
+        <li>판정 기준은 <b>상속개시일 현재 상속인이 속한 세대</b>입니다. 상속받은 결과 그 세대가 국내에 이 주택 1채만 소유하게 되면 특례를 받습니다(지방세법 §15①2호가목, 시행령 §29).</li>
+        <li>돌아가신 분이 소유하던 주택에 어머니(배우자)가 함께 살다가 그 주택을 상속받는 경우, 어머니에게 다른 주택이 없으면 특례 대상입니다. 돌아가신 분 명의의 주택은 「상속 전 보유 주택」으로 보지 않습니다.</li>
+        <li>그런데 같은 세대에 <b>따로 주택을 가진 자녀</b>가 있으면 세대 전체가 2주택이 되어 특례를 받을 수 없습니다. 이 경우에만 그 자녀를 사망일 전에 세대분리해야 합니다. <b>주택이 없는 자녀는 세대분리할 필요가 없습니다.</b></li>
+        <li>어머니가 이미 다른 주택(지분 포함)을 갖고 있다면 세대분리와 관계없이 특례가 안 됩니다. 이때는 무주택 세대의 자녀가 상속받는 쪽이 유리할 수 있습니다.</li>
+        <li>무주택 자녀가 상속받는 경우에도 같은 세대(30세 이상 세대원 등)에 주택 소유자가 있으면 같은 방식으로 판단합니다.</li>
       </ul>
     </details>
     <div class="actions no-print"><button class="btn ghost" data-go="13">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="15">종부세 줄이러 가기</button></div>
@@ -523,42 +521,49 @@
     <p>시간이 지남에 따라서 소수지분이 기준시가가 처음엔 6억원이하 였다가, 6억원이 넘는 경우가 있을 수 있습니다. 이런 경우 일부지분을 증여 또는 양도를 통해서 6억이하로 만들어 종부세를 줄일 수 있습니다.</p>
 
     <h3>◈ 나의 재산세와 종부세를 계산해 볼까요 ?</h3>
-    <h4>상속 후 재산세 비교</h4>
-    <div class="field"><label for="owned_houses">상속 전 나의 소유주택 수</label>
-      <div class="ctl"><input type="number" id="owned_houses" class="short" min="0" max="4" placeholder="0"><span class="unit">채 (최대 4채까지 주택별 입력)</span></div></div>
-    <div class="field" data-house="1"><label for="gongsi_1">상속전 나의 주택 ① 공시가격</label>
-      <div class="ctl"><input type="text" id="gongsi_1" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <div class="field" data-house="2"><label for="gongsi_1_2">상속전 나의 주택 ② 공시가격</label>
-      <div class="ctl"><input type="text" id="gongsi_1_2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <div class="field" data-house="3"><label for="gongsi_1_3">상속전 나의 주택 ③ 공시가격</label>
-      <div class="ctl"><input type="text" id="gongsi_1_3" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <div class="field" data-house="4"><label for="gongsi_1_4">상속전 나의 주택 ④ 공시가격</label>
-      <div class="ctl"><input type="text" id="gongsi_1_4" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <div class="field"><label for="ownedHousesAfter">상속 후 나의 소유주택 수</label>
-      <div class="ctl"><input type="text" id="ownedHousesAfter" class="short" readonly placeholder="자동 (상속 전 + 상속주택 수)"><span class="unit">채</span></div></div>
+    <p class="subtle">금액을 넣으면 바로 계산됩니다. 「계산하기」를 눌러도 됩니다.</p>
+    <div class="field"><label>상속 전 나의 주택 <small>상속받는 내가 이미 가진 주택</small></label>
+      <div class="ctl"><b id="ownedSummary">없음 (무주택)</b><input type="hidden" id="owned_houses" value="0"></div></div>
+    <div class="field own-house" data-house="1" hidden><label for="gongsi_1">상속 전 나의 1주택 공시가격</label>
+      <div class="ctl"><input type="text" id="gongsi_1" data-money placeholder="0"><span class="unit">원</span><span class="won"></span><button type="button" class="row-del no-print" data-own-del="1" aria-label="이 주택 빼기">×</button></div></div>
+    <div class="field own-house" data-house="2" hidden><label for="gongsi_1_2">상속 전 나의 2주택 공시가격</label>
+      <div class="ctl"><input type="text" id="gongsi_1_2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span><button type="button" class="row-del no-print" data-own-del="2" aria-label="이 주택 빼기">×</button></div></div>
+    <div class="field own-house" data-house="3" hidden><label for="gongsi_1_3">상속 전 나의 3주택 공시가격</label>
+      <div class="ctl"><input type="text" id="gongsi_1_3" data-money placeholder="0"><span class="unit">원</span><span class="won"></span><button type="button" class="row-del no-print" data-own-del="3" aria-label="이 주택 빼기">×</button></div></div>
+    <div class="field own-house" data-house="4" hidden><label for="gongsi_1_4">상속 전 나의 4주택 공시가격</label>
+      <div class="ctl"><input type="text" id="gongsi_1_4" data-money placeholder="0"><span class="unit">원</span><span class="won"></span><button type="button" class="row-del no-print" data-own-del="4" aria-label="이 주택 빼기">×</button></div></div>
+    <div class="actions no-print own-add"><button type="button" class="btn ghost sm" id="btnOwnAdd">+ 상속 전 나의 주택 추가</button></div>
+    <div class="field"><label for="ownedHousesAfter">상속 후 나의 소유주택 수 <small>협의분할로 실제 내가 받는 주택을 반영해 직접 넣으세요</small></label>
+      <div class="ctl"><input type="number" id="ownedHousesAfter" class="short" min="0" max="9" placeholder="채"><span class="unit">채</span><span class="muted own-hint" id="ownedAfterHint"></span></div></div>
     <div class="note multi-note" data-multi hidden></div>
-    <div class="field"><label for="gongsi_2">상속주택분 공시가격 <small>1단계 공시가격 합계가 자동으로 들어옵니다. 지분 상속이면 내 지분만큼으로 고치세요</small></label>
+    <div class="field"><label for="gongsi_2">내가 받는 상속주택분 공시가격 <small>1단계 공시가격 합계가 들어옵니다. 지분·협의분할이면 내 몫으로 고치세요</small></label>
       <div class="ctl"><input type="text" id="gongsi_2" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <p class="subtle">※ 재산세는 주택별로 따로 계산합니다(물건별 과세). 상속주택은 상속개시일부터 5년간 1세대1주택 판정 시 주택수에서 제외되므로, 상속 전 1주택이면 상속 후에도 기존 주택의 1세대1주택 특례(공정시장가액비율 43~45%, 9억 이하 특례세율)가 유지됩니다.</p>
-    <div class="actions no-print"><button class="btn" id="btnPropTax">재산세 비교 계산하기</button></div>
-    <table class="dh" id="resultTableProperty" hidden>
-      <thead><tr><th>구분</th><th>종전주택만 있는 경우</th><th>상속주택 추가된 경우</th></tr></thead>
-      <tbody>
-        <tr><td class="lab">재산세</td><td class="num" id="property_tax_1"></td><td class="num" id="property_tax_2"></td></tr>
-        <tr><td class="lab">도시지역분</td><td class="num" id="dosi_tax_1"></td><td class="num" id="dosi_tax_2"></td></tr>
-        <tr><td class="lab">지방교육세</td><td class="num" id="p_edu_tax_1"></td><td class="num" id="p_edu_tax_2"></td></tr>
-        <tr class="total"><td class="lab">총 세금</td><td class="num" id="total_tax_1"></td><td class="num" id="total_tax_2"></td></tr>
-      </tbody>
-    </table>
-    <div id="propertyTaxDetail"></div>
 
-    <h4>상속후 종부세비교하기</h4>
-    <div class="field"><label for="age">상속받는 나의 연령(만)</label>
-      <div class="ctl"><input type="number" id="age" class="short" min="0" placeholder="세"><span class="unit">세</span></div></div>
-    <div class="field"><label for="period">상속전 나의 주택 보유기간(년)</label>
-      <div class="ctl"><input type="number" id="period" class="short" min="0" placeholder="년"><span class="unit">년</span></div></div>
-    <div class="actions no-print"><button class="btn" id="btnCompTax">종부세 비교 계산하기</button></div>
-    <div id="resultComprehensiveTax"></div>
+    <div class="calc-box">
+      <h4><span class="tag">①</span> 재산세 비교 <small>지방세 · 7월·9월 부과</small></h4>
+      <p class="subtle">※ 재산세는 주택별로 따로 계산합니다(물건별 과세). 상속주택은 상속개시일부터 5년간 1세대1주택 판정 시 주택수에서 제외되므로, 상속 전 1주택이면 상속 후에도 기존 주택의 특례가 유지됩니다.</p>
+      <div class="actions no-print"><button class="btn sm" id="btnPropTax">재산세 계산하기</button></div>
+      <table class="dh calc-table" id="resultTableProperty" hidden>
+        <thead><tr><th>구분</th><th>상속 전</th><th>상속 후</th></tr></thead>
+        <tbody>
+          <tr><td class="lab">재산세</td><td class="num" id="property_tax_1"></td><td class="num" id="property_tax_2"></td></tr>
+          <tr><td class="lab">도시지역분</td><td class="num" id="dosi_tax_1"></td><td class="num" id="dosi_tax_2"></td></tr>
+          <tr><td class="lab">지방교육세</td><td class="num" id="p_edu_tax_1"></td><td class="num" id="p_edu_tax_2"></td></tr>
+          <tr class="total"><td class="lab">재산세 합계</td><td class="num" id="total_tax_1"></td><td class="num" id="total_tax_2"></td></tr>
+        </tbody>
+      </table>
+      <div id="propertyTaxDetail"></div>
+    </div>
+
+    <div class="calc-box">
+      <h4><span class="tag">②</span> 종합부동산세 비교 <small>국세 · 12월 부과</small></h4>
+      <div class="field"><label for="age">상속받는 나의 연령(만)</label>
+        <div class="ctl"><input type="number" id="age" class="short" min="0" placeholder="세"><span class="unit">세</span></div></div>
+      <div class="field"><label for="period">상속 전 나의 주택 보유기간(년)</label>
+        <div class="ctl"><input type="number" id="period" class="short" min="0" placeholder="년"><span class="unit">년</span></div></div>
+      <div class="actions no-print"><button class="btn sm" id="btnCompTax">종부세 계산하기</button></div>
+      <div id="resultComprehensiveTax"></div>
+    </div>
     <div class="actions no-print"><button class="btn ghost" data-go="14">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="16">상속부동산 양도세 줄이기</button></div>
   </section>
 

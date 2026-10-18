@@ -222,7 +222,19 @@ const fakeStorage = (w, init) => { const s = Object.assign({}, init || {}); Obje
   // 재산세: 상속 전 무주택 → 상속주택 2채 중 선순위(주택2, 공시 6억)만 1세대1주택 특례, 주택1(5억)은 일반
   p.set('owned_houses', 0); p.click('#btnPropTax');
   expect('2채: 재산세 표에 상속주택 2줄', p.d.querySelectorAll('#propertyTaxDetail tbody tr').length, 2);
-  expect('2채: 상속 후 주택 수 자동', p.d.getElementById('ownedHousesAfter').value, '2');
+  expect('2채: 상속 후 주택 수는 직접 입력(비어 있음)', p.d.getElementById('ownedHousesAfter').value, '');
+  expect('2채: 참고 문구에 0+2=2채', p.text('ownedAfterHint').includes('2채') ? 1 : 0, 1);
+  // 협의분할로 1채만 받음 → 상속 후 1채 입력 → 상속주택 1줄(공시가격 = 상속주택분 11억)
+  p.set('ownedHousesAfter', 1); p.click('#btnPropTax');
+  expect('협의분할 1채: 재산세 상속주택 1줄', p.d.querySelectorAll('#propertyTaxDetail tbody tr').length, 1);
+  p.set('ownedHousesAfter', '');
+  // 상속 전 주택 행 추가·삭제
+  p.click('#btnOwnAdd'); p.set('gongsi_1', 3e8); p.click('#btnOwnAdd'); p.set('gongsi_1_2', 4e8);
+  expect('상속 전 주택 2채 추가', p.d.getElementById('owned_houses').value, '2');
+  p.d.querySelector('[data-own-del="1"]').click();
+  expect('1주택 삭제 → 2주택 값이 1주택으로', p.num('gongsi_1'), 400000000);
+  expect('삭제 후 1채', p.d.getElementById('owned_houses').value, '1');
+  p.d.querySelector('[data-own-del="1"]').click();
   // 1채로 돌리면 안내문 사라지고 합계는 주택1만
   p.set('houseCount', 1); p.click('#btnCalc');
   expect('1채 복귀: 과세가액 8억 − 500만', p.num('taxableAmountValueCell'), 795000000);

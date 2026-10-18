@@ -191,7 +191,7 @@
     const g = houseGongsiTotal();
     ['houseValue1', 'gongsi_2'].forEach(function (id) { const el = $(id); if (!el) return; if (!el.dataset.user && (el.dataset.auto === '1' || num(id) === 0)) { el.value = g ? fmt(g) : ''; el.dispatchEvent(new Event('input', { bubbles: true })); el.dataset.auto = '1'; } });
     const sp = $('houseSpecial'); if (sp) { const opt = sp.querySelector('option[value="special"]'); if (opt) { opt.disabled = n >= 2; if (n >= 2 && sp.value === 'special') sp.value = 'normal'; } }
-    const after = $('ownedHousesAfter'); if (after) after.value = isBlank('owned_houses') ? '' : String(ownedHouseCount() + n);
+    syncHouseFields();
     const ph = $('psHouseTotal'); if (ph) ph.textContent = houseTotal() ? DH.won(houseTotal()) + (n >= 2 ? ' (' + n + '채)' : '') : '-';
     document.querySelectorAll('[data-multi]').forEach(function (el) {
       const sec = el.closest('.step'); const key = sec ? sec.id : '';
@@ -279,6 +279,7 @@
     const total = cellNum('spouseInheritanceDeductionCell') + cellNum('cohabitationDeductionAmount') + cellNum('finalFinancialDeductionAmount') + cellNum('finalDeductionAmount');
     setText('totalDeductionResult', total);
     if ($('inheritanceDeduction2')) $('inheritanceDeduction2').value = fmt(total);
+    if (total > 0 && $('result')) performDeductionComparison();
     return total;
   }
   function performDeductionComparison() {
@@ -287,10 +288,11 @@
     const r1 = computeInheritance(d1), r2 = computeInheritance(d2);
     const saving = r1.payableTax - r2.payableTax;
     const out = $('result');
-    if (out) out.innerHTML = '<table class="dh"><thead><tr><th>구분</th><th>상속세</th></tr></thead><tbody>' +
-      '<tr><td class="lab">10억 상속공제 시 상속세</td><td class="num" id="cmpTax1">' + fmt(r1.payableTax) + '</td></tr>' +
-      '<tr><td class="lab">위 상속공제 다 받을시 상속세</td><td class="num" id="cmpTax2">' + fmt(r2.payableTax) + '</td></tr>' +
-      '<tr class="total"><td class="lab">절세되는 상속세 금액</td><td class="num" id="cmpSave">' + fmt(saving) + '</td></tr></tbody></table>' +
+    if (out) out.innerHTML = '<div class="cmp-box">' +
+      '<div class="cmp-col"><span class="k">' + (hasSpouse() ? '기본 공제(10억)만' : '일괄공제(5억)만') + ' 받을 때 상속세</span><b id="cmpTax1">' + fmt(r1.payableTax) + '</b><small>공제 ' + fmt(r1.appliedDeduction) + '원</small></div>' +
+      '<div class="cmp-arrow" aria-hidden="true">→</div>' +
+      '<div class="cmp-col"><span class="k">위 상속공제를 모두 받을 때 상속세</span><b id="cmpTax2">' + fmt(r2.payableTax) + '</b><small>공제 ' + fmt(r2.appliedDeduction) + '원</small></div>' +
+      '<div class="cmp-save"><span class="k">줄어드는 상속세</span><b id="cmpSave">' + fmt(saving) + '<small>원</small></b></div></div>' +
       '<p class="subtle">※ 두 경우 모두 상속공제 종합한도' + (r2.appliedDeduction < d2 ? '(' + fmt(r2.deductionLimit) + '원)' : '') + '를 적용한 금액입니다. 배우자공제는 배우자가 실제 상속받은 금액(분할·등기 완료분)까지만 인정됩니다.</p>';
     return { tax1: r1.payableTax, tax2: r2.payableTax, saving: saving };
   }
@@ -351,21 +353,37 @@
   function ownedHouseCount() { return Math.min(4, intOf('owned_houses')); }
   function ownedHouseValues() { return HOUSE_IDS.slice(0, ownedHouseCount()).map(num); }
   function syncHouseFields() {
+    // 예전 저장값(주택 수 비어 있음 + 공시가격만 있음) 호환: 값이 있는 마지막 칸까지 보이게
+    let filled = 0; HOUSE_IDS.forEach(function (id, i) { if (num(id) > 0) filled = i + 1; });
+    if (filled > ownedHouseCount() && $('owned_houses')) $('owned_houses').value = String(filled);
     const n = ownedHouseCount();
-    document.querySelectorAll('[data-house]').forEach(function (f) { f.hidden = Number(f.dataset.house) > Math.max(1, n); });
-    if ($('ownedHousesAfter')) $('ownedHousesAfter').value = isBlank('owned_houses') ? '' : String(n + Math.max(1, houseCount()));
+    document.querySelectorAll('[data-house]').forEach(function (f) { f.hidden = Number(f.dataset.house) > n; });
+    const sum = $('ownedSummary'); if (sum) sum.textContent = n ? n + '채' : '없음 (무주택)';
+    const add = $('btnOwnAdd'); if (add) { add.disabled = n >= 4; add.textContent = n ? '+ 상속 전 나의 주택 추가 (' + (n + 1) + '주택)' : '+ 상속 전 나의 주택 추가'; }
+    const h = $('ownedAfterHint'); if (h) h.textContent = '참고: 상속 전 ' + n + '채 + 상속주택을 모두 받으면 ' + (n + houseCount()) + '채';
   }
+  function setOwnedCount(n) { const el = $('owned_houses'); if (el) { el.value = String(Math.max(0, Math.min(4, n))); el.dispatchEvent(new Event('input', { bubbles: true })); } syncHouseFields(); }
+  function addOwnedHouse() { const n = ownedHouseCount(); if (n >= 4) return; setOwnedCount(n + 1); const el = $(HOUSE_IDS[n]); if (el) el.focus(); }
+  function removeOwnedHouse(k) {        // k번째 주택을 빼고 뒤 주택을 한 칸씩 당긴다
+    const n = ownedHouseCount();
+    for (let i = k - 1; i < n - 1; i++) { $(HOUSE_IDS[i]).value = $(HOUSE_IDS[i + 1]).value; }
+    if (n >= 1) $(HOUSE_IDS[n - 1]).value = '';
+    HOUSE_IDS.forEach(function (id) { const el = $(id); if (el) el.dispatchEvent(new Event('input', { bubbles: true })); });
+    setOwnedCount(n - 1);
+  }
+  // 상속 후 내가 받는 상속주택 수: 「상속 후 나의 소유주택 수」를 직접 넣었으면 그 값 − 상속 전, 아니면 1단계 주택 전부
+  function myInheritedCount() { return isBlank('ownedHousesAfter') ? houseCount() : Math.max(0, intOf('ownedHousesAfter') - ownedHouseCount()); }
   // 재산세는 주택별로 따로 계산(물건별 과세). 상속주택은 상속개시일부터 5년간 1세대1주택 판정 시 주택수에서 제외되므로
   // 상속 전 1주택자는 상속 후에도 기존 주택의 1세대1주택 특례가 유지되고, 상속 전 무주택이면 상속주택이 1세대1주택이 된다.
   // inherited: 상속주택 공시가격 배열 (1단계 주택별). 한 채만 넣으면 gongsi_2 값을 쓴다
   function calc_property_tax(values, gongsiInherited, ownedHouses, inherited) {
     const one = ownedHouses === 1;
     const rows = values.map(function (g, i) { return { label: '기존주택 ' + (i + 1), gongsi: g, tax: propertyTaxOfHouse(g, one) }; });
-    const list = (inherited && inherited.length > 1) ? inherited : [{ no: 1, gongsi: gongsiInherited }];
+    const list = inherited ? inherited : [{ no: 1, gongsi: gongsiInherited }];
     const pri = priorityHouse();
     const inhRows = list.map(function (h, i) {
       const isPri = list.length === 1 || (pri && pri.no === h.no);
-      return { label: '상속주택' + (list.length > 1 ? ' ' + h.no : ''), gongsi: h.gongsi, tax: propertyTaxOfHouse(h.gongsi, ownedHouses === 0 && isPri) };
+      return { label: '상속주택' + (list.length > 1 ? ' ' + h.no : ''), gongsi: h.gongsi, tax: propertyTaxOfHouse(h.gongsi, ownedHouses === 0 && (list.length === 1 || isPri)) };
     });
     const sum = function (l, k) { return l.reduce(function (a, r) { return a + r.tax[k]; }, 0); };
     const before = { property: sum(rows, 'property'), dosi: sum(rows, 'dosi'), edu: sum(rows, 'edu') };
@@ -381,8 +399,10 @@
     const n = ownedHouseCount();
     // 상속주택이 여러 채면 1단계 공시가격을 주택별로, 사용자가 gongsi_2 를 직접 고쳤으면(지분 등) 그 비율로 안분
     let inh = inhHouses().filter(function (h) { return h.gongsi > 0; });
-    const g2 = num('gongsi_2'), gsum = inh.reduce(function (a, h) { return a + h.gongsi; }, 0);
-    if (inh.length > 1 && gsum > 0 && g2 > 0 && Math.abs(g2 - gsum) > 1) inh = inh.map(function (h) { return { no: h.no, gongsi: Math.floor(h.gongsi * g2 / gsum) }; });
+    const g2 = num('gongsi_2'), gsum = inh.reduce(function (a, h) { return a + h.gongsi; }, 0), mine = myInheritedCount();
+    if (mine === 0) inh = [];
+    else if (mine === 1 || inh.length <= 1) inh = [{ no: (priorityHouse() || { no: 1 }).no, gongsi: g2 }];
+    else if (gsum > 0 && g2 > 0 && Math.abs(g2 - gsum) > 1) inh = inh.map(function (h) { return { no: h.no, gongsi: Math.floor(h.gongsi * g2 / gsum) }; });
     const t = calc_property_tax(ownedHouseValues(), g2, n, inh);
     const tbl = $('resultTableProperty'); if (tbl) tbl.hidden = false;
     setText('property_tax_1', t.propertyTaxBefore); setText('dosi_tax_1', t.dosiTaxBefore); setText('p_edu_tax_1', t.eduTaxBefore); setText('total_tax_1', t.totalTaxBefore);
@@ -445,7 +465,7 @@
   function compareComprehensiveTax() {
     const n = ownedHouseCount();
     const gongsi_1 = ownedHouseValues().reduce(function (a, b) { return a + b; }, 0);
-    const gongsi_2 = num('gongsi_2');
+    const gongsi_2 = myInheritedCount() === 0 ? 0 : num('gongsi_2');
     const age = intOf('age'), period = intOf('period');
     const pt = comparePropertyTax();
     // 상속 전: 1주택이면 1세대1주택
@@ -459,7 +479,7 @@
     const result2 = calculateComprehensiveTax(total, n <= 1, Math.max(n, 1), age, period, pt.after, creditRatio, rowsAfter);
     const rows = [['과세표준', 'tax_base'], ['종합부동산세액', 'tax'], ['공제할 재산세액', 'deductible_property_tax'], ['종합부동산산출세액', 'comprehensive_tax'],
       ['연령별 세액공제', 'age_deduction'], ['보유기간 세액공제', 'period_deduction'], ['납부할 세액', 'payable_tax'], ['농어촌특별세', 'rural_tax'], ['총 납부세액', 'total_tax']];
-    let html = '<table class="dh"><thead><tr><th>구분</th><th>상속 전</th><th>상속 후</th></tr></thead><tbody>';
+    let html = '<table class="dh calc-table"><thead><tr><th>구분</th><th>상속 전</th><th>상속 후</th></tr></thead><tbody>';
     rows.forEach(function (r) {
       html += '<tr' + (r[1] === 'total_tax' ? ' class="total"' : '') + '><td class="lab">' + r[0] + '</td><td class="num" id="ct1_' + r[1] + '">' + fmt(floor10(result1[r[1]])) + '</td><td class="num" id="ct2_' + r[1] + '">' + fmt(floor10(result2[r[1]])) + '</td></tr>';
     });
@@ -714,7 +734,7 @@
   const LINK_EXTRA = ['_question', '_name', '_phone', '_email', '_mode', '_when', '_no', '_at'];
   function encodeData(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function decodeData(str) { try { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; return JSON.parse(decodeURIComponent(escape(atob(str)))); } catch (e) { return null; } }
-  function linkData(extra) { return Object.assign(DH.collect(), extra || {}); }
+  function linkData(extra) { return DH.compact(Object.assign(DH.collect(), extra || {})); }
   function reportLink(file, extra) { return location.href.replace(/[#?].*$/, '').replace(/[^/]*$/, '') + file + '#d=' + encodeData(linkData(extra)); }
   let linkPayload = null;                       // 주소로 받은 값 (질문·연락처 포함)
   function applyLinkData() {
@@ -722,7 +742,7 @@
     const data = decodeData(m[1]); if (!data) return false;
     linkPayload = data;
     const inputs = {}; Object.keys(data).forEach(function (k) { if (LINK_EXTRA.indexOf(k) < 0) inputs[k] = data[k]; });
-    DH.apply(inputs);
+    DH.resetFields(); DH.apply(inputs);
     try { localStorage.setItem(DH.storeKey(), JSON.stringify(Object.assign({ _savedAt: new Date().toISOString() }, inputs))); } catch (e) { }
     return true;
   }
@@ -866,6 +886,22 @@
     on('btnPropTax', 'click', comparePropertyTax);
     on('btnCompTax', 'click', compareComprehensiveTax);
     on('owned_houses', 'input', syncHouseFields);
+    on('btnOwnAdd', 'click', addOwnedHouse);
+    document.addEventListener('click', function (e) { const d = e.target.closest('[data-own-del]'); if (d) removeOwnedHouse(Number(d.dataset.ownDel)); });
+    const AUTO = {
+      step13: function () { if (!isBlank('childrensNumber')) calculateSpouseInheritanceDeduction(); },
+      step14: calculateInheritAcquisionTax,
+      step15: compareComprehensiveTax,
+      step16: calculateAllTaxes,
+      step19: calculateIncomeProperty
+    };
+    const timers = {};
+    const autoRun = function (e) {
+      const sec = e.target.closest && e.target.closest('.step'); if (!sec || !AUTO[sec.id]) return;
+      if (e.target.closest('.print-pick')) return;
+      clearTimeout(timers[sec.id]); timers[sec.id] = setTimeout(function () { try { AUTO[sec.id](); } catch (err) { } }, 250);
+    };
+    document.addEventListener('input', autoRun); document.addEventListener('change', autoRun);
     on('houseCount', 'change', function () { syncInhHouses(); if (lastResult) calculateInheritanceTax(); else updatePrintSummary(); });
     ['houseValue1', 'gongsi_2'].forEach(function (id) { const el = $(id); if (el) el.addEventListener('input', function (e) { if (e.isTrusted) { el.dataset.user = '1'; delete el.dataset.auto; } }); });
     document.addEventListener('input', function (e) { if (e.target.closest && e.target.closest('[data-ihouse]')) syncInhHouses(); });
@@ -890,13 +926,16 @@
     const r = lastResult || computeInheritance(defaultDeduction());
     return '절세보고서 ' + (window.REPORT_TIER && REPORT_TIER.key ? REPORT_TIER.key : '') + ': 재산 ' + DH.won(r.totalProperty) + ', 채무 ' + DH.won(r.debts) + ', 공제 ' + DH.won(r.appliedDeduction) + ', 예상 상속세 ' + DH.won(r.payableTax) + ', 배우자 ' + (hasSpouse() ? '있음' : '없음');
   };
+  // 상담 접수 시트의 「다시 보기」 링크, 아래 띠의 3단계 이동 링크 (입력값을 그대로 실어 보냄)
+  window.DH_shareLink = function () { return reportLink(location.pathname.split('/').pop() || 'inheritGold.html'); };
+  window.DH_carryRoyal = function () { return reportLink('inheritRoyal.html'); };
   // 불러오기·지우기 뒤 dh.js 가 호출
   window.DH_recalc = function () { syncInhHouses(); syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); calculateInheritanceTax(); };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
   // 테스트·디버깅용 공개
-  window.REPORT = { tier: TIER, goStep: goStep, inhHouses: inhHouses, priorityHouse: priorityHouse, reportLink: reportLink, encodeData: encodeData, decodeData: decodeData, computeInheritance: computeInheritance, calculateInheritanceTax: calculateInheritanceTax,
+  window.REPORT = { tier: TIER, goStep: goStep, addOwnedHouse: addOwnedHouse, removeOwnedHouse: removeOwnedHouse, myInheritedCount: myInheritedCount, inhHouses: inhHouses, priorityHouse: priorityHouse, reportLink: reportLink, encodeData: encodeData, decodeData: decodeData, computeInheritance: computeInheritance, calculateInheritanceTax: calculateInheritanceTax,
     calculateSpouseInheritanceDeduction: calculateSpouseInheritanceDeduction, performDeductionComparison: performDeductionComparison,
     calculateInheritAcquisionTax: calculateInheritAcquisionTax, propertyTaxOfHouse: propertyTaxOfHouse, comparePropertyTax: comparePropertyTax,
     calculateComprehensiveTax: calculateComprehensiveTax, compareComprehensiveTax: compareComprehensiveTax, calculateAllTaxes: calculateAllTaxes,
