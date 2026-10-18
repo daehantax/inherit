@@ -188,7 +188,7 @@
       const share = legal[spouse.id] || 0;
       const base = Math.max(0, totalProperty + giftsToHeirs - skipAmount - debts);
       spouseLimit = Math.min(Math.max(0, Math.floor(base * share) - giftToSpouseBase), R.spouseMax);
-      spouseActual = opt.spouseActual !== undefined ? opt.spouseActual : Math.max(0, byHeir[spouse.id] - debtShare(spouse.id));
+      spouseActual = Math.floor(opt.spouseActual !== undefined ? opt.spouseActual : Math.max(0, byHeir[spouse.id] - debtShare(spouse.id)));
       spouseDed = Math.max(R.spouseMin, Math.min(spouseActual, spouseLimit));
     }
 

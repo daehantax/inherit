@@ -87,6 +87,20 @@
         <div id="askMsg" class="note" hidden></div>
       </form>
       <div id="askDone" hidden></div>
+      <div class="card rs-key" id="keyBox">
+        <h3 class="rs-sub">결제하셨나요? 셀프 신고서 열기</h3>
+        <p class="es-note">결제 확인 메일로 받은 접수번호와 열쇠 코드를 넣으면, 지금 입력한 내용으로 신고서 서식이 모두 채워지고 칸별 입력 가이드가 열립니다.</p>
+        <div class="rs-key-row" id="keyForm">
+          <input type="text" id="keyNo" placeholder="접수번호 (F-20261018-01)" autocomplete="off">
+          <input type="text" id="keyCode" placeholder="열쇠 코드 8자리" autocomplete="off" maxlength="8">
+          <button type="button" class="btn" id="keyOpen">열기</button>
+        </div>
+        <div id="keyOk" hidden>
+          <p class="es-note" id="keyOkText"></p>
+          <div class="actions"><button type="button" class="btn" id="btnReturn">신고서 열기 (자동으로 채움) →</button></div>
+        </div>
+        <p id="keyMsg" class="es-note"></p>
+      </div>
     </section>
 
     <!-- 5. 그 다음 -->

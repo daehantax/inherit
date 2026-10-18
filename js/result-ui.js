@@ -255,6 +255,40 @@
     } catch (e) { $('alarmMsg').textContent = '전송에 실패했습니다. 031-783-8877로 연락 주세요.'; }
   }
 
+  /* ---------- 셀프 신고서 열쇠 코드 ---------- */
+  const KEY_STORE = 'dh.estate.key';
+  function savedKey() { try { return JSON.parse(localStorage.getItem(KEY_STORE) || 'null'); } catch (e) { return null; } }
+  function showUnlocked(k) {
+    $('keyForm').hidden = true; $('keyOk').hidden = false;
+    $('keyOkText').textContent = '접수번호 ' + k.no + ' · 열쇠 코드가 확인되었습니다. 아래 버튼을 누르면 지금 입력한 내용으로 신고서가 채워집니다(입력을 고친 뒤 다시 누르면 다시 채워집니다).';
+  }
+  async function openKey() {
+    const no = ($('keyNo').value || '').trim().toUpperCase(), key = ($('keyCode').value || '').trim().toUpperCase();
+    const msg = function (t, bad) { $('keyMsg').textContent = t; $('keyMsg').className = 'es-note' + (bad ? ' bad' : ''); };
+    if (!/^F-\d{8}-\d{2,}$/.test(no)) { msg('접수번호를 확인해 주세요. 예: F-20261018-01', true); return; }
+    if (!/^[0-9A-F]{8}$/.test(key)) { msg('열쇠 코드 8자리를 확인해 주세요.', true); return; }
+    msg('확인하는 중…');
+    try {
+      const res = await fetch(DH.CONSULT_URL + '?verify=' + encodeURIComponent(no) + '&key=' + encodeURIComponent(key));
+      const j = await res.json();
+      if (!j || !j.ok) { msg('접수번호와 열쇠 코드가 맞지 않습니다. 메일을 다시 확인하시거나 031-783-8877로 연락 주세요.', true); return; }
+      const k = { no: no, key: key, at: new Date().toISOString() };
+      try { localStorage.setItem(KEY_STORE, JSON.stringify(k)); } catch (e) { }
+      msg(''); showUnlocked(k);
+    } catch (e) { msg('확인 서버에 연결하지 못했습니다. 잠시 뒤 다시 해 주세요.', true); }
+  }
+  function openReturn() {
+    const RKEY = 'dh.inherit-tax-report.v1';
+    try {
+      const old = JSON.parse(localStorage.getItem(RKEY) || 'null');
+      const hasOwn = old && old._from !== 'estate' && (old.assets || []).some(function (r) { return Number(r.price) > 0; });
+      if (hasOwn && !confirm('신고서 화면에 직접 입력해 둔 내용이 있습니다. 지금 입력한 내용으로 바꿔 채울까요?')) return;
+      const data = EST.toReturn(E); data._key = (savedKey() || {}).no || '';
+      localStorage.setItem(RKEY, JSON.stringify(data));
+    } catch (e) { DH.toast('이 브라우저에 저장할 수 없습니다.', true); return; }
+    location.href = 'inherit-tax-report.html#from=estate';
+  }
+
   /* ---------- 전체 ---------- */
   function render() {
     if (!ready()) { $('rsEmpty').hidden = false; $('rsBody').hidden = true; return; }
@@ -280,6 +314,8 @@
     if (b.dataset.pick) { product = b.dataset.pick; $('askForm').dataset.touched = '1'; renderAsk(); try { $('askForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { } return; }
     if (b.dataset.ask) { const q = $('askQ'); if (q && !q.value) q.value = '「' + b.dataset.ask + '」이 저에게 적용되는지 궁금합니다.'; product = ALL.parts.inheritance ? 'review' : 'self'; $('askForm').dataset.touched = '1'; renderAsk(); return; }
     if (b.id === 'alarmSend') { sendAlarm(); return; }
+    if (b.id === 'keyOpen') { openKey(); return; }
+    if (b.id === 'btnReturn') { openReturn(); return; }
   });
   document.addEventListener('change', function (ev) {
     if (ev.target.name === 'askProd') { product = ev.target.value; $('askForm').dataset.touched = '1'; renderAsk(); }
@@ -289,6 +325,7 @@
 
   if (cur.from === 'link') { try { history.replaceState(null, '', location.pathname); } catch (err) { } }
   render();
+  if (savedKey()) showUnlocked(savedKey());
   try { const prev = JSON.parse(localStorage.getItem('dh.estate.ask') || 'null'); if (prev && prev.no) { $('askMsg').hidden = false; $('askMsg').className = 'note'; $('askMsg').textContent = '이 기기에서 ' + String(prev.at).slice(0, 10) + '에 접수번호 ' + prev.no + '로 신청한 내역이 있습니다.'; } } catch (e) { }
   window.RESULT_UI = { get E() { return E; }, get ALL() { return ALL; }, get SV() { return SV; }, render: render, summary: function () { return summary(); } };
 })();

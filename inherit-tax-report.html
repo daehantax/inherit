@@ -116,7 +116,14 @@
     <button class="btn ghost sm" data-action="clear">지우기</button>
     <button class="btn ghost sm" data-action="print">이 단계 인쇄</button>
     <button class="btn sm" id="printAll">전체 인쇄 (1~4단계)</button>
+    <button class="btn sm" id="btnGuide" hidden>칸별 입력 가이드</button>
   </div>
+  <div class="note no-print" id="estateNote" hidden></div>
+  <section class="card no-print" id="guideBox" hidden>
+    <h2>칸별 입력 가이드 <small>홈택스 상속세 신고 화면은 이 서식의 칸 번호를 그대로 씁니다. 0원인 칸은 뺐습니다.</small></h2>
+    <div id="guideBody"></div>
+    <div class="actions"><button type="button" class="btn ghost sm" id="guidePrint">가이드 인쇄</button><button type="button" class="btn ghost sm" id="guideClose">닫기</button></div>
+  </section>
 
   <div data-save>
   <!-- ===================== 1단계 ===================== -->
@@ -697,9 +704,58 @@
     recalc();
   });
 
+  /* ---------- 상속 파일에서 채운 경우 안내 + 칸별 입력 가이드(셀프 신고서 열쇠 코드가 있을 때) ---------- */
+  function guideHtml() {
+    recalc();
+    const esc = function (t) { return String(t).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+    const val = function (el) { if (!el) return ''; if (el.tagName === 'SELECT') return el.value ? el.options[el.selectedIndex].textContent.replace(/^(\S+) \1 /, '$1 ').replace(/^[a-z]+ /, '') : ''; if (el.type === 'checkbox') return el.checked ? '예' : ''; return el.value || el.textContent || ''; };
+    let html = '';
+    // 1단계: 재산 행
+    const rows = Array.from(document.querySelectorAll('#assetBody tr')).filter(function (tr) { return rowValue(tr) > 0; });
+    html += '<h3 class="subhead">1. 상속받은 총재산명세 (별지)</h3>' + (rows.length ? '<div class="table-scroll"><table class="dh"><thead><tr><th>번호</th><th>① 재산구분</th><th>② 재산종류</th><th>③ 소재지·명칭</th><th>④ 지분 등</th><th>⑦ 평가가액</th><th>⑧ 평가기준</th></tr></thead><tbody>' +
+      rows.map(function (tr, i) { return '<tr><td class="c">' + (i + 1) + '</td><td>' + esc(val(tr.querySelector('.atype'))) + '</td><td>' + esc(val(tr.querySelector('.ptype'))) + '</td><td>' + esc(val(tr.querySelector('.loc'))) + '</td><td>' + esc(val(tr.querySelector('.reg'))) + '</td><td class="num">' + DH.fmt(rowValue(tr)) + '</td><td>' + esc(val(tr.querySelector('.eval'))) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<p class="muted">재산 행이 없습니다.</p>');
+    // 2~4단계: 번호가 붙은 칸
+    [['step2', '2. 채무·공과금·장례비용 및 상속공제 명세서 (부표3)'], ['step3', '3. 상속세 과세가액 계산명세서 (부표1)'], ['step4', '4. 과세표준신고 및 자진납부계산서 (제9호)']].forEach(function (g) {
+      const items = [];
+      document.querySelectorAll('#' + g[0] + ' .form-sheet tr').forEach(function (tr) {
+        if (tr.closest('tbody[id]')) return;                              // 채무·공과금·장례 행은 아래에서 따로
+        const cells = Array.from(tr.children); if (!cells.length) return;
+        const labCell = cells.find(function (c) { return /[\u2460-\u2473\u3251-\u325F\u32B1-\u32BF]/.test(c.textContent); }); if (!labCell) return;
+        const clone = labCell.cloneNode(true); clone.querySelectorAll('input,select,.cnt,.muted').forEach(function (x) { x.remove(); });
+        const label = clone.textContent.replace(/\s+/g, ' ').trim();
+        const out = tr.querySelector('b.calc') || Array.from(tr.querySelectorAll('input[data-money], input[type=number]')).pop();
+        const v = out ? (out.tagName === 'B' ? out.textContent : out.value) : '';
+        if (!v || DH.num(v) === 0) return;
+        items.push('<tr><td>' + esc(label) + '</td><td class="num">' + esc(v) + '</td></tr>');
+      });
+      if (g[0] === 'step2') {
+        [['debtBody', '채무'], ['utilityBody', '공과금'], ['funeralBody', '장례비용']].forEach(function (r) {
+          document.querySelectorAll('#' + r[0] + ' tr').forEach(function (tr, i) { const a = tr.querySelector('.amt'); if (a && DH.num(a.value)) items.unshift('<tr><td>' + r[1] + ' ' + (i + 1) + '행 ' + esc(val(tr.querySelector('.kind')) || val(tr.querySelector('.desc'))) + '</td><td class="num">' + esc(a.value) + '</td></tr>'); });
+        });
+      }
+      html += '<h3 class="subhead">' + g[1] + '</h3>' + (items.length ? '<div class="table-scroll"><table class="dh"><thead><tr><th>칸</th><th>값(원)</th></tr></thead><tbody>' + items.join('') + '</tbody></table></div>' : '<p class="muted">채울 금액이 없습니다.</p>');
+    });
+    html += '<p class="muted s">주민등록번호·주소·연락처(4단계 신고인·피상속인 칸)는 직접 넣으세요. 홈택스: 세금신고 › 상속세 › 정기신고. 막히면 sjlee@taxdh.net 으로 화면을 찍어 보내 주세요.</p>';
+    return html;
+  }
+  function estateExtras() {
+    let key = null; try { key = JSON.parse(localStorage.getItem('dh.estate.key') || 'null'); } catch (e) { }
+    let saved = null; try { saved = JSON.parse(localStorage.getItem(DH.storeKey()) || 'null'); } catch (e) { }
+    const fromEstate = saved && saved._from === 'estate';
+    const g = document.getElementById('btnGuide'); if (g) g.hidden = !key;
+    const n = document.getElementById('estateNote');
+    if (n && fromEstate) { n.hidden = false; n.innerHTML = '「무엇을 물려받나요」에서 입력한 내용으로 채웠습니다. 4단계의 이름·주민등록번호·주소는 직접 넣으세요. 재산을 고치려면 <a href="estate.html">입력 화면</a>에서 고친 뒤 결과 화면의 「신고서 열기」를 다시 누르세요.'; }
+  }
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('#btnGuide')) { document.getElementById('guideBody').innerHTML = guideHtml(); const b = document.getElementById('guideBox'); b.hidden = false; b.scrollIntoView({ behavior: 'smooth' }); }
+    if (e.target.closest('#guideClose')) document.getElementById('guideBox').hidden = true;
+    if (e.target.closest('#guidePrint')) DH.printSheets([document.getElementById('guideBody')]);
+  });
+  window.DH_guideHtml = guideHtml;
+
   buildAll({}); codeLegend();
   document.addEventListener('DOMContentLoaded', function () {
-    migrateOld(); DH.load(true);
+    migrateOld(); DH.load(true); estateExtras();
     const t = new Date(); ['signY', 'signM', 'signD'].forEach(function (id, i) { const el = document.getElementById(id); if (!el.value) el.value = [t.getFullYear(), t.getMonth() + 1, t.getDate()][i]; });
     go(1);
   });

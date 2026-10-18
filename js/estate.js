@@ -196,6 +196,52 @@
     return d;
   };
 
+  /* ---------- 셀프 신고서(inherit-tax-report.html) 서식으로 바꾸기 ----------
+     신고서 페이지의 저장 모양 { assets:[행], step2:{칸·rows}, step4:{칸} } 을 만든다.
+     ② 재산종류코드·⑧ 평가기준코드는 국세청 서식 코드표 기준. */
+  const PTYPE = { apt: '05', house: '04', officetel: '06', shop: '06', land: '02', farm: '02', bunyang: '08', deposit: '11', stock: '09', insurance: '11', retire: '12', car: '12', other: '12' };
+  EST.toReturn = function (e) {
+    const EC = root.EC; if (!EC) return {};
+    const inh = EC.calcInheritance(e);
+    const won = function (v) { v = Math.round(Number(v) || 0); return v ? v.toLocaleString('ko-KR') : ''; };
+    const heirIds = e.heirs.map(function (h) { return h.id; });
+    const nonHeir = e.heirs.filter(function (h) { return h.rel === 'grandchild' && !h.substitute; }).map(function (h) { return h.id; });
+    const assets = [];
+    e.assets.filter(function (a) { return EC.assetValue(a) > 0; }).forEach(function (a) {
+      const s = EC.sharesOf(e, a), v = EC.assetValue(a);
+      const toNon = nonHeir.reduce(function (t, id) { return t + (s[id] || 0); }, 0);
+      const basis = EC.valueBasis(a);
+      const ev = EC.isFin(a) || a.type === 'retire' ? '08' : basis === 'appraisal' ? '02' : basis === 'gongsi' ? '08' : (a.type === 'apt' || a.type === 'officetel' ? '05' : '01');
+      const row = function (atype, amount) { assets.push({ atype: atype, ptype: PTYPE[a.type] || '12', foreign: 'no', country: '', loc: a.name || EC.TYPES[a.type].label, reg: toNon > 0 && toNon < 1 ? '지분 ' + Math.round((atype === 'A12' ? toNon : 1 - toNon) * 1000) / 10 + '%' : '', qty: '', price: Math.round(amount), eval: ev }); };
+      if (toNon >= 0.999) row('A12', v);
+      else if (toNon > 0) { row('A11', v * (1 - toNon)); row('A12', v * toNon); }
+      else row('A11', v);
+    });
+    (e.gifts || []).filter(function (g) { return Number(g.value) > 0; }).forEach(function (g) {
+      assets.push({ atype: heirIds.indexOf(g.to) >= 0 ? 'A21' : 'A22', ptype: '12', foreign: 'no', country: '', loc: '사전증여' + (g.year ? ' (' + g.year + '년)' : ''), reg: '', qty: '', price: Math.round(Number(g.value)), eval: '' });
+    });
+    const d = e.debts || {}, f = e.funeral || {};
+    const debt = [];
+    if (Number(d.loan)) debt.push({ kind: 'finance', creditor: '금융기관', amt: Number(d.loan) });
+    if (Number(d.deposit)) debt.push({ kind: 'deposit', creditor: '임차인', amt: Number(d.deposit) });
+    if (Number(d.other)) debt.push({ kind: 'other', creditor: '', amt: Number(d.other) });
+    const utility = Number(d.tax) ? [{ kind: '06', year: (e.deceased.date || '').slice(0, 4), quarter: '', amt: Number(d.tax) }] : [];
+    // 서식의 봉안시설·자연장지 비용은 장례비 합계 「그중」 금액이므로 행에는 둘을 합쳐 적는다
+    const funeralAll = (Number(f.cost) || 0) + (Number(f.grave) || 0);
+    const funeral = funeralAll ? [{ payeeId: '', payee: '', desc: Number(f.grave) ? '장례비용(봉안시설 포함)' : '장례비용', amt: funeralAll }] : [];
+    const sp = e.heirs.some(function (h) { return h.rel === 'spouse'; });
+    return {
+      assets: assets,
+      step2: { filing: 'ontime', residency: 'res', spouse: sp ? 'yes' : 'no', heirs: inh.ded.spouseOnly ? 'spouseOnly' : 'mixed',
+        childCount: String(inh.ded.children || ''), minorYears: String(inh.ded.minorYears || ''), seniorCount: String(inh.ded.seniors || ''), disabledYears: String(inh.ded.disabledYears || ''),
+        spouseInheritance: won(inh.ded.spouse), financialInheritance: won(inh.ded.fin), cohabitationDeduction: won(inh.ded.cohabit), enshrineAmount: won(f.grave),
+        priorGiftBase: won(inh.priorGiftTaxBase), renounced: '',
+        rows: { debt: debt, utility: utility, funeral: funeral } },
+      step4: { inheritance_date: e.deceased.date || '', skipValue: won(inh.skipAmount), skipMinor: !!inh.skipBig, giftTaxCredit: won(inh.giftTaxPaid), appraisalFee: won((e.misc || {}).appraisalFee) },
+      _from: 'estate', _savedAt: new Date().toISOString()
+    };
+  };
+
   root.EST = EST;
   if (typeof module === 'object' && module.exports) module.exports = EST;
 })(typeof window !== 'undefined' ? window : globalThis);

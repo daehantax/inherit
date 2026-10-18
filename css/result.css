@@ -80,3 +80,7 @@
   .rs-heirs tr.total td{border-top:0}
   .rs-heirs tr.total{border-top:2px solid var(--main);border-bottom:0}
 }
+
+.rs-key-row{display:flex;flex-wrap:wrap;gap:8px}
+.rs-key-row input{max-width:240px}
+#keyMsg.bad{color:var(--bad)}

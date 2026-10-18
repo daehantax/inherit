@@ -39,6 +39,14 @@ const E = { v: 1, deceased: { date: '2026-03-10' },
   // 신청: 연락처 없으면 막힘
   p.d.getElementById('askForm').dispatchEvent(new p.w.Event('submit', { cancelable: true }));
   expect('휴대폰 없으면 안내', p.el('askMsg').textContent.includes('휴대폰') ? 1 : 0, 1);
+  // 열쇠 코드: 형식이 틀리면 안내, 맞으면 서버 확인(가짜 fetch) 후 「신고서 열기」 버튼
+  p.el('keyNo').value = 'F-1'; p.click('#keyOpen');
+  expect('접수번호 형식 안내', p.text('keyMsg').includes('접수번호') ? 1 : 0, 1);
+  p.w.fetch = async () => ({ ok: true, json: async () => ({ ok: true }) });
+  p.el('keyNo').value = 'F-20261018-01'; p.el('keyCode').value = 'a1b2c3d4'; p.click('#keyOpen');
+  await new Promise(r => setTimeout(r, 30));
+  expect('열쇠 코드 확인 → 신고서 열기 버튼', p.el('keyOk').hidden ? 0 : 1, 1);
+  p.w.fetch = async () => ({ ok: true, json: async () => ({ ok: false }) });
   // 상속세 0원 사례: 신고 대행 카드 숨김
   const small = JSON.parse(JSON.stringify(E)); small.assets = [{ id: 'fin_deposit', type: 'deposit', value: 3e8 }];
   const q = await open('result.html', { hash: '#e=' + EST.encode(small) });
