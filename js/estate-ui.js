@@ -45,7 +45,10 @@
     opt = opt || {};
     const v = Number(getVal(path)) || 0;
     const id = 'f_' + path.replace(/\./g, '_');
-    return '<input type="text" inputmode="numeric" autocomplete="off" id="' + id + '" data-path="' + path + '" data-type="money" value="' + (v ? Math.round(v / 1e4).toLocaleString('ko-KR') : '') + '" placeholder="' + (opt.ph || '0') + '"><span class="unit">만원</span><span class="kor">' + (v ? kor(v) : '') + '</span>';
+    const lockN = (window.FIL ? FIL.locked(E) : {})[path];
+    const sec = /^a\.fin_/.test(path) ? 'fin' : 'debt';
+    return '<input type="text" inputmode="numeric" autocomplete="off" id="' + id + '" data-path="' + path + '" data-type="money" value="' + (v ? Math.round(v / 1e4).toLocaleString('ko-KR') : '') + '" placeholder="' + (opt.ph || '0') + '"' + (lockN ? ' readonly class="locked" title="신고서 채우기에서 건별로 적은 합계입니다"' : '') + '><span class="unit">만원</span><span class="kor">' + (v ? kor(v) : '') + '</span>' +
+      (lockN ? '<a class="es-lock" href="filing.html#s=' + sec + '">건별 ' + lockN + '건 합계 · 신고서 채우기에서 고치기 →</a>' : '');
   }
   function intIn(path, opt) {
     opt = opt || {};

@@ -1,13 +1,15 @@
 /* ============================================================
    상속 파일 + 비밀 칸 → 국세청 전자신고 레코드 값 (efile-map.js)
    EF.build(estate, secret) → { records: [{ code, values(칸 번호: 값) }], problems: [...], totals }
+   고객이 「신고서 채우기」(e.filing)에 적은 값이 먼저 들어가고, secret(세무사가 efile.html 에서 입력)이 있으면 그 값이 우선한다.
    secret(세무사가 efile.html 에서만 입력, 저장 안 함):
      agent   { userId, name, mgmtNo, phone, bizNo }                       세무대리인
      filer   { heirId, email, phone, address }                            신고인(상속인 중 1명)
      deceased{ name, ssn, sex, bjd, bjdName, san, bunji, ho, block, dong, unit, cause }
      heirs   { [heirId]: { name, ssn, phone, relation } }
      assets  { [assetId]: { bjd, bjdName, san, bunji, ho, block, dong, unit, area, sharePct, uniqNo, bankCode, account, bizNo } }
-     debts   { loan|deposit|other: { creditor, creditorNo, from, to, kind } }, publicCharge { kind, year, quarter, taxCode }
+     fin     { [finItemId]: { account } }                                 건별 예금의 계좌번호
+     debts   { loan|deposit|other: { creditor, creditorNo, from, to, kind } }, publicCharge { kind, year, quarter, taxCode }  (건별 입력이 없을 때)
      funeral { payee, payeeNo }
    ============================================================ */
 (function (root) {
@@ -15,6 +17,9 @@
   const EC = root.EC || require('./estate-calc.js');
   const CODES = root.EF_CODES || require('./efile-codes.js');
   const EF = root.EF || require('./efile.js');
+  const FIL = root.FIL || require('./filing.js');
+  // 고객이 적은 값(filing) 위에 세무사가 적은 값(secret)을 덮는다. 빈 문자열은 덮지 않는다.
+  function over(base, top) { const o = Object.assign({}, base || {}); Object.keys(top || {}).forEach(function (k) { const v = top[k]; if (v !== '' && v !== undefined && v !== null) o[k] = v; }); return o; }
   const digits = function (s) { return String(s || '').replace(/[^\d]/g, ''); };
   const seq = function (n) { return String(n).padStart(6, '0'); };
   const ymd = function (s) { return digits(s).slice(0, 8); };
@@ -47,11 +52,15 @@
     const problems = [], add = function (t) { problems.push(t); };
     const inh = EC.calcInheritance(e), d = inh.ded, legal = EC.legalShares(e);
     const date = e.deceased.date || '', ym = ymd(date).slice(0, 6);
-    const heirs = e.heirs.slice(), hs = S.heirs || {}, as = S.assets || {};
+    const F = FIL.get(e);
+    const heirs = e.heirs.slice();
+    const hs = {}; heirs.forEach(function (h) { hs[h.id] = over(F.heirs[h.id], (S.heirs || {})[h.id]); });
+    const as = {}; e.assets.forEach(function (a) { as[a.id] = over(F.assets[a.id], (S.assets || {})[a.id]); });
+    const fs0 = over(F.filer, S.filer), dc0 = over(F.deceased, S.deceased);
     const heirSeq = {}; heirs.forEach(function (h, i) { heirSeq[h.id] = seq(i + 1); });
-    const filer = heirs.find(function (h) { return h.id === (S.filer || {}).heirId; }) || heirs[0];
+    const filer = heirs.find(function (h) { return h.id === fs0.heirId; }) || heirs[0];
     if (!filer) add('상속인이 없습니다.');
-    const relOf = function (h) { return (hs[h.id] && hs[h.id].relation) || CODES.defaultRelation(h, (S.deceased || {}).sex); };
+    const relOf = function (h) { return (hs[h.id] && hs[h.id].relation) || CODES.defaultRelation(h, dc0.sex); };
     const R = [];
 
     /* 01 헤더 */
@@ -59,33 +68,53 @@
     R.push({ code: '01', values: { 3: digits((hs[filer && filer.id] || {}).ssn), 8: '1', 9: ym, 10: ag.userId, 11: ag.name, 12: String(ag.mgmtNo || '').replace(/-/g, ''), 13: ag.phone, 14: digits(ag.bizNo), 15: '9000', 16: ym, 17: ym, 19: 'N', 20: 'N' } });
 
     /* 02 기본사항 */
-    const dc = S.deceased || {}, fs = S.filer || {}, fh = hs[filer && filer.id] || {};
+    const dc = dc0, fs = fs0, fh = hs[filer && filer.id] || {};
+    if (!dc.name) add('피상속인 성명을 넣어 주세요.');
+    if (digits(dc.ssn).length !== 13) add('피상속인 주민등록번호 13자리를 넣어 주세요.');
+    if (digits(dc.bjd).length !== 10) add('피상속인 주소의 법정동코드 10자리를 넣어 주세요.');
+    if (!fs.address) add('신고인 주소를 넣어 주세요.');
+    if (!fs.phone && !fh.phone) add('신고인 전화번호를 넣어 주세요.');
     R.push({ code: '02', values: { 3: fh.name || (filer && filer.name), 4: digits(fh.ssn), 5: fs.email, 6: fs.address, 7: filer ? relOf(filer) : '', 8: fs.phone, 9: 'N',
       10: dc.name, 11: digits(dc.ssn), 12: digits(dc.bjd), 13: dc.bjdName, 14: dc.san || '0', 15: dc.bunji || 0, 16: dc.ho || 0, 17: dc.block, 18: dc.dong, 19: dc.unit, 22: dc.cause || '01', 23: ymd(date) } });
+    R[R.length - 1].values[8] = fs.phone || fh.phone;
 
     /* 05 재산명세 (상속재산 + 사전증여) */
     const assetRows = []; let aNo = 0;
     const nonHeir = heirs.filter(function (h) { return h.rel === 'grandchild' && !h.substitute; }).map(function (h) { return h.id; });
+    const finRows = [];                                   // 19 레코드용: { no, name, account }
     e.assets.filter(function (a) { return EC.assetValue(a) > 0; }).forEach(function (a) {
-      const v = EC.assetValue(a), s = EC.sharesOf(e, a, legal), x = as[a.id] || {};
+      const s = EC.sharesOf(e, a, legal), x = as[a.id] || {};
       const toNon = nonHeir.reduce(function (t, id) { return t + (s[id] || 0); }, 0);
-      const kind = PT[a.type] || '12';
-      const basis = EC.valueBasis(a);
-      const ev = (EC.isFin(a) || a.type === 'retire') ? '08' : basis === 'appraisal' ? '02' : basis === 'gongsi' ? '08' : (a.type === 'apt' || a.type === 'officetel' ? '05' : '01');
-      aNo += 1; const no = seq(aNo);
-      const vals = { 3: no, 4: toNon >= 0.999 ? 'A12' : 'A11', 5: kind, 6: ev, 7: Math.round(v), 21: 'N' };
-      if (REAL.indexOf(kind) >= 0) {
-        Object.assign(vals, { 9: Number(x.area) || 0, 11: digits(x.bjd), 12: x.bjdName, 13: x.san || '0', 14: x.bunji || 0, 15: x.ho || 0, 16: x.block, 17: x.dong, 18: x.unit, 19: x.uniqNo, 20: x.sharePct !== undefined && x.sharePct !== '' ? Number(x.sharePct) : 100 });
-        if (digits(x.bjd).length !== 10) add((a.name || EC.TYPES[a.type].label) + ': 법정동코드 10자리를 넣어 주세요.');
-        if (!Number(x.area)) add((a.name || EC.TYPES[a.type].label) + ': 면적(㎡)을 넣어 주세요.');
-      }
-      if (kind === '09' || kind === '10') Object.assign(vals, { 8: 1, 10: Math.round(v), 24: digits(x.bizNo), 25: '01' });
-      if (kind === '11') Object.assign(vals, { 26: x.bankCode, 27: digits(dc.ssn), 28: x.account });
-      if (kind === '12') Object.assign(vals, { 8: 1, 29: a.name || EC.TYPES[a.type].label });
-      if (a.type === 'insurance') vals[30] = '20';
-      if (a.type === 'retire') vals[30] = '10';
-      R.push({ code: '05', values: vals });
-      assetRows.push({ a: a, no: no, value: Math.round(v), shares: s, area: Number(x.area) || 0 });
+      const items = FIL.FIN_TYPES.indexOf(a.type) >= 0 && F.fin[a.type].length ? F.fin[a.type] : null;
+      // 건별 입력이 있으면 한 건이 한 레코드, 없으면 합계 한 레코드
+      (items || [null]).forEach(function (it) {
+        const v = it ? FIL.finItemValue(a.type, it) : EC.assetValue(a); if (!v) return;
+        const sec = it ? ((S.fin || {})[it.id] || {}) : {};
+        let kind = PT[a.type] || '12', ev = x.evalCode || FIL.evalCode(a);
+        if (it && a.type === 'stock') { kind = it.listed === '10' ? '10' : '09'; ev = kind === '10' ? '08' : '05'; }
+        aNo += 1; const no = seq(aNo);
+        const vals = { 3: no, 4: toNon >= 0.999 ? 'A12' : 'A11', 5: kind, 6: ev, 7: Math.round(v), 21: 'N' };
+        const label = it ? (it.name || it.company || FIL.BANK_NAME(it.bankCode) || it.bank || it.desc || EC.TYPES[a.type].label) : (a.name || EC.TYPES[a.type].label);
+        if (REAL.indexOf(kind) >= 0) {
+          Object.assign(vals, { 9: Number(x.area) || 0, 11: digits(x.bjd), 12: x.bjdName, 13: x.san || '0', 14: x.bunji || 0, 15: x.ho || 0, 16: x.block, 17: x.dong, 18: x.unit, 19: x.uniqNo, 20: x.sharePct !== undefined && x.sharePct !== '' ? Number(x.sharePct) : 100 });
+          if (digits(x.bjd).length !== 10) add(label + ': 법정동코드 10자리를 넣어 주세요.');
+          if (!Number(x.area) && a.type !== 'bunyang') add(label + ': 면적(㎡)을 넣어 주세요.');
+        }
+        if (kind === '09' || kind === '10') {
+          const qty = it && Number(it.qty) > 0 ? Number(it.qty) : 1, unit = it && Number(it.qty) > 0 && Number(it.unitPrice) > 0 ? Math.round(Number(it.unitPrice)) : Math.round(v);
+          Object.assign(vals, { 8: qty, 10: unit, 24: digits(it ? it.bizNo : x.bizNo), 25: '01' });
+        }
+        if (kind === '11') {
+          const bank = it ? (it.bankCode || x.bankCode) : x.bankCode, acct = it ? (sec.account || x.account) : x.account;
+          Object.assign(vals, { 26: bank && bank !== 'ZZZ' ? bank : 'ZZZ', 27: digits(dc.ssn), 28: acct });
+          finRows.push({ no: no, name: label + (a.type === 'deposit' ? ' 예금' : ''), account: acct });
+        }
+        if (kind === '12') Object.assign(vals, { 8: 1, 29: label });
+        if (a.type === 'insurance') vals[30] = '20';
+        if (a.type === 'retire') vals[30] = '10';
+        R.push({ code: '05', values: vals });
+        assetRows.push({ a: a, no: no, value: Math.round(v), shares: s, area: Number(x.area) || 0 });
+      });
     });
     const heirIds = heirs.map(function (h) { return h.id; });
     (e.gifts || []).filter(function (g) { return Number(g.value) > 0; }).forEach(function (g) {
@@ -126,16 +155,41 @@
       });
     });
 
-    /* 08 채무 · 09 공과금 · 10 장례비용 */
+    /* 08 채무 · 09 공과금 · 10 장례비용 — 건별 입력(filing)이 있으면 그대로, 없으면 합계 한 줄 */
     const dS = S.debts || {}; let dNo = 0; const debtNos = {};
-    [['loan', '01'], ['deposit', '07'], ['other', '06']].forEach(function (k) {
-      const amt = Math.round(inh.debtParts[k[0]]); if (!amt) return;
-      const x = dS[k[0]] || {}; dNo += 1; debtNos[k[0]] = seq(dNo);
-      R.push({ code: '08', values: { 3: seq(dNo), 4: x.kind || k[1], 5: ymd(x.from) || ymd(date), 6: ymd(x.to), 7: x.creditor || (k[0] === 'loan' ? '금융기관' : ''), 8: digits(x.creditorNo) || '9999999999', 9: amt, 10: f24 } });
-      if (!x.creditor && k[0] !== 'loan') add('채무(' + k[0] + '): 채권자 이름을 넣어 주세요.');
-    });
-    if (f22) { const pc = S.publicCharge || {}; dNo += 1; R.push({ code: '09', values: { 3: seq(dNo), 4: pc.kind || '06', 5: pc.year || ym.slice(0, 4), 6: pc.quarter || '1', 7: f22, 8: f22, 9: pc.kind === '01' ? (pc.taxCode || '') : '' } }); }
-    {
+    if (F.debts.length) {
+      F.debts.forEach(function (r) {
+        const amt = Math.round(Number(r.amount) || 0); if (!amt) return;
+        dNo += 1; const no = seq(dNo); if (FIL.debtGroup(r.kind) === 'loan' && !debtNos.loan) debtNos.loan = no;
+        R.push({ code: '08', values: { 3: no, 4: r.kind || '06', 5: ymd(r.from) || ymd(date), 6: ymd(r.to), 7: r.creditor, 8: digits(r.creditorNo) || '9999999999', 9: amt, 10: f24 } });
+        if (!r.creditor) add('채무 ' + dNo + '번: 채권자 이름을 넣어 주세요.');
+      });
+      const dSum = F.debts.reduce(function (t, r) { return t + Math.round(Number(r.amount) || 0); }, 0);
+      if (dSum !== f24) add('채무 건별 합계(' + dSum + ')가 과세가액의 채무(' + f24 + ')와 다릅니다. 「신고서 채우기」에서 저장을 다시 눌러 주세요.');
+    } else {
+      [['loan', '01'], ['deposit', '07'], ['other', '06']].forEach(function (k) {
+        const amt = Math.round(inh.debtParts[k[0]]); if (!amt) return;
+        const x = dS[k[0]] || {}; dNo += 1; debtNos[k[0]] = seq(dNo);
+        R.push({ code: '08', values: { 3: seq(dNo), 4: x.kind || k[1], 5: ymd(x.from) || ymd(date), 6: ymd(x.to), 7: x.creditor || (k[0] === 'loan' ? '금융기관' : ''), 8: digits(x.creditorNo) || '9999999999', 9: amt, 10: f24 } });
+        if (!x.creditor && k[0] !== 'loan') add('채무(' + k[0] + '): 채권자 이름을 넣어 주세요.');
+      });
+    }
+    if (F.charges.length) {
+      F.charges.forEach(function (r) {
+        const amt = Math.round(Number(r.amount) || 0); if (!amt) return;
+        dNo += 1; R.push({ code: '09', values: { 3: seq(dNo), 4: r.kind || '06', 5: r.year || ym.slice(0, 4), 6: r.quarter || '1', 7: amt, 8: f22, 9: r.kind === '01' ? (r.taxCode || '') : '' } });
+        if (r.kind === '01' && !r.taxCode) add('공과금 ' + dNo + '번(국세): 세목코드를 넣어 주세요.');
+      });
+      const cSum = F.charges.reduce(function (t, r) { return t + Math.round(Number(r.amount) || 0); }, 0);
+      if (cSum !== f22) add('공과금 건별 합계(' + cSum + ')가 과세가액의 공과금(' + f22 + ')과 다릅니다.');
+    } else if (f22) { const pc = S.publicCharge || {}; dNo += 1; R.push({ code: '09', values: { 3: seq(dNo), 4: pc.kind || '06', 5: pc.year || ym.slice(0, 4), 6: pc.quarter || '1', 7: f22, 8: f22, 9: pc.kind === '01' ? (pc.taxCode || '') : '' } }); }
+    if (F.funeral.length) {
+      // 서식·전산매체의 장례비 행은 실제 지출액, 공제액(f23)은 04·06 레코드에서 한도 적용
+      F.funeral.forEach(function (r) {
+        const amt = Math.round(Number(r.amount) || 0); if (!amt) return;
+        dNo += 1; R.push({ code: '10', values: { 3: seq(dNo), 4: r.kind === '2' ? '2' : '1', 5: digits(r.payeeNo), 6: r.payee, 7: r.desc || (r.kind === '2' ? '봉안시설·자연장지' : '장례비용'), 8: amt, 9: f23 } });
+      });
+    } else {
       const fx = S.funeral || {}; const general = Math.max(inh.funeralGeneral, EC.R.funeralMin);
       dNo += 1; R.push({ code: '10', values: { 3: seq(dNo), 4: '1', 5: digits(fx.payeeNo), 6: fx.payee, 7: '장례비용', 8: Math.round(general), 9: f23 } });
       if (inh.funeralGrave) { dNo += 1; R.push({ code: '10', values: { 3: seq(dNo), 4: '2', 5: digits(fx.payeeNo), 6: fx.payee, 7: '봉안시설·자연장지', 8: Math.round(inh.funeralGrave), 9: f23 } }); }
@@ -157,7 +211,7 @@
     /* 19·20 금융재산 */
     if (d.fin > 0) {
       let fNo = 0;
-      assetRows.filter(function (r) { return EC.isFin(r.a); }).forEach(function (r) { fNo += 1; R.push({ code: '19', values: { 3: seq(fNo), 4: r.no, 6: r.a.name || EC.TYPES[r.a.type].label, 7: (as[r.a.id] || {}).account } }); });
+      assetRows.filter(function (r) { return EC.isFin(r.a); }).forEach(function (r) { const fr = finRows.find(function (q) { return q.no === r.no; }); fNo += 1; R.push({ code: '19', values: { 3: seq(fNo), 4: r.no, 6: fr ? fr.name : (r.a.name || EC.TYPES[r.a.type].label), 7: fr ? fr.account : (as[r.a.id] || {}).account } }); });
       if (debtNos.loan) { fNo += 1; R.push({ code: '19', values: { 3: seq(fNo), 5: debtNos.loan, 6: '금융채무' } }); }
       const finA = Math.round(e.assets.filter(EC.isFin).reduce(function (s, a) { return s + EC.assetValue(a); }, 0)), finD = Math.round(inh.debtParts.loan);
       const net = Math.max(0, finA - finD);

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>신고서 채우기 · 상속세 · 대한세무법인</title>
+<meta name="description" content="상속세 신고서와 전자신고에 들어가는 내용을 건별로 적습니다. 이 기기에만 저장됩니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<link rel="stylesheet" href="css/estate.css">
+<link rel="stylesheet" href="css/filing.css">
+</head>
+<body class="es-page fl-page" data-subject="상속세" data-wide="1" data-contact="off">
+
+<main class="wrap wide">
+  <div class="dh-head">
+    <div class="crumb"><a href="./">상속세</a> › <a href="result.html#ask">맡기기</a> › 신고서 채우기</div>
+    <h1>신고서 채우기 <span class="fl-prod" id="flProd"></span></h1>
+    <p id="flLead">신고서와 전자신고에 들어가는 내용을 한 건씩 적습니다. 1단계에서 합계로 적은 금액이 여기서 건별로 나뉩니다. 아는 것부터 적으세요. 비워 둔 칸은 아래 「확인」에서 다시 알려 드립니다.</p>
+  </div>
+
+  <div class="note fl-privacy" id="flPrivacy">
+    <b>이 화면의 내용은 이 기기(브라우저)에만 저장됩니다.</b> 서버로 자동 전송되지 않습니다.
+    <span class="fl-sec-note">주민등록번호·계좌번호는 어떤 경우에도 링크·메일·접수 시트에 실리지 않습니다. 셀프 신고서를 인쇄할 때만 이 기기에서 씁니다.</span>
+    신청하기를 누르면 그 밖의 내용(이름·주소·재산·빚 등)은 「입력 내용 보기」 링크로 담당 세무사에게 전달됩니다.
+    <button type="button" class="btn ghost sm" id="btnClearSecret">주민등록번호·계좌번호 지우기</button>
+  </div>
+  <div class="note warn" id="flLimit" hidden></div>
+  <div class="note" id="flEmpty" hidden>먼저 <a href="estate.html">무엇을 물려받나요</a>에서 가족과 재산을 넣어 주세요. 그다음 여기서 건별로 적습니다.</div>
+
+  <nav class="es-steps no-print" id="flSteps" aria-label="입력 순서">
+    <button type="button" data-go="people"><span class="k">1</span>사람</button>
+    <button type="button" data-go="real"><span class="k">2</span>집·땅</button>
+    <button type="button" data-go="fin"><span class="k">3</span>예금·주식 등</button>
+    <button type="button" data-go="debt"><span class="k">4</span>빚·공과금·장례비</button>
+    <button type="button" data-go="done"><span class="k">5</span>확인·다음</button>
+  </nav>
+
+  <div class="es-layout">
+    <div>
+      <!-- 1. 사람 -->
+      <section class="card es-screen" data-screen="people">
+        <h2 class="es-q">돌아가신 분과 신고인</h2>
+        <p class="es-lead">신고서 맨 앞장(제9호 서식)과 전자신고 기본사항에 들어갑니다. 주소는 주민등록상 주소입니다.</p>
+        <h3 class="subhead">돌아가신 분(피상속인)</h3>
+        <div id="flDeceased"></div>
+        <h3 class="subhead">신고인 <small>상속인 중 한 명이 대표로 신고합니다. 보통 배우자 또는 첫째 자녀.</small></h3>
+        <div id="flFiler"></div>
+        <h3 class="subhead">상속인 모두</h3>
+        <div id="flHeirs"></div>
+      </section>
+
+      <!-- 2. 집·땅 -->
+      <section class="card es-screen" data-screen="real">
+        <h2 class="es-q">집·땅·건물의 소재지</h2>
+        <p class="es-lead">등기부등본의 「소재지번」을 그대로 적으세요. 법정동코드는 몰라도 됩니다 — 세무사가 채웁니다(직접 찾으시려면 <a href="https://www.code.go.kr/stdcode/regCodeL.do" target="_blank" rel="noopener">행정표준코드 › 법정동코드</a>).</p>
+        <div id="flReal"></div>
+      </section>
+
+      <!-- 3. 예금·주식 등 -->
+      <section class="card es-screen" data-screen="fin">
+        <h2 class="es-q">예금·주식·보험금을 한 건씩</h2>
+        <p class="es-lead">돌아가신 날 기준 잔액입니다. 「안심상속 원스톱 서비스」 조회 결과와 은행 잔액증명서를 보고 적으세요. 여기에 적은 건별 합계가 1단계 금액이 됩니다.</p>
+        <div id="flFin"></div>
+      </section>
+
+      <!-- 4. 빚·공과금·장례비 -->
+      <section class="card es-screen" data-screen="debt">
+        <h2 class="es-q">빚·공과금·장례비를 한 건씩</h2>
+        <p class="es-lead">채권자(은행·세입자·병원 등)별로 한 줄씩. 증빙(잔액증명서·임대차계약서·영수증)이 있는 것만 공제됩니다.</p>
+        <div id="flDebt"></div>
+      </section>
+
+      <!-- 5. 확인·다음 -->
+      <section class="card es-screen" data-screen="done">
+        <h2 class="es-q">확인하고 다음으로</h2>
+        <div id="flMissing"></div>
+        <h3 class="subhead">신고서에 이렇게 들어갑니다 <small>별지 「상속받은 총재산명세」 행</small></h3>
+        <div class="table-scroll"><table class="mini fl-preview" id="flPreview"></table></div>
+        <div id="flNext"></div>
+      </section>
+
+      <div class="es-nav no-print">
+        <button type="button" class="btn ghost" id="btnPrev">← 이전</button>
+        <button type="button" class="btn" id="btnNext">다음 →</button>
+      </div>
+    </div>
+
+    <aside class="es-sum no-print" id="flSum" aria-live="polite">
+      <h3>지금까지</h3>
+      <div class="kv"><span>재산 합계</span><b id="sumProp">0원</b></div>
+      <div class="kv"><span>빚·공과금·장례비</span><b id="sumMinus">0원</b></div>
+      <div class="big"><span>예상 상속세</span><b id="sumTax">—</b></div>
+      <div class="kv"><span>아직 비운 칸</span><b id="sumMissing">0개</b></div>
+      <p class="es-note" id="sumSaved">자동 저장됨</p>
+      <a class="btn ghost wide" href="estate.html">1단계 입력으로</a>
+      <a class="btn ghost wide" href="result.html">세금 결과로</a>
+    </aside>
+  </div>
+</main>
+
+<script src="js/dh.js"></script>
+<script src="js/estate-calc.js"></script>
+<script src="js/estate.js"></script>
+<script src="js/filing.js"></script>
+<script src="js/efile-codes.js"></script>
+<script src="js/filing-ui.js"></script>
+</body>
+</html>

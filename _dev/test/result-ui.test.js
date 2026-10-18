@@ -33,9 +33,11 @@ const E = { v: 1, deceased: { date: '2026-03-10' },
   expect('적용 후 10년 합계 = 원래 − 카드 금액', afterTotal, all.total - sv.save[0].amount);
   p.click('#btnUndo');
   expect('되돌리면 원래 숫자', p.text('bigNow'), before);
-  // 상품 고르기
-  p.click('[data-pick="review"]');
-  expect('검토 고르면 버튼 글자', p.text('askSend'), '세무사 검토 신청하기');
+  // 상품 고르기 (이 사례는 15억 초과 → 셀프·검토 막힘, 맡기기만)
+  expect('15억 초과 → 셀프·검토 카드 막힘(2개)', p.d.querySelectorAll('#products .pd.off').length, 2);
+  expect('15억 초과 → 맡기기 선택', p.d.querySelector('input[name="askProd"]:checked').value, 'file');
+  p.click('[data-pick="file"]');
+  expect('맡기기 버튼 글자', p.text('askSend'), '신고까지 맡기기 신청하기');
   // 신청: 연락처 없으면 막힘
   p.d.getElementById('askForm').dispatchEvent(new p.w.Event('submit', { cancelable: true }));
   expect('휴대폰 없으면 안내', p.el('askMsg').textContent.includes('휴대폰') ? 1 : 0, 1);
@@ -52,6 +54,22 @@ const E = { v: 1, deceased: { date: '2026-03-10' },
   const q = await open('result.html', { hash: '#e=' + EST.encode(small) });
   expect('상속세 0원 → 상품 2개(대행 없음)', q.d.querySelectorAll('#products .pd').length, 2);
   expect('상속세 0원 안내 문구', q.el('offerLine').textContent.includes('0원') ? 1 : 0, 1);
+  // 15억 이하 사례: 셀프·검토는 「신고서 채우기」로, 맡기기는 바로 신청
+  const mid = JSON.parse(JSON.stringify(E)); mid.assets[0].value = 8e8; mid.assets[0].gongsi = 6e8;
+  const m = await open('result.html', { hash: '#e=' + EST.encode(mid) });
+  expect('셀프·검토 카드 → 신고서 채우기 링크(2) + 맡기기 선택 링크(1)', m.d.querySelectorAll('#products a[href^="filing.html?p="]').length, 3);
+  expect('맡기기 카드 → 바로 신청 버튼', m.d.querySelectorAll('#products [data-pick="file"]').length, 1);
+  m.radio('askProd', 'review');
+  expect('검토 고르면 버튼 글자', m.text('askSend'), '세무사 검토 신청하기');
+  expect('건별 입력 없으면 안내 줄', m.el('askNoFill').hidden ? 0 : 1, 1);
+  m.click('[data-pick="file"]');
+  expect('맡기기 고르면 안내 줄 숨김', m.el('askNoFill').hidden ? 1 : 0, 1);
+  // 건별 입력이 있는 파일 → 「함께 보냅니다」 체크
+  const filled = JSON.parse(JSON.stringify(mid)); filled.filing = { fin: { deposit: [{ id: 'd1', bankCode: '004', value: 3e8 }] }, debts: [], charges: [], funeral: [], deceased: { name: '홍길동' }, filer: {}, heirs: {}, assets: {} };
+  const f = await open('result.html?p=review', { hash: '#e=' + EST.encode(filled) });
+  expect('?p=review → 검토 선택', f.d.querySelector('input[name="askProd"]:checked').value, 'review');
+  expect('함께 보냅니다 체크 보임', f.el('askWith').hidden ? 0 : 1, 1);
+  expect('이어서 채우기 링크', f.d.querySelectorAll('#products a[href="filing.html?p=review"]').length, 1);
   // 빈 상속 파일
   const r = await open('result.html');
   expect('입력 없으면 안내 카드', r.el('rsEmpty').hidden ? 0 : 1, 1);

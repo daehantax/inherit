@@ -131,10 +131,10 @@
   function products() {
     const tp = ALL.inheritance.totalProperty, P = EST.PRICE;
     return [
-      { key: 'self', name: '셀프 신고서', say: '신고서를 다 채워 드립니다. 직접 내시면 됩니다.', price: P.self, priceNote: '부가세 포함',
-        items: ['입력값으로 채운 신고서 서식 전체 (인쇄·PDF)', '홈택스 화면 입력 가이드 (어느 화면, 어느 칸에 무슨 값)', '납부서', '결제 확인 후 열쇠 코드를 이메일로 보내 드림'] },
-      { key: 'review', name: '세무사 검토', say: '세무사가 한 번 봐 드립니다.', price: P.review, priceNote: '셀프 신고서를 결제하셨다면 9만9천원 빼 드림',
-        items: ['입력값·평가액·공제 검토', '위 절세 포인트 중 적용되는 것 확정', '서면 답변서 + 30분 통화', '셀프 신고서 포함'] },
+      { key: 'self', name: '셀프 신고서', say: '자산·빚을 건별로 적으면 신고서를 다 채워 드립니다. 직접 내시면 됩니다.', price: P.self, priceNote: '부가세 포함 · 총 상속재산 15억원 이하',
+        items: ['건별로 적은 내용으로 채운 신고서 서식 전체 (인쇄·PDF)', '홈택스 직접 제출 순서 (화면·칸 단위)', '납부 안내', '결제 확인 후 열쇠 코드를 이메일로 보내 드림'] },
+      { key: 'review', name: '세무사 검토', say: '적은 내용을 세무사가 한 번 봐 드립니다.', price: P.review, priceNote: '셀프 신고서를 결제하셨다면 9만9천원 빼 드림 · 15억원 이하',
+        items: ['건별 입력값·평가액·공제 검토', '위 절세 포인트 중 적용되는 것 확정', '서면 답변서 + 30분 통화', '검토 끝난 신고서 서식(PDF) 전달'] },
       { key: 'file', name: '신고까지 맡기기', say: '세무사가 대신 신고합니다.', price: EST.fileFee(tp, 0), priceNote: '기본 99만원 + 10억 초과분 0.1% · 앞 단계 결제분 차감',
         items: ['세무사 검토 포함', '필요한 서류 목록 안내', '세무사가 홈택스로 전자신고, 접수증 전달', '취득세 기한·다음 해 재산세·종부세 달력'] }
     ];
@@ -160,11 +160,23 @@
     if (!$('askForm').dataset.touched) product = rec;
     $('offerLine').innerHTML = line;
     const shown = ps.filter(function (p) { return p.key !== 'file' || inh.payable; });
+    const over = FIL.overLimit(E, inh), filled = FIL.has(E);
     $('products').innerHTML = shown.map(function (p) {
-      return '<div class="pd' + (p.key === product ? ' pick' : '') + '" data-pd="' + p.key + '"><div class="name">' + p.name + (p.key === rec ? ' <span class="badge ok">추천</span>' : '') + '</div><div class="say">' + p.say + '</div>' +
-        '<div class="price">' + priceText(p.price) + '<small>' + p.priceNote + '</small></div><ul>' + p.items.map(function (i) { return '<li>' + i + '</li>'; }).join('') + '</ul>' +
-        '<button type="button" class="btn' + (p.key === product ? '' : ' ghost') + ' wide" data-pick="' + p.key + '">이걸로 신청</button></div>';
+      const limited = over && p.key !== 'file';
+      let act;
+      if (limited) act = '<p class="pd-limit">총 상속재산 15억원 초과 — 이 상품은 15억원 이하만 진행합니다. 신고까지 맡기기 또는 세무사 문의(031-783-8877)</p>';
+      else if (p.key === 'file') act = '<button type="button" class="btn' + (p.key === product ? '' : ' ghost') + ' wide" data-pick="' + p.key + '">이걸로 신청</button><a class="pd-sub" href="filing.html?p=file">신고서 먼저 채우기 (선택) →</a>';
+      else act = '<a class="btn' + (p.key === product ? '' : ' ghost') + ' wide" href="filing.html?p=' + p.key + '">' + (filled ? '신고서 채우기 이어서 →' : '신고서 채우러 가기 →') + '</a>' + (filled ? '<button type="button" class="pd-sub as-link" data-pick="' + p.key + '">다 채웠으면 바로 신청</button>' : '<span class="pd-sub">자산·빚을 건별로 적은 뒤 신청합니다</span>');
+      return '<div class="pd' + (p.key === product ? ' pick' : '') + (limited ? ' off' : '') + '" data-pd="' + p.key + '"><div class="name">' + p.name + (p.key === rec && !limited ? ' <span class="badge ok">추천</span>' : '') + '</div><div class="say">' + p.say + '</div>' +
+        '<div class="price">' + priceText(p.price) + '<small>' + p.priceNote + '</small></div><ul>' + p.items.map(function (i) { return '<li>' + i + '</li>'; }).join('') + '</ul>' + act + '</div>';
     }).join('');
+    // 15억 초과면 셀프·검토는 고를 수 없음
+    if (over && product !== 'file') { product = 'file'; }
+    const cnt = FIL.count(E);
+    $('askWith').hidden = !filled;
+    if (filled) $('askWithText').textContent = '신고서 채우기에서 적은 내용을 함께 보냅니다 (' + FIL.summary(E).replace(/^신고서 채우기: /, '') + ') · 주민등록번호·계좌번호는 빠집니다';
+    $('askNoFill').hidden = filled || product === 'file';
+    if (!$('askNoFill').hidden) $('askNoFill').innerHTML = '아직 자산·빚을 건별로 적지 않았습니다. <a href="filing.html?p=' + product + '">신고서 채우기</a>를 먼저 하시면 ' + (product === 'self' ? '신고서가 바로 채워집니다.' : '세무사 검토가 빨라집니다.') + ' 지금 바로 신청하셔도 됩니다.';
     $('prodRadio').innerHTML = shown.map(function (p) { return '<label><input type="radio" name="askProd" value="' + p.key + '"' + (p.key === product ? ' checked' : '') + '><span>' + p.name + ' · ' + (p.price / 10000).toLocaleString('ko-KR') + '만원</span></label>'; }).join('');
     $('askSend').textContent = (shown.find(function (p) { return p.key === product; }) || shown[0]).name + ' 신청하기';
   }
@@ -174,15 +186,18 @@
     const cnt = {}; fam.forEach(function (r) { cnt[r] = (cnt[r] || 0) + 1; });
     return '예상 상속세 ' + won(p.inheritance) + ' / 취득세 ' + won(p.acquisition) + ' / 10년 집세금 ' + won(p.holding) + ' / 양도세 ' + won(p.transfer) +
       ' (재산 ' + kor(inh.totalProperty) + ', 빚 ' + kor(inh.debts) + ', 가족 ' + Object.keys(cnt).map(function (k) { return k + cnt[k]; }).join('·') + ')' +
-      (SV.save.length ? ' / 절세 포인트: ' + SV.save.map(function (x) { return x.code + ' ' + kor(x.amount); }).join(', ') : '');
+      (SV.save.length ? ' / 절세 포인트: ' + SV.save.map(function (x) { return x.code + ' ' + kor(x.amount); }).join(', ') : '') +
+      (FIL.has(E) && withFiling() ? ' / ' + FIL.summary(E) : '');
   }
+  function withFiling() { const c = $('askWithCheck'); return !c || $('askWith').hidden || c.checked; }
+  function sendE() { return withFiling() ? E : FIL.strip(E); }
   function localNo() { const d = new Date(); return 'F-' + d.toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0'); }
   function showDone(no, prod, c, failed) {
     const p = products().find(function (x) { return x.key === prod; });
     const bank = EST.FIRM.bank;
     const steps = {
-      self: ['결제가 확인되면 <b>' + esc(c.email) + '</b>로 열쇠 코드를 보내 드립니다.', '이 화면의 「셀프 신고서」에서 열쇠 코드를 넣으면 신고서 전체와 홈택스 입력 가이드가 열립니다.', '홈택스에서 직접 신고·납부하시면 됩니다. 막히면 이메일로 물어보세요.'],
-      review: ['담당 세무사가 <b>' + esc(c.phone) + '</b>로 전화드려 질문 범위를 확인합니다.', '결제 확인 후 영업일 2일 안에 서면 답변서를 보내 드리고 30분 통화합니다.', '셀프 신고서 열쇠 코드도 함께 보내 드립니다.'],
+      self: ['결제가 확인되면 <b>' + esc(c.email) + '</b>로 열쇠 코드를 보내 드립니다.', '이 화면의 「셀프 신고서 열기」에 열쇠 코드를 넣으면 <a href="filing.html?p=self#s=done">신고서 채우기</a>에서 적은 내용으로 신고서 전체가 채워집니다.', '<a href="filing.html?p=self#s=done">신고서 채우기 › 확인·다음</a>의 「홈택스에서 직접 제출」 순서대로 신고·납부하시면 됩니다. 막히면 이메일로 물어보세요.'],
+      review: ['담당 세무사가 <b>' + esc(c.phone) + '</b>로 전화드려 질문 범위와 보내 주실 서류를 확인합니다.', '결제 확인 후 영업일 2일 안에 서면 답변서를 보내 드리고 30분 통화합니다.', '검토가 끝난 신고서 서식(PDF)과 셀프 신고서 열쇠 코드를 함께 보내 드립니다.'],
       file: ['담당 세무사가 <b>' + esc(c.phone) + '</b>로 전화드려 최종 금액과 일정을 확인합니다.', '아래 서류를 이메일 또는 사무실로 보내 주세요.', '세무사가 검토한 신고서를 보내 드리고, 확인을 받은 뒤 홈택스로 전자신고합니다. 접수증을 보내 드립니다.']
     }[prod];
     const docs = prod === 'file' || prod === 'review' ? '<h4>준비할 서류</h4><ul>' + EST.docs(E).map(function (d) { return '<li>' + esc(d) + '</li>'; }).join('') + '</ul>' : '';
@@ -208,7 +223,7 @@
     const btn = $('askSend'); btn.disabled = true; btn.textContent = '보내는 중…';
     const payload = { form: 'inherit-file', product: product, productName: p.name, price: p.price, name: c.name, phone: c.phone, email: c.email, question: c.question, pay: c.pay,
       summary: summary(), payable: ALL.parts.inheritance, total: ALL.inheritance.totalProperty, opened: (E.opened || []).join(','),
-      link: EST.link('result.html', E), source: 'inherit/result.html', at: new Date().toISOString() };
+      filing: FIL.has(E) && withFiling() ? FIL.summary(E) : '', link: EST.link('result.html', sendE()), source: 'inherit/result.html', at: new Date().toISOString() };
     let no = '';
     try {
       const res = await fetch(DH.CONSULT_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -284,7 +299,7 @@
       const old = JSON.parse(localStorage.getItem(RKEY) || 'null');
       const hasOwn = old && old._from !== 'estate' && (old.assets || []).some(function (r) { return Number(r.price) > 0; });
       if (hasOwn && !confirm('신고서 화면에 직접 입력해 둔 내용이 있습니다. 지금 입력한 내용으로 바꿔 채울까요?')) return;
-      const data = EST.toReturn(E); data._key = (savedKey() || {}).no || '';
+      const data = EST.toReturn(E, FIL.loadSecret()); data._key = (savedKey() || {}).no || '';
       localStorage.setItem(RKEY, JSON.stringify(data));
     } catch (e) { DH.toast('이 브라우저에 저장할 수 없습니다.', true); return; }
     location.href = 'inherit-tax-report.html#from=estate';
@@ -325,7 +340,9 @@
   TEACH.onOpen(function (id) { if (E.opened.indexOf(id) < 0) { E.opened.push(id); EST.save(E); } });
 
   if (cur.from === 'link') { try { history.replaceState(null, '', location.pathname); } catch (err) { } }
+  { const m = /[?&]p=(self|review|file)/.exec(location.search); if (m) { product = m[1]; $('askForm').dataset.touched = '1'; try { localStorage.setItem('dh.estate.product', m[1]); } catch (e) { } } }
   render();
+  if (/[?&]p=/.test(location.search)) { try { $('askForm').scrollIntoView({ block: 'start' }); } catch (e) { } }
   if (savedKey()) showUnlocked(savedKey());
   try { const prev = JSON.parse(localStorage.getItem('dh.estate.ask') || 'null'); if (prev && prev.no) { $('askMsg').hidden = false; $('askMsg').className = 'note'; $('askMsg').textContent = '이 기기에서 ' + String(prev.at).slice(0, 10) + '에 접수번호 ' + prev.no + '로 신청한 내역이 있습니다.'; } } catch (e) { }
   window.RESULT_UI = { get E() { return E; }, get ALL() { return ALL; }, get SV() { return SV; }, render: render, summary: function () { return summary(); } };

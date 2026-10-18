@@ -13,10 +13,11 @@ function inline(html, file){
 }
 async function open(file, opt){
   opt = opt || {};
+  const qi = file.indexOf('?'); const query = qi >= 0 ? file.slice(qi) : ''; if (qi >= 0) file = file.slice(0, qi);
   const html = inline(fs.readFileSync(path.join(ROOT,file),'utf8'), file);
   const vc=new VirtualConsole(); const errors=[];
   vc.on('jsdomError',e=>{ if(!/Could not load/.test(e.message)) errors.push(e.message); });
-  const dom = new JSDOM(html,{runScripts:'dangerously',url:'file://'+path.join(ROOT,file)+(opt.hash||''),pretendToBeVisual:true,virtualConsole:vc,
+  const dom = new JSDOM(html,{runScripts:'dangerously',url:'file://'+path.join(ROOT,file)+query+(opt.hash||''),pretendToBeVisual:true,virtualConsole:vc,
     beforeParse(w){ w.matchMedia=()=>({matches:false,addListener(){},removeListener(){},addEventListener(){}}); w.scrollTo=()=>{}; w.HTMLElement.prototype.scrollIntoView=()=>{}; w.print=()=>{}; w.alert=()=>{}; w.confirm=()=>true; }});
   await new Promise(r=>dom.window.addEventListener('load',r));
   await new Promise(r=>setTimeout(r,30));

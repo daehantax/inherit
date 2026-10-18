@@ -88,6 +88,8 @@
         <div class="es-row"><label for="askPhone">휴대폰</label><div class="es-ctl"><input type="tel" id="askPhone" autocomplete="tel" inputmode="tel" placeholder="010-0000-0000"></div></div>
         <div class="es-row"><label for="askEmail">이메일 <small>신고서·답변서를 받을 주소</small></label><div class="es-ctl"><input type="email" id="askEmail" autocomplete="email"></div></div>
         <div class="es-row"><label for="askQ">궁금한 점 <small>없으면 비워 두세요</small></label><div class="es-ctl"><textarea id="askQ" rows="3" maxlength="2000" placeholder="예: 어머니 몫을 얼마로 하는 게 좋을까요?"></textarea></div></div>
+        <label class="check rs-with" id="askWith" hidden><input type="checkbox" id="askWithCheck" checked> <span id="askWithText"></span></label>
+        <p class="note" id="askNoFill" hidden></p>
         <div class="es-row"><span class="lab">결제 방법</span><div class="es-ctl radio-row">
           <label><input type="radio" name="askPay" value="계좌이체" checked><span>계좌이체</span></label>
           <label><input type="radio" name="askPay" value="카드"><span>카드 (결제 링크를 보내 드림)</span></label>
@@ -132,6 +134,7 @@
 <script src="js/dh.js"></script>
 <script src="js/estate-calc.js"></script>
 <script src="js/estate.js"></script>
+<script src="js/filing.js"></script>
 <script src="js/savings.js"></script>
 <script src="js/teach.js"></script>
 <script src="js/result-ui.js"></script>

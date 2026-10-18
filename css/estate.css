@@ -114,3 +114,6 @@
 .mini th:first-child,.mini td:first-child{text-align:left}
 .mini th{font-size:12px;color:var(--muted);font-weight:700}
 .mini tr.total td{font-weight:800;border-top:2px solid var(--main);border-bottom:0}
+/* 신고서 채우기에서 건별로 적어 잠긴 칸 */
+.es-ctl input.locked{background:#f6f3f4;color:var(--muted)}
+.es-lock{flex-basis:100%;font-size:12px;color:var(--main);font-weight:700;text-decoration:none}
