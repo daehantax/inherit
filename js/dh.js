@@ -357,6 +357,80 @@
     });
   };
 
+  /* ---------- 장애인공제 기대여명 찾기 (상증법 §20①4호·③) ----------
+     국가데이터처 「2024년 완전생명표(1세별)」 2025.12.3. 공표, 성별·연령별 기대여명(년).
+     공제 연수 = 기대여명의 1년 미만을 1년으로 올림(§20③). 상속개시일 현재 고시된 표를 쓴다. */
+  DH.LIFE_TABLE = {
+    year: 2024, published: '2025-12-03',
+    source: 'https://kosis.kr/statHtml/statHtml.do?orgId=101&tblId=DT_1B42',
+    m: [80.8,80,79,78.1,77.1,76.1,75.1,74.1,73.1,72.1,71.1,70.1,69.1,68.1,67.1,66.1,65.1,64.2,63.2,62.2,61.2,60.2,59.3,58.3,57.3,56.3,55.4,54.4,53.4,52.5,51.5,50.5,49.6,48.6,47.6,46.7,45.7,44.7,43.8,42.8,41.9,40.9,40,39,38.1,37.2,36.2,35.3,34.4,33.5,32.5,31.6,30.7,29.8,28.9,28.1,27.2,26.3,25.4,24.6,23.7,22.9,22,21.2,20.4,19.5,18.7,17.9,17.1,16.3,15.5,14.8,14,13.3,12.6,11.8,11.1,10.5,9.8,9.1,8.5,7.9,7.4,6.9,6.4,5.9,5.5,5.1,4.7,4.3,4,3.7,3.4,3.2,2.9,2.7,2.5,2.3,2.2,2,1.9],
+    f: [86.6,85.8,84.8,83.8,82.8,81.8,80.8,79.8,78.8,77.8,76.8,75.8,74.8,73.9,72.9,71.9,70.9,69.9,68.9,67.9,66.9,66,65,64,63,62,61.1,60.1,59.1,58.1,57.1,56.2,55.2,54.2,53.2,52.3,51.3,50.3,49.3,48.4,47.4,46.4,45.5,44.5,43.6,42.6,41.6,40.7,39.7,38.8,37.8,36.9,35.9,35,34,33.1,32.1,31.2,30.3,29.3,28.4,27.5,26.5,25.6,24.7,23.7,22.8,21.9,21,20.1,19.2,18.3,17.4,16.6,15.7,14.9,14,13.2,12.4,11.6,10.9,10.2,9.5,8.8,8.2,7.6,7,6.5,6,5.5,5.1,4.7,4.3,4,3.7,3.4,3.1,2.9,2.7,2.5,2.3]
+  };
+  DH.lifeExpectancy = function (sex, age) {
+    const t = DH.LIFE_TABLE[sex === 'f' ? 'f' : 'm']; const a = Math.max(0, Math.min(100, Math.floor(Number(age) || 0)));
+    return t[a];
+  };
+  DH.lifeYears = function (sex, age) { const e = DH.lifeExpectancy(sex, age); return Math.ceil(e - 1e-9); };   // 1년 미만은 1년
+  DH.openLifeHelper = function (target) {
+    let box = document.getElementById('dhLife');
+    if (!box) {
+      box = document.createElement('div'); box.id = 'dhLife'; box.className = 'dh-life no-print'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+      box.innerHTML = '<div class="dh-life-card"><div class="dh-life-head"><b>장애인 기대여명 찾기</b><button type="button" class="dh-life-x" aria-label="닫기">×</button></div>' +
+        '<p class="dh-life-lead">장애인마다 성별과 <b>상속개시일 현재 만 나이</b>를 넣으세요. 기대여명의 1년 미만은 1년으로 올려 계산합니다(상증법 §20③).</p>' +
+        '<table class="dh dh-life-t"><thead><tr><th>성별</th><th>만 나이</th><th>기대여명</th><th>공제 연수</th><th class="lf-a">공제액</th><th></th></tr></thead><tbody></tbody>' +
+        '<tfoot><tr class="total"><td colspan="3" class="c">합계</td><td class="num" id="dhLifeYears">0년</td><td class="num lf-a" id="dhLifeAmt">0원</td><td></td></tr></tfoot></table>' +
+        '<div class="dh-life-btns"><button type="button" class="btn ghost sm" id="dhLifeAdd">+ 장애인 추가</button><span class="sp"></span><button type="button" class="btn ghost sm dh-life-x">취소</button><button type="button" class="btn sm" id="dhLifeApply">합계 연수 넣기</button></div>' +
+        '<p class="dh-life-src">기준: 국가데이터처 「' + DH.LIFE_TABLE.year + '년 완전생명표(1세별)」 (' + DH.LIFE_TABLE.published.replace(/-/g, '.') + '. 공표) · <a href="' + DH.LIFE_TABLE.source + '" target="_blank" rel="noopener">KOSIS에서 확인</a><br>상속개시일이 이 공표일 전이면 직전 연도 생명표를 적용합니다. 장애인은 상속인·동거가족 중 「장애인복지법」 등록 장애인, 중증환자 등(상증령 §18②)이며 배우자도 포함됩니다.</p></div>';
+      document.body.appendChild(box);
+      const tb = box.querySelector('tbody');
+      const row = function (sex, age) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td><select class="lf-sex"><option value="m">남</option><option value="f">여</option></select></td>' +
+          '<td><input type="number" class="lf-age short" min="0" max="120" placeholder="세"></td><td class="num lf-e"></td><td class="num lf-y"></td><td class="num lf-a"></td>' +
+          '<td><button type="button" class="row-del" aria-label="삭제">×</button></td>';
+        if (sex) tr.querySelector('.lf-sex').value = sex; if (age != null) tr.querySelector('.lf-age').value = age;
+        tb.appendChild(tr); return tr;
+      };
+      const recalc = function () {
+        let ys = 0;
+        [...tb.querySelectorAll('tr')].forEach(function (tr, i) {
+          const age = tr.querySelector('.lf-age').value;
+          if (age === '') { tr.querySelector('.lf-e').textContent = tr.querySelector('.lf-y').textContent = tr.querySelector('.lf-a').textContent = ''; return; }
+          const sex = tr.querySelector('.lf-sex').value, e = DH.lifeExpectancy(sex, age), y = DH.lifeYears(sex, age); ys += y;
+          tr.querySelector('.lf-e').textContent = e.toFixed(1) + '년'; tr.querySelector('.lf-y').textContent = y + '년'; tr.querySelector('.lf-a').textContent = DH.fmt(y * 1e7) + '원';
+        });
+        box.querySelector('#dhLifeYears').textContent = ys + '년'; box.querySelector('#dhLifeAmt').textContent = DH.fmt(ys * 1e7) + '원';
+        box.dataset.years = ys;
+      };
+      box._row = row; box._recalc = recalc;
+      box.addEventListener('input', recalc); box.addEventListener('change', recalc);
+      box.addEventListener('click', function (e) {
+        if (e.target === box || e.target.closest('.dh-life-x')) { box.classList.remove('open'); return; }
+        if (e.target.closest('.row-del')) { const tr = e.target.closest('tr'); if (tb.children.length > 1) tr.remove(); else { tr.querySelector('.lf-age').value = ''; } recalc(); return; }
+        if (e.target.closest('#dhLifeAdd')) { row().querySelector('.lf-age').focus(); recalc(); return; }
+        if (e.target.closest('#dhLifeApply')) {
+          const t = box._target; if (t) { t.value = box.dataset.years || 0; t.dispatchEvent(new Event('input', { bubbles: true })); t.dispatchEvent(new Event('change', { bubbles: true })); }
+          box.classList.remove('open'); if (t) t.focus();
+        }
+      });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') box.classList.remove('open'); });
+    }
+    box._target = target;
+    const tb = box.querySelector('tbody'); if (!tb.children.length) box._row('m', null);
+    box._recalc(); box.classList.add('open');
+    const first = tb.querySelector('.lf-age'); if (first) setTimeout(function () { first.focus(); }, 30);
+  };
+  DH.bindLifeHelper = function () {
+    document.querySelectorAll('input#disabledYears').forEach(function (inp) {
+      if (inp.dataset.lifeBound) return; inp.dataset.lifeBound = '1';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'dh-life-btn no-print'; b.textContent = '기대여명 찾기 ▸';
+      b.title = '성별·나이로 2024년 생명표 기대여명을 찾아 넣습니다';
+      inp.insertAdjacentElement('afterend', b);
+      b.addEventListener('click', function () { DH.openLifeHelper(inp); });
+    });
+  };
+  document.addEventListener('DOMContentLoaded', function () { DH.bindLifeHelper(); });
+
   /* ---------- 폰 메뉴(≡) : 720px 이하에서 nav 를 접고 버튼으로 펼친다 ---------- */
   DH.mobileNav = function () {
     document.querySelectorAll('header.top .wrap, header.dh-top .wrap').forEach(function (w) {
