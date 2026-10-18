@@ -61,7 +61,7 @@
       (out.errors.length ? '<h4>형식 오류</h4><ul>' + out.errors.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '') +
       (out.warn.length ? '<h4>경고</h4><ul>' + out.warn.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '') +
       '<p class="es-note">레코드: ' + Object.keys(counts).sort().map(function (k) { return k + '×' + counts[k]; }).join(' · ') + ' · 총 ' + out.bytes.length.toLocaleString('ko-KR') + '바이트 · 과세가액 ' + b.totals.taxable.toLocaleString('ko-KR') + '원 · 납부세액 ' + b.totals.payable.toLocaleString('ko-KR') + '원</p>' +
-      '<p class="es-note">홈택스: 세무대리인 로그인 › 신고/납부 › 세금신고 › 상속세 › 파일 변환 신고 → 이 파일을 올리고 「변환 결과」의 오류를 확인한 뒤 제출하세요. 처음 3건은 화면 입력 결과와 금액을 대조하세요.</p>';
+      '<p class="es-note">홈택스(세무대리인 로그인) 상속세 신고에서 「전자신고 파일 변환(일괄변환)」으로 이 파일을 올려 변환 결과 오류를 확인한 뒤 전송하세요(정확한 메뉴 이름은 홈택스 화면 기준). 처음 3건은 화면 입력 결과와 금액을 대조하세요.</p>';
   }
   document.addEventListener('input', function (ev) { const p = ev.target.dataset && ev.target.dataset.s; if (p) { set(p, ev.target.value); save(); } });
   document.addEventListener('change', function (ev) { const p = ev.target.dataset && ev.target.dataset.s; if (p) { set(p, ev.target.value); save(); if (p === 'deceased.sex') render(); } });
