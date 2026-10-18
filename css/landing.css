@@ -28,7 +28,8 @@ a{color:inherit;text-decoration:none}
 .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#fdf6f8 0%,#fdf6f8 34%,rgba(253,246,248,.96) 44%,rgba(253,246,248,.6) 56%,rgba(253,246,248,.1) 72%,rgba(253,246,248,0) 100%)}
 .hero .wrap{position:relative}
 .hero .wrap{display:block}
-.hero-text{padding:64px 0 72px;max-width:560px}
+.hero-text{padding:72px 0 80px;max-width:560px}
+.hero-poem{font-size:clamp(15px,2vw,17px);line-height:1.9;color:#5a4f52;margin:0 0 30px!important;word-break:keep-all}
 .eyebrow{display:inline-block;font-size:13px;font-weight:700;color:var(--main);
   background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px}
 .hero h1{word-break:keep-all;font-size:clamp(30px,5vw,48px);line-height:1.22;margin:18px 0 14px;font-weight:900;letter-spacing:-.03em}
@@ -200,3 +201,21 @@ footer a{color:var(--main)}
 .chips-static span{font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--main-soft);color:var(--main)}
 @media (max-width:900px){.diff-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){.diff-grid{grid-template-columns:1fr}}
+
+/* ---------- v3 정리: 특징 5가지 · 도구 모음 ---------- */
+.feat{padding:48px 0 8px}
+.feat h2,.sec-title{font-size:22px;font-weight:900;margin:0 0 16px;letter-spacing:-.02em}
+.feat-list{list-style:none;margin:0;padding:0;counter-reset:f}
+.feat-list li{position:relative;padding:14px 0 14px 46px;border-top:1px solid var(--line);counter-increment:f}
+.feat-list li::before{content:counter(f);position:absolute;left:0;top:14px;width:30px;height:30px;border-radius:50%;background:var(--main-soft);color:var(--main);font-weight:900;font-size:14px;display:grid;place-items:center}
+.feat-list b{display:block;font-size:16px;word-break:keep-all}
+.feat-list span{display:block;font-size:14px;color:var(--muted);word-break:keep-all;margin-top:2px}
+.feat-foot{margin:14px 0 0;padding:14px 18px;border-radius:12px;background:var(--main-soft);font-size:14.5px;font-weight:700;color:var(--main);word-break:keep-all}
+.main3{padding:40px 0 8px}
+.tools{margin:28px 0 8px;border-top:1px solid var(--line)}
+.tools>summary{cursor:pointer;padding:16px 0;font-weight:700;font-size:15px;list-style:none}
+.tools>summary::-webkit-details-marker{display:none}
+.tools>summary::before{content:'＋ ';color:var(--main)}
+.tools[open]>summary::before{content:'－ '}
+.tools>summary small{font-weight:400;color:var(--muted);font-size:13px;margin-left:8px}
+footer a.staff{color:var(--muted)}

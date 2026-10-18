@@ -362,7 +362,7 @@
     const f = document.getElementById('dhConsult'); if (!f || f.dataset.bound) return; f.dataset.bound = '1';
     const paid = document.getElementById('dhPaidLink');
     if (paid) paid.addEventListener('click', function (e) { if (typeof window.DH_carryRoyal === 'function') { e.preventDefault(); location.href = window.DH_carryRoyal(); } });
-    if (document.body.dataset.tier === 'royal' && paid) paid.parentElement.hidden = true;
+    if (paid && (document.body.dataset.tier === 'royal' || /result\.html$/.test(location.pathname))) paid.parentElement.hidden = true;
     const msg = document.getElementById('dhMsg');
     const show = function (t, bad) { msg.hidden = false; msg.textContent = t; msg.className = 'dh-consult-msg' + (bad ? ' bad' : ' ok'); };
     f.addEventListener('submit', async function (e) {
@@ -548,7 +548,7 @@
       '<a href="https://daehantax.com/info.html" target="_blank" rel="noopener">블로그</a></nav></div>';
     document.body.prepend(top);
     DH.mobileNav();
-    if (opt.contact !== false) {
+    if (opt.contact !== false && document.body.dataset.contact !== 'off') {
       const c = document.createElement('div'); c.className = 'dh-contact no-print'; c.id = 'contact';
       c.innerHTML = '<div class="wrap">' + DH.consultHtml({ title: opt.contactTitle }) + '</div>';
       document.body.appendChild(c);
