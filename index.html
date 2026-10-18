@@ -87,38 +87,11 @@
     </ol>
   </section>
 
-  <details class="tools">
-    <summary>계산기·서식 모음 <small>예전 계산기와 신고 서식을 따로 쓰고 싶을 때</small></summary>
-    <div class="line">
-      <b>계산기</b>
-      <span class="items">
-      <a href="cal_Inherit_simple.html">단순한 상속세 계산기</a>
-      <a href="inheritGold.html">20단계 셀프 절세</a>
-      <a href="inheritClass.html">셀프 신고 교실</a>
-      <a href="상속공제.html">상속공제</a>
-      <a href="inheritance-deduction-limit.html">공제 종합한도</a>
-      <a href="채무공과금.html">채무·공과금·장례비</a>
-      <a href="adquisitionTaxClaim.html">상속취득세 경정청구</a>
-      <a href="상속으로인한재산세.html">상속 후 재산세·종부세</a>
-      </span>
-    </div>
-    <div class="line">
-      <b>신고 서식</b>
-      <span class="items">
-      <a href="inherit-tax-report.html">상속세 신고서</a>
-      <a href="상속세과세표준 자진납부.html">과세표준·자진납부 계산서</a>
-      <a href="spose-inherit-deduction.html">배우자 상속공제 명세서</a>
-      <a href="finantial-asset-deduction.html">금융재산 상속공제 신고서</a>
-      <a href="co-habitation-deduction.html">동거주택 상속공제 신고서</a>
-      <a href="납부서.html">납부서</a>
-      </span>
-    </div>
-  </details>
 
 </main>
 
-<div class="dh-contact" id="contact">
-  <div class="wrap" id="consultWrap"></div>
+<div class="ask-line" id="contact">
+  <div class="wrap"><details class="ask-mini"><summary>이용 방법이 궁금하시면 물어보세요 <small>세무사가 전화드립니다 · 무료</small></summary><div id="consultWrap"></div></details></div>
 </div>
 
 <footer>
@@ -132,7 +105,7 @@
   // 랜딩: 상단바·푸터는 자체 마크업을 쓰므로 dh.js 자동 삽입은 끈다 (body data-chrome="off")
   document.getElementById('consultWrap').innerHTML = DH.consultHtml({ title: '궁금한 점이 있으시면 먼저 물어보세요', lead: '성함과 연락처만 남기시면 대한세무법인 상속 담당 세무사가 전화드립니다. 상담은 무료입니다.' });
   DH.bindConsult();
-  (function(){ const paid=document.getElementById('dhPaidLink'); if(paid) paid.parentElement.remove(); })();   // 첫 화면에는 유료 안내 줄을 두지 않음
+  (function(){ const paid=document.getElementById('dhPaidLink'); if(paid) paid.parentElement.remove(); const h=document.querySelector('#dhConsult .dh-consult-head'); if(h) h.remove(); })();   // 작은 문의 줄: 제목·유료 안내 없음
 
   // 첫 화면: 사망일 → 신고기한
   const $=id=>document.getElementById(id);

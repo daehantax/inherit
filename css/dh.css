@@ -267,3 +267,18 @@ details.dh>div,details.dh>ul,details.dh>p{padding:0 0 12px;font-size:14px;color:
 .dh-consult-paid a{color:#fff;font-weight:800;text-decoration:underline;text-underline-offset:3px;margin-left:4px;white-space:nowrap}
 
 [hidden]{display:none!important}
+
+/* 작은 문의 줄 (모든 페이지 공통) */
+.dh-contact-mini{background:#fff;color:var(--ink);border-top:1px solid var(--line);padding:0}
+.dh-contact-mini .wrap{padding-top:0;padding-bottom:0}
+.dh-ask-mini>summary{cursor:pointer;list-style:none;padding:16px 0;font-size:15px;font-weight:700}
+.dh-ask-mini>summary::-webkit-details-marker{display:none}
+.dh-ask-mini>summary::before{content:'？ ';color:var(--main)}
+.dh-ask-mini>summary small{font-weight:400;color:var(--muted);font-size:13px;margin-left:8px}
+.dh-contact-mini .dh-consult{padding:0 0 16px}
+.dh-contact-mini .dh-consult-row input{border:1px solid var(--line-strong)}
+.dh-contact-mini .check{color:var(--ink)}
+.dh-contact-mini .dh-consult .btn{background:var(--main);color:#fff;border-color:var(--main)}
+.dh-contact-mini .dh-consult-opts .check input{accent-color:var(--main)}
+.dh-contact-mini .dh-consult-msg.bad{color:var(--bad)}
+.dh-contact-mini .dh-consult-msg a{color:var(--main)}

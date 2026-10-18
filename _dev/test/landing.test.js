@@ -7,7 +7,8 @@ const {open,expect}=require('./harness');
   expect('첫 화면에 사망일 질문 없음', p.d.getElementById('deathDate')?1:0, 0);
   expect('첫 화면에 가격 문구 없음(히어로)', /만원/.test(p.d.querySelector('.hero').textContent)?1:0, 0);
   expect('특징 5가지', p.d.querySelectorAll('.feat-list li').length, 5);
-  expect('도구 모음은 접혀 있음', p.d.querySelector('details.tools').open?1:0, 0);
+  expect('예전 계산기 링크 없음', p.d.querySelectorAll('a[href*="cal_Inherit_simple"], a[href*="inheritGold"], a[href*="inheritClass"]').length, 0);
+  expect('문의는 작은 접힌 줄', p.d.querySelector('details.ask-mini').open?1:0, 0);
   expect('바닥글에 세무사용 링크', /efile\.html/.test(p.d.querySelector('footer').innerHTML)?1:0, 1);
   // 접수 폼 검증
   let posted=null; p.w.fetch=async(u,o)=>{ posted={u,body:JSON.parse(o.body)}; return {ok:true}; };

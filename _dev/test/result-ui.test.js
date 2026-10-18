@@ -21,7 +21,7 @@ const E = { v: 1, deceased: { date: '2026-03-10' },
   expect('첫 카드 금액', p.d.querySelector('#saveList .sv .amt').textContent.includes(S.kor(sv.save[0].amount)) ? 1 : 0, 1);
   expect('상속세 내역 마지막 줄 = 낼 상속세', p.d.querySelector('#inhDetail .kv.total b').textContent, all.inheritance.payable.toLocaleString('ko-KR') + '원');
   expect('양도세 내역 행 1개(분당 아파트)', p.d.querySelectorAll('#trDetail tbody tr').length, 1);
-  expect('20단계 링크에 #d=', p.el('btnGold').getAttribute('href').startsWith('inheritGold.html#d=') ? 1 : 0, 1);
+  expect('20단계 링크 없음(단순화)', p.el('btnGold') ? 1 : 0, 0);
   expect('상품 카드 3개(상속세 있음)', p.d.querySelectorAll('#products .pd').length, 3);
   expect('추천 배지 1개', p.d.querySelectorAll('#products .badge').length, 1);
   expect('달력 항목 있음', p.d.querySelectorAll('#calList li').length >= 5 ? 1 : 0, 1);

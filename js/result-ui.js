@@ -101,7 +101,7 @@
       trRows.map(function (x) { const r = x[1]; return '<tr><td>' + esc(x[0]) + '</td><td>' + esc(r.name) + '<small>' + r.years + '년 보유' + (r.oneHouse ? ' · 1세대1주택' : '') + (r.heavyRisk ? ' · <b style="color:var(--bad)">다주택 중과 가능</b>' : '') + '</small></td><td>' + kor(r.price * r.share) + '</td><td>' + kor(r.cost * r.share) + (r.basis === 'gongsi' ? '<small>공시가로 평가</small>' : '') + '</td><td>' + dash(r.gain) + '</td><td>' + dash(r.total) + '</td></tr>'; }).join('') +
       '</tbody></table></div><p class="es-note">팔 때 "산 값"은 상속받을 때 평가한 금액입니다. 보유 기간은 상속일부터 셉니다(세율은 돌아가신 분이 가진 기간도 합산). 다주택 중과(2026년 5월 10일부터 다시 적용, 조정대상지역)·비사업용 토지 가산세율·조정지역 2년 거주 요건·필요경비는 넣지 않았습니다. 「다주택 중과 가능」 표시가 있으면 실제 세금은 이보다 훨씬 많을 수 있습니다.</p>' : '<p class="es-note">팔 계획을 넣은 부동산이 없습니다. 입력 화면의 「앞으로 이 집은」에서 고르면 계산합니다.</p>';
 
-    $('btnGold').href = 'inheritGold.html#d=' + DH.encodeData(EST.toReport(E));
+    if ($('btnGold')) $('btnGold').href = 'inheritGold.html#d=' + DH.encodeData(EST.toReport(E));
   }
 
   /* ---------- 3. 줄이기 ---------- */

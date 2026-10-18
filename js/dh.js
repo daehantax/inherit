@@ -362,7 +362,8 @@
     const f = document.getElementById('dhConsult'); if (!f || f.dataset.bound) return; f.dataset.bound = '1';
     const paid = document.getElementById('dhPaidLink');
     if (paid) paid.addEventListener('click', function (e) { if (typeof window.DH_carryRoyal === 'function') { e.preventDefault(); location.href = window.DH_carryRoyal(); } });
-    if (paid && (document.body.dataset.tier === 'royal' || /result\.html$/.test(location.pathname))) paid.parentElement.hidden = true;
+    if (paid) paid.parentElement.hidden = true;                           // 유료 안내는 결과 화면의 「맡기기」에서만
+    const head = f.querySelector('.dh-consult-head'); if (head && f.closest('.dh-ask-mini')) head.remove();
     const msg = document.getElementById('dhMsg');
     const show = function (t, bad) { msg.hidden = false; msg.textContent = t; msg.className = 'dh-consult-msg' + (bad ? ' bad' : ' ok'); };
     f.addEventListener('submit', async function (e) {
@@ -549,8 +550,8 @@
     document.body.prepend(top);
     DH.mobileNav();
     if (opt.contact !== false && document.body.dataset.contact !== 'off') {
-      const c = document.createElement('div'); c.className = 'dh-contact no-print'; c.id = 'contact';
-      c.innerHTML = '<div class="wrap">' + DH.consultHtml({ title: opt.contactTitle }) + '</div>';
+      const c = document.createElement('div'); c.className = 'dh-contact dh-contact-mini no-print'; c.id = 'contact';
+      c.innerHTML = '<div class="wrap"><details class="dh-ask-mini"><summary>이용 방법이 궁금하시면 물어보세요 <small>세무사가 전화드립니다 · 무료</small></summary>' + DH.consultHtml({ title: opt.contactTitle }) + '</details></div>';
       document.body.appendChild(c);
       DH.bindConsult();
     }
