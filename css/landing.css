@@ -241,7 +241,7 @@ footer a.staff{color:var(--muted)}
 .hero.memorial .pic-stone{position:relative;height:100%;width:clamp(280px,31vw,400px);flex:none;margin-left:-70px;overflow:hidden;
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 70px);mask-image:linear-gradient(90deg,transparent 0,#000 70px)}
 /* 비석 폭 넓히기: 같은 사진을 흐리게 깔아 양옆을 돌결로 채우고, 그 위에 선명한 원본을 가운데 둔다 */
-.hero.memorial .stone-in{position:absolute;inset:0;transform-origin:50% 44%}
+.hero.memorial .stone-in{position:absolute;inset:0;transform-origin:50% 44%;background:#55585c radial-gradient(ellipse at 50% 40%,#6a6d71 0%,#4a4d51 100%)}
 .hero.memorial .stone-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(3px) brightness(.84) contrast(1.05)}
 .hero.memorial .stone-fg{position:absolute;top:0;left:50%;height:100%;width:auto;transform:translateX(-50%);
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%)}
@@ -264,11 +264,9 @@ footer a.staff{color:var(--muted)}
 /* 첫 화면 묵념: 국화 → 비석 → 글 순서로 천천히 나타남 */
 @keyframes memIn{from{opacity:0}to{opacity:1}}
 @keyframes memUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.hero.memorial .pic-flower{animation:memIn 1.6s ease-out both}
-.hero.memorial .pic-stone{animation:memIn 2.4s ease-out .8s both}
 /* 전체 글씨를 보여 준 뒤 「長水黃氏」로 천천히 다가감 */
 @keyframes stoneZoom{from{transform:scale(1)}to{transform:scale(1.9)}}
-.hero.memorial .stone-in{animation:stoneZoom 4.5s cubic-bezier(.45,0,.25,1) 4.6s both}
-.hero.memorial h1{animation:memUp 1.4s ease-out 2.2s both}
-.hero.memorial .hero-go{animation:memIn 1s ease-out 3.2s both}
+.hero.memorial .stone-in{animation:stoneZoom 10s cubic-bezier(.4,0,.3,1) 1.2s both}
+.hero.memorial h1{animation:memUp 1.4s ease-out .4s both}
+.hero.memorial .hero-go{animation:memIn 1s ease-out 1.4s both}
 @media (prefers-reduced-motion:reduce){.hero.memorial *{animation:none!important}}
