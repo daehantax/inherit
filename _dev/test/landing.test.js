@@ -8,7 +8,7 @@ const {open,expect}=require('./harness');
   expect('경과 안내', /지났습니다/.test(p.text('askLeft'))?1:0, 1);
   expect('경과 시 2차 버튼 → 상담', p.d.getElementById('askSecondary').getAttribute('href')==='#contact'?1:0, 1);
   p.set('deathDate','2026-09-20'); p.click('#askGo');   // → 2027-03-31, 165일
-  expect('여유 시 2차 버튼 → 절세보고서', /inheritPremium/.test(p.d.getElementById('askSecondary').getAttribute('href'))?1:0, 1);
+  expect('여유 시 2차 버튼 → 절세보고서', /inheritGold/.test(p.d.getElementById('askSecondary').getAttribute('href'))?1:0, 1);
   p.set('deathDate','2026-05-10'); p.click('#askGo');   // → 2026-11-30, 44일
   expect('임박 시 2차 버튼 → 신고서', /inherit-tax-report/.test(p.d.getElementById('askSecondary').getAttribute('href'))?1:0, 1);
   p.click('#askNotYet'); expect('상속 전 안내 표시', p.d.getElementById('askPre').hidden?0:1, 1);

@@ -148,3 +148,21 @@ table.dh td.rem{font-size:12.5px;color:var(--muted);text-align:center}
   details.dh>div,details.dh>ul,details.dh>p{font-size:9.5pt}
   table.dh{break-inside:auto}
 }
+
+/* ---- 세무사 문의(3단계) 안내 카드 ---- */
+.fee-card{margin:18px 0 6px;padding:18px 20px;border:1.5px solid var(--main);border-radius:var(--r);background:#fff}
+.fee-card h3{margin:0 0 10px;font-size:17px;color:var(--ink)}
+.fee-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.fee-head span{font-weight:700;color:var(--main)}
+.fee-head b{font-size:22px;color:var(--ink)}
+.fee-head b small{font-size:13px;font-weight:400;color:var(--muted)}
+.fee-card ul{margin:0;padding-left:18px;font-size:14.5px;line-height:1.7;word-break:keep-all}
+.fee-card .fee-anchor{margin:12px 0 0;padding:10px 12px;background:#faf6f7;border-radius:8px;font-size:14px;color:var(--ink);word-break:keep-all}
+.fee-card .fee-anchor:empty{display:none}
+.fee-card .actions{margin-top:14px}
+.consent-box{margin:14px 0 4px;padding:12px 14px;background:#faf6f7;border-radius:8px}
+.consent-box .check{display:block;margin:4px 0;font-size:14px;word-break:keep-all}
+.consult-done{padding:16px 18px;border:1px solid var(--line);border-radius:var(--r);background:#fff}
+.consult-done .no{font-size:20px;font-weight:900;color:var(--main);margin:0 0 6px}
+.consult-done ol{margin:8px 0 0;padding-left:20px;font-size:14.5px;line-height:1.7}
+@media print{.fee-card .actions,.consent-box{display:none!important}}

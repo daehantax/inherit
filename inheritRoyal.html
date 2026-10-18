@@ -4,8 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>상속세 절세 보고서 (R) · 대한세무법인</title>
-<meta name="description" content="절세 보고서를 바탕으로 여러 세무사·전문가가 대면으로 심층 상담합니다. 대면상담을 신청하세요.">
+<title>계산 후 세무사 문의 · 대한세무법인</title>
+<meta name="description" content="입력한 내용과 질문을 보내면 담당 세무사가 서면 답변서와 전화 상담으로 답합니다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/dh.css">
@@ -16,8 +16,8 @@
 <main class="wrap wide">
   <div class="dh-head">
     <div class="crumb"><a href="./">상속세</a> › 절세 보고서</div>
-    <span class="form-no">로얄 (R) · 대면상담</span>
-    <h1>상속세 절세 보고서 (R)</h1>
+    <span class="form-no">3단계 · 33만원(부가세 포함)</span>
+    <h1>계산 후 세무사 문의</h1>
     <p>입력한 재산·채무·가족 구성으로 예상 상속세를 계산하고, 상황별 절세 방법을 단계별로 살펴봅니다.</p>
   </div>
 
@@ -44,7 +44,12 @@
   <!-- ================= 1~10 단계 : 입력 ================= -->
   <section class="card step input-step on" id="step1">
     <span class="step-no">1 / 10</span>
-    <h2 class="title">주택가격</h2>
+    <h2 class="title">배우자 · 주택가격</h2>
+    <div class="field"><label>배우자 <small>돌아가신 분의 배우자가 상속개시일에 살아 계신지. 공제가 크게 달라집니다</small></label>
+      <div class="ctl radio-row" id="spouseChoice">
+        <label><input type="radio" name="hasSpouse" value="yes" checked><span>배우자 있음</span></label>
+        <label><input type="radio" name="hasSpouse" value="no"><span>배우자 없음</span></label>
+      </div></div>
     <div class="field"><label for="houseValue">주택가격 <small>상속개시일 현재 시가</small></label>
       <div class="ctl"><input type="text" id="houseValue" data-money placeholder="주택가격"><span class="unit">원</span><span class="won"></span></div></div>
     <ul class="tips">
@@ -167,11 +172,7 @@
   <section class="card step input-step" id="step9">
     <span class="step-no">9 / 10</span>
     <h2 class="title">상속공제</h2>
-    <div class="field"><label>배우자 <small>피상속인의 배우자가 상속개시일에 생존해 있는지</small></label>
-      <div class="ctl radio-row" id="spouseChoice">
-        <label><input type="radio" name="hasSpouse" value="yes" checked><span>배우자 있음</span></label>
-        <label><input type="radio" name="hasSpouse" value="no"><span>배우자 없음</span></label>
-      </div></div>
+    <div class="field"><label>배우자</label><div class="ctl"><span id="spouseEcho" class="muted"></span> <button type="button" class="btn ghost sm no-print" data-go="1">바꾸기</button></div></div>
     <div class="field"><label for="inheritanceDeduction">상속공제 <small id="dedDefaultNote">배우자 있음: 일괄공제 5억 + 배우자공제 5억</small></label>
       <div class="ctl"><input type="text" id="inheritanceDeduction" data-money value="1,000,000,000" readonly><span class="unit">원</span><span class="won"></span></div></div>
     <ul class="tips">
@@ -254,8 +255,8 @@
       <button class="tip" data-go="17"><span class="n">5</span>상속 받은 주택 외 가지고 있던 주택 양도시 ! 1세대 1주택 비과세 만들수 있습니다.</button>
       <button class="tip" data-go="18"><span class="n">6</span>주택 상속으로 2주택인 경우, 청약기회 사라진 건 아닐까요 ?</button>
       <button class="tip" data-go="19"><span class="n">7</span>부모님 기초연금 받게 할 순 없을까요 ?</button>
-            <button class="tip" data-go="20"><span class="n">8</span>유의사항. 저장하기 . 인쇄하기</button>
-          </div>
+            <button class="tip" data-go="20"><span class="n">8</span>세무사에게 물어보기 (질문 보내기)</button>
+                </div>
     <h3>뒤로 가기</h3>
     <div class="back-links">
       <button class="back-link" data-go="1">주택가격</button>
@@ -714,44 +715,48 @@
       </select></div></div>
     <div class="actions no-print"><button class="btn" id="btnPension">계산하기</button></div>
     <div id="resultPention"></div>
-    <div class="actions no-print"><button class="btn ghost" data-go="18">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="20">대면상담신청 !</button></div>
+    <div class="actions no-print"><button class="btn ghost" data-go="18">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="20">세무사에게 물어보기</button></div>
   </section>
 
-  <!-- ================= 20 단계 : 유의사항 · 질문 · 상담 · 안내 ================= -->
+  <!-- ================= 20 단계 : 안내 · 주의사항 · 세무사 문의 · 답변 ================= -->
   <section class="card step page-break" id="step20">
     
+    
     <div>
-            <h2 class="title">유의사항</h2>
-                  <ul class="tips">
-        <li>이 보고서와 아래의 내용은 고객님이 입력한 데이터에 추가로 질문한 내용을 반영한 “상황별 예상세금 모의계산 보고서” 입니다.</li>
-        <li>고객님의 질문 외 고객님의 개별적인 판단에 따른 의사결정에 대한 법적 책임은 없습니다.</li>
-        <li>따라서 중요한 실제 의사결정 및 관련 세무신고는 사전에 세무사와 반드시 대면 상담하시기 바랍니다.</li>
-        <li>"대면상담"은 여러세무사와 전문가가 심층적으로 대응합니다.</li>
-      </ul>
-
-      
-      <!-- 골드: 고객 질문 -->
-      
-      <!-- 골드 답변서: 세무사 답변 -->
-      
-      <!-- 로얄: 대면상담 신청 -->
-      <div class="qa consult">
-        <h3>▶ 대면상담신청</h3>
-        <p class="subtle">이름 이메일 전화번호 문의사항등을 입력해 주세요. 이 보고서의 기본적인 내용들을 실행해 보시고, PDF 저장후 이메일에 첨부해 주시면 더욱 풍부한 상담이 됩니다. 담당자가 대면면담 일정을 잡기 위해 직접 연락드리겠습니다.</p>
-        <form id="consultForm">
-          <div class="field"><label for="consultName">이름</label><div class="ctl"><input type="text" id="consultName" class="mid" required></div></div>
-          <div class="field"><label for="consultPhone">연락처</label><div class="ctl"><input type="tel" id="consultPhone" class="mid" placeholder="010-0000-0000" required></div></div>
-          <div class="field"><label for="consultEmail">이메일</label><div class="ctl"><input type="email" id="consultEmail" placeholder="example@email.com"></div></div>
-          <div class="field"><label for="consultWhen">희망 일시</label><div class="ctl"><input type="text" id="consultWhen" placeholder="예) 10월 25일 오후 2시"></div></div>
-          <div class="field"><label for="consultMemo">메모</label><div class="ctl"><textarea id="consultMemo" placeholder="문의사항"></textarea></div></div>
-          <div class="actions no-print"><button type="submit" class="btn" id="btnConsultMail">이메일로 신청하기</button><button type="button" class="btn ghost" id="btnConsultFile">신청 내용 파일로 저장</button></div>
-        </form>
-        <div class="qa-content" id="consultContent"></div>
+      <h2 class="title">세무사에게 물어보기</h2>
+      <div class="fee-card">
+        <div class="fee-head"><span>계산 후 세무사 문의</span><b>33만원 <small>(부가세 포함)</small></b></div>
+        <ul>
+          <li>입력하신 재산·가족 구성과 아래 질문을 보고 쓴 <b>서면 답변서</b> + 답변서 전달 후 <b>전화 상담 30분</b> (방문 가능)</li>
+          <li>접수 → 담당 세무사가 전화로 질문 범위 확인 → 계좌 안내 → <b>입금 확인 후 영업일 2일 안</b> 답변</li>
+          <li>답변서 발송 전 취소하면 전액 환불 · 상속세 신고를 맡기시면 33만원을 수수료에서 전액 차감</li>
+        </ul>
+        <p class="fee-anchor" id="feeAnchor"></p>
+        <p class="subtle">간단한 문의는 <a href="#contact">무료 전화 상담</a>으로 남겨 주세요.</p>
       </div>
-
-      <div class="actions no-print"><button class="btn ghost" data-go="19">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-action="print">인쇄 / PDF 저장</button></div>
+      <form id="consultForm" class="consult">
+        <div class="field"><label for="consultQuestion">질문 <small>궁금한 점을 자유롭게. 입력하신 숫자는 자동으로 함께 전달됩니다</small></label>
+          <div class="ctl"><textarea id="consultQuestion" class="plain" rows="7" placeholder="예) 동거주택공제를 받을 수 있는지, 배우자가 얼마를 상속받는 것이 유리한지, 사전증여 합산이 맞는지…" required></textarea></div></div>
+        <div class="field"><label for="consultName">이름</label><div class="ctl"><input type="text" id="consultName" class="mid" required></div></div>
+        <div class="field"><label for="consultPhone">연락처</label><div class="ctl"><input type="tel" id="consultPhone" class="mid" placeholder="010-0000-0000" required></div></div>
+        <div class="field"><label for="consultEmail">이메일 <small>답변서를 받을 주소</small></label><div class="ctl"><input type="email" id="consultEmail" placeholder="example@email.com" required></div></div>
+        <div class="field"><label>원하는 답변 방식</label>
+          <div class="ctl radio-row">
+            <label><input type="radio" name="consultMode" value="서면+전화" checked><span>서면 답변서 + 전화</span></label>
+            <label><input type="radio" name="consultMode" value="서면+방문"><span>서면 답변서 + 방문 상담</span></label>
+          </div></div>
+        <div class="field"><label for="consultWhen">전화 받기 편한 시간 <small>선택</small></label><div class="ctl"><input type="text" id="consultWhen" placeholder="예) 평일 오후 2~5시"></div></div>
+        <div class="consent-box">
+          <label class="check"><input type="checkbox" id="consultAgreePrivacy"> 상담을 위한 개인정보(이름·연락처·이메일·입력 내용) 수집·이용에 동의합니다</label>
+          <label class="check"><input type="checkbox" id="consultAgreeFee"> 상담료 33만원(부가세 포함) 안내를 확인했습니다. 입금 전에는 비용이 발생하지 않습니다</label>
+        </div>
+        <div class="actions no-print"><button type="submit" class="btn" id="btnConsultSend">세무사에게 물어보기</button><button type="button" class="btn ghost" id="btnConsultFile">보낼 내용 파일로 저장</button></div>
+      </form>
+      <div class="qa-content" id="consultContent"></div>
+      <div class="actions no-print"><button class="btn ghost" data-go="19">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn ghost" data-action="print">인쇄 / PDF 저장</button></div>
     </div>
-  </section>
+
+      </section>
 
   </div><!-- /data-save -->
 </main>

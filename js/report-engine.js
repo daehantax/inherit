@@ -121,6 +121,7 @@
     ['dedDefaultNote', 'ded1Note'].forEach(function (id) { const el = $(id); if (el) el.textContent = note; });
     const sc = $('spouseInheritanceDeductionCell'); if (!sp && sc) { setText('spouseInheritanceDeductionCell', 0); setText('spouseNoteCell', '배우자 없음: 배우자상속공제 해당 없음'); }
     const sb = $('btnSpouse'); if (sb) sb.disabled = !sp;
+    const echo = $('spouseEcho'); if (echo) echo.textContent = sp ? '배우자 있음 (1단계에서 선택)' : '배우자 없음 (1단계에서 선택)';
     document.querySelectorAll('[data-spouse-only]').forEach(function (el) { el.classList.toggle('dim', !sp); });
     updateTotalDeduction();
   }
@@ -152,7 +153,7 @@
     if (r.priorGifts > 0 && isBlank('priorGiftTaxBase')) notes.push('사전증여의 과세표준을 넣지 않아 증여가액 전액을 과세표준으로 보고 계산했습니다. 증여세 신고서의 과세표준을 확인해 넣으면 더 정확합니다.');
     if (r.payableTax > 0) notes.push('신고·납부 기한은 상속개시일이 속한 달의 말일부터 6개월입니다. 2천만 원 초과 시 연부연납(최장 10년)을 검토하세요.');
     const noteEl = $('resultNote'); if (noteEl) { noteEl.textContent = notes.join(' '); noteEl.hidden = notes.length === 0; }
-    updatePrintSummary();
+    updatePrintSummary(); updateFeeAnchor();
     return r.payableTax;
   }
 
@@ -630,7 +631,11 @@
     if ($('btnQaFile')) $('btnQaFile').addEventListener('click', function () { downloadText('상속세질문_' + name() + '_' + today() + '.txt', fullText()); });
   }
   function setupAnswer(bind) {
-    const q = lsGet(Q_KEY); renderContent('qaContent', q || '<p class="subtle">이 브라우저에 저장된 고객 질문이 없습니다. 고객이 보낸 질문 파일·이메일을 참고하세요.</p>', q ? '질문 내용' : '');
+    if (linkPayload && linkPayload._question) {
+      const L = linkPayload;
+      lsSet(Q_KEY, '<p>' + esc(L._question).replace(/\n/g, '<br>') + '</p>');
+      renderContent('qaContent', '<p class="qa-meta">' + esc(L._name || '') + ' · ' + esc(L._phone || '') + ' · ' + esc(L._email || '') + (L._mode ? ' · ' + esc(L._mode) : '') + (L._when ? ' · ' + esc(L._when) : '') + (L._no ? ' · 접수번호 ' + esc(L._no) : '') + '</p><p>' + esc(L._question).replace(/\n/g, '<br>') + '</p>', '질문 내용');
+    } else { const q = lsGet(Q_KEY); renderContent('qaContent', q || '<p class="subtle">접수 메일의 「보고서 열기」 링크로 열면 고객 질문과 입력값이 함께 나타납니다.</p>', q ? '질문 내용' : ''); }
     const a = lsGet(A_KEY); if (a) renderContent('ansContent', a, '답변');
     if (!bind) return;
     const toggle = $('btnAnsToggle');
@@ -651,22 +656,118 @@
       downloadText('상속세답변_' + today() + '.txt', '[상속세 보고서 답변]\n작성일: ' + new Date().toLocaleDateString('ko-KR') + '\n\n[질문]\n' + htmlToText(lsGet(Q_KEY)) + '\n\n[답변]\n' + (ed ? ed.getText().trim() : '') + '\n\n' + summaryText());
     });
   }
+  /* ---- 입력값을 주소(#d=)에 실어 다른 등급·답변서로 그대로 넘긴다 ---- */
+  const LINK_EXTRA = ['_question', '_name', '_phone', '_email', '_mode', '_when', '_no', '_at'];
+  function encodeData(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function decodeData(str) { try { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; return JSON.parse(decodeURIComponent(escape(atob(str)))); } catch (e) { return null; } }
+  function linkData(extra) { return Object.assign(DH.collect(), extra || {}); }
+  function reportLink(file, extra) { return location.href.replace(/[#?].*$/, '').replace(/[^/]*$/, '') + file + '#d=' + encodeData(linkData(extra)); }
+  let linkPayload = null;                       // 주소로 받은 값 (질문·연락처 포함)
+  function applyLinkData() {
+    const m = /[#&]d=([A-Za-z0-9_-]+)/.exec(location.hash); if (!m) return false;
+    const data = decodeData(m[1]); if (!data) return false;
+    linkPayload = data;
+    const inputs = {}; Object.keys(data).forEach(function (k) { if (LINK_EXTRA.indexOf(k) < 0) inputs[k] = data[k]; });
+    DH.apply(inputs);
+    try { localStorage.setItem(DH.storeKey(), JSON.stringify(Object.assign({ _savedAt: new Date().toISOString() }, inputs))); } catch (e) { }
+    return true;
+  }
+  // 2단계 → 3단계 등 이동 링크(data-carry)에 입력값을 실어 준다
+  function bindCarryLinks() {
+    document.addEventListener('click', function (e) {
+      const a = e.target.closest('a[data-carry]'); if (!a) return;
+      e.preventDefault(); location.href = reportLink(a.getAttribute('href'));
+    });
+  }
+  // 상담료 옆에 고객 자신의 숫자를 보여 준다 (절세액 약속이 아니라 검토 대상의 크기)
+  function updateFeeAnchor() {
+    const el = $('feeAnchor'); if (!el) return;
+    const r = lastResult || computeInheritance(defaultDeduction());
+    const parts = [];
+    if (r.payableTax > 0) parts.push('지금 입력하신 내용으로 계산한 예상 상속세는 <b>' + DH.won(r.payableTax) + '</b>입니다.');
+    const cohab = cellNum('cohabitationDeductionAmount'), fin = cellNum('finalFinancialDeductionAmount');
+    const extra = [];
+    if (cohab > 0) extra.push('동거주택공제 ' + DH.won(cohab));
+    if (fin > 0) extra.push('금융재산공제 ' + DH.won(fin));
+    if (extra.length) parts.push('이 보고서에서 검토한 ' + extra.join('·') + '은 요건을 서류로 확인해야 적용할 수 있습니다.');
+    else if (r.taxBase > 0) parts.push('공제 요건 하나가 과세표준을 수억원 바꾸기도 합니다. 서류로 확인해야 하는 부분을 세무사가 짚어 드립니다.');
+    el.innerHTML = parts.join(' ');
+  }
   function setupConsult(bind) {
     const form = $('consultForm'); if (!form) return;
     const v = function (id) { return (($(id) || {}).value || '').trim(); };
-    const text = function () {
-      return '[대면상담신청] ' + (v('consultName') || '고객') + '\n이름: ' + v('consultName') + '\n연락처: ' + v('consultPhone') + '\n이메일: ' + v('consultEmail') +
-        '\n희망 일시: ' + v('consultWhen') + '\n메모: ' + v('consultMemo') + '\n\n' + summaryText() + '\n\n보고서: ' + location.href;
+    const mode = function () { const el = document.querySelector('input[name="consultMode"]:checked'); return el ? el.value : ''; };
+    const contact = function () { return { name: v('consultName'), phone: v('consultPhone'), email: v('consultEmail'), mode: mode(), when: v('consultWhen'), question: v('consultQuestion') }; };
+    const resultsText = function () {
+      const r = lastResult || computeInheritance(defaultDeduction());
+      return summaryText() + '\n[절세 검토]\n' + ['배우자공제 ' + DH.won(cellNum('spouseInheritanceDeductionCell')), '동거주택공제 ' + DH.won(cellNum('cohabitationDeductionAmount')), '금융재산공제 ' + DH.won(cellNum('finalFinancialDeductionAmount')), '기초·인적/일괄 ' + DH.won(cellNum('finalDeductionAmount'))].join(' / ') +
+        '\n세대생략 할증: ' + DH.won(r.surcharge) + ' · 배우자 ' + (hasSpouse() ? '있음' : '없음');
     };
-    const render = function () {
-      lsSet(C_KEY, JSON.stringify({ name: v('consultName'), phone: v('consultPhone'), email: v('consultEmail'), when: v('consultWhen'), memo: v('consultMemo'), at: new Date().toISOString() }));
-      renderContent('consultContent', '<p>이름: ' + esc(v('consultName')) + ' · 연락처: ' + esc(v('consultPhone')) + ' · 이메일: ' + esc(v('consultEmail')) + '<br>희망 일시: ' + esc(v('consultWhen')) + '</p><p>' + esc(v('consultMemo')).replace(/\n/g, '<br>') + '</p>', '대면상담 신청 내용');
+    const inputsText = function () {
+      const d = DH.collect(); const lines = [];
+      document.querySelectorAll('.input-step').forEach(function (sec) {
+        const t = sec.querySelector('.title'); const no = sec.querySelector('.step-no');
+        const rows = [];
+        sec.querySelectorAll('input, select, textarea').forEach(function (el) {
+          const k = el.id || el.name; if (!k || !(k in d)) return;
+          if (el.type === 'radio' && !el.checked) return;
+          const lab = (function () { const f = el.closest('.field'); const l = f && f.querySelector('label'); return l ? (l.childNodes[0].textContent || '').trim() : k; })();
+          let val = d[k]; if (el.hasAttribute('data-money')) val = DH.won(val); else if (val === true) val = '예'; else if (val === false) return;
+          if (val === '' || val == null) return;
+          rows.push('  ' + lab + ': ' + val);
+        });
+        if (rows.length) lines.push((no ? no.textContent.trim() + ' ' : '') + (t ? t.textContent.trim() : '') + '\n' + rows.join('\n'));
+      });
+      return lines.join('\n');
     };
-    const c = lsGet(C_KEY);
-    if (c) { try { const o = JSON.parse(c); renderContent('consultContent', '<p>이름: ' + esc(o.name) + ' · 연락처: ' + esc(o.phone) + ' · 이메일: ' + esc(o.email) + '<br>희망 일시: ' + esc(o.when) + '</p><p>' + esc(o.memo).replace(/\n/g, '<br>') + '</p>', '대면상담 신청 내용'); } catch (e) { } }
+    const answerLink = function (c, no) { return reportLink('inheritGoldAnswer.html', { _question: c.question, _name: c.name, _phone: c.phone, _email: c.email, _mode: c.mode, _when: c.when, _no: no || '' }); };
+    const text = function (no) {
+      const c = contact();
+      return '[상속세 세무사 문의' + (no ? ' ' + no : '') + '] ' + (c.name || '고객') + '\n이름: ' + c.name + '\n연락처: ' + c.phone + '\n이메일: ' + c.email + '\n답변 방식: ' + c.mode + '\n통화 가능 시간: ' + c.when +
+        '\n\n[질문]\n' + (c.question || '(없음)') + '\n\n' + resultsText() + '\n\n[입력값 전체]\n' + inputsText() + '\n\n보고서 열기: ' + answerLink(c, no);
+    };
+    const showDone = function (no, mailFailed) {
+      const c = contact();
+      const html = '<div class="consult-done"><p class="no">접수번호 ' + esc(no) + '</p><p>' + esc(c.name) + '님, 질문과 입력 내용이 접수되었습니다.</p><ol>' +
+        '<li>담당 세무사가 <b>' + esc(c.phone) + '</b>로 전화드려 질문 범위를 확인합니다' + (c.when ? ' (' + esc(c.when) + ')' : '') + '.</li>' +
+        '<li>상담료 33만원(부가세 포함) 입금 계좌를 안내드립니다. 입금 전에는 비용이 발생하지 않습니다.</li>' +
+        '<li>입금 확인 후 영업일 2일 안에 <b>' + esc(c.email) + '</b>로 답변서를 보내고 전화 상담을 진행합니다.</li></ol>' +
+        (mailFailed ? '<p class="subtle">자동 접수에 실패해 이메일 앱으로 보냈습니다. 메일이 열리지 않았다면 031-783-8877로 연락 주세요.</p>' : '<p class="subtle">접수 확인 메일을 ' + esc(c.email) + '로 보내드렸습니다. 문의: 031-783-8877</p>') + '</div>';
+      renderContent('consultContent', html, ''); form.hidden = true;
+      lsSet(C_KEY, JSON.stringify(Object.assign({ no: no, at: new Date().toISOString() }, c)));
+      try { $('consultContent').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { }
+    };
+    const prev = lsGet(C_KEY);
+    if (prev) { try { const o = JSON.parse(prev); if (o.no) { ['consultName', 'consultPhone', 'consultEmail', 'consultWhen', 'consultQuestion'].forEach(function (id) { const k = id.replace('consult', '').toLowerCase(); if ($(id) && o[k]) $(id).value = o[k]; }); renderContent('consultContent', '<p class="subtle">이 브라우저에서 ' + esc(String(o.at || '').slice(0, 10)) + '에 접수번호 <b>' + esc(o.no) + '</b>로 보낸 문의가 있습니다. 추가 질문은 다시 보내셔도 됩니다.</p>', ''); } } catch (e) { } }
+    updateFeeAnchor();
     if (!bind) return;
-    form.addEventListener('submit', function (e) { e.preventDefault(); render(); mailto('[대면상담신청] ' + (v('consultName') || '고객'), text()); });
-    if ($('btnConsultFile')) $('btnConsultFile').addEventListener('click', function () { render(); downloadText('대면상담신청_' + (v('consultName') || '고객') + '_' + today() + '.txt', text()); });
+    const localNo = function () { const d = new Date(); return 'R-' + d.toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0'); };
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const c = contact();
+      if (!c.question) { DH.toast('질문을 적어 주세요.', true); $('consultQuestion').focus(); return; }
+      if (!/\d{9,}/.test(c.phone.replace(/[^\d]/g, ''))) { DH.toast('연락처를 확인해 주세요.', true); $('consultPhone').focus(); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.email)) { DH.toast('답변서를 받을 이메일을 확인해 주세요.', true); $('consultEmail').focus(); return; }
+      if (!$('consultAgreePrivacy').checked) { DH.toast('개인정보 수집·이용에 동의해 주세요.', true); return; }
+      if (!$('consultAgreeFee').checked) { DH.toast('상담료 안내 확인에 체크해 주세요.', true); return; }
+      const btn = $('btnConsultSend'); btn.disabled = true; btn.textContent = '보내는 중…';
+      const r = lastResult || computeInheritance(defaultDeduction());
+      const payload = { form: 'inherit-royal', name: c.name, phone: c.phone, email: c.email, mode: c.mode, when: c.when, question: c.question,
+        summary: resultsText(), inputs: inputsText(), data: linkData(), payable: r.payableTax, spouse: hasSpouse() ? '있음' : '없음',
+        link: answerLink(c, ''), source: 'inherit/' + location.pathname.split('/').pop(), at: new Date().toISOString() };
+      let no = '';
+      try {
+        const res = await fetch(DH.CONSULT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('http ' + res.status);
+        try { const j = await res.json(); if (j && j.ok === false) throw new Error(j.error || 'server'); if (j && j.no) no = String(j.no); } catch (pe) { if (/server|http/.test(String(pe.message))) throw pe; }
+        showDone(no || localNo(), false);
+      } catch (err) {
+        no = localNo();
+        mailto('[상속세 세무사 문의 ' + no + '] ' + (c.name || '고객'), text(no));
+        showDone(no, true);
+      } finally { btn.disabled = false; btn.textContent = '세무사에게 물어보기'; }
+    });
+    if ($('btnConsultFile')) $('btnConsultFile').addEventListener('click', function () { downloadText('세무사문의_' + (v('consultName') || '고객') + '_' + today() + '.txt', text('')); });
   }
   // 옛 Quill 저장('answer_0')을 등급에 맞는 새 키로 한 번 옮김
   function migrateOldAnswer() {
@@ -720,8 +821,11 @@
     document.addEventListener('input', function (e) { if (e.target.closest && e.target.closest('.input-step')) { if (lastResult) calculateInheritanceTax(); else updatePrintSummary(); } });
     document.addEventListener('change', function (e) { if (e.target.closest && e.target.closest('.input-step')) { if (lastResult) calculateInheritanceTax(); else updatePrintSummary(); } });
 
+    const fromLink = applyLinkData();
+    bindCarryLinks();
     setupQa();
     renderProgress(); syncHouseFields(); syncTransfer(); syncPrintSections(); applySpouseChoice(); updatePrintSummary();
+    if (fromLink) { calculateInheritanceTax(); goStep(TIER.qaMode === 'answer' || TIER.qaMode === 'consult' ? 20 : 11); }
     window.addEventListener('beforeprint', function () { calculateInheritanceTax(); updatePrintSummary(); });
   }
   window.DH_summary = function () {
@@ -734,7 +838,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
   // 테스트·디버깅용 공개
-  window.REPORT = { tier: TIER, goStep: goStep, computeInheritance: computeInheritance, calculateInheritanceTax: calculateInheritanceTax,
+  window.REPORT = { tier: TIER, goStep: goStep, reportLink: reportLink, encodeData: encodeData, decodeData: decodeData, computeInheritance: computeInheritance, calculateInheritanceTax: calculateInheritanceTax,
     calculateSpouseInheritanceDeduction: calculateSpouseInheritanceDeduction, performDeductionComparison: performDeductionComparison,
     calculateInheritAcquisionTax: calculateInheritAcquisionTax, propertyTaxOfHouse: propertyTaxOfHouse, comparePropertyTax: comparePropertyTax,
     calculateComprehensiveTax: calculateComprehensiveTax, compareComprehensiveTax: compareComprehensiveTax, calculateAllTaxes: calculateAllTaxes,

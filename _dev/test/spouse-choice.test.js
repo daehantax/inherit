@@ -1,7 +1,7 @@
 const {open,expect}=require('./harness');
 (async()=>{
   console.log('절세보고서 배우자 선택');
-  for (const f of ['inheritGold.html','inheritFree.html','inheritPremium.html','inheritRoyal.html']){
+  for (const f of ['inheritGold.html','inheritFree.html','inheritGoldAnswer.html','inheritRoyal.html']){
     let p=await open(f);
     p.set('houseValue',1.5e9); p.set('otherProperty',3e8); p.set('debts',2e8); p.set('funeralExpense',1.2e7); if(p.d.getElementById('childrensNumber')) p.set('childrensNumber',2);
     // 배우자 있음(기본): 과세가액 15.9억 − 10억 = 5.9억 → 30%−6천만 = 1.17억 → ×0.97 = 113,490,000

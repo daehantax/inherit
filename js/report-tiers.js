@@ -9,35 +9,31 @@
   'use strict';
   var TIERS = {
     free: {
-      key: 'free', file: 'inheritFree.html', label: '프리',
-      title: '상속세 절세 보고서',
-      desc: '상속재산·채무·사전증여를 넣으면 예상 상속세를 계산합니다. 절세 방법은 프리미엄·골드·로얄 보고서에서 확인하세요.',
-      paidSteps: false,          // 13~19단계(절세 방법) 포함 여부
-      qaMode: 'none'             // 'none' | 'question' | 'answer' | 'consult'
-    },
-    premium: {
-      key: 'premium', file: 'inheritPremium.html', label: '프리미엄 (P)',
-      title: '상속세 절세 보고서 (P)',
-      desc: '예상 상속세와 함께 배우자·동거주택·금융재산 공제, 취득세·종부세·양도세·청약·기초연금 절세 방법을 직접 계산합니다.',
-      paidSteps: true, qaMode: 'none'
+      key: 'free', file: 'inheritFree.html', label: '1단계 · 무료',
+      title: '상속세 간단 계산',
+      desc: '상속재산·채무·사전증여를 넣으면 예상 상속세가 나옵니다. 절세 방법은 「계산 후 셀프 절세」에서 이어집니다.',
+      paidSteps: false, qaMode: 'none', next: 'gold'
     },
     gold: {
-      key: 'gold', file: 'inheritGold.html', label: '골드 (G) · 서면상담',
-      title: '상속세 절세 보고서 (G)',
-      desc: '절세 보고서에 질문을 적어 이메일로 보내면 세무사가 서면으로 답변합니다.',
-      paidSteps: true, qaMode: 'question'
-    },
-    goldAnswer: {
-      key: 'goldAnswer', file: 'inheritGoldAnswer.html', label: '골드 (G) · 답변서',
-      title: '상속세 절세 보고서 (G) 답변서',
-      desc: '골드 보고서의 고객 질문에 세무사가 답변을 달아 인쇄하는 답변서입니다.',
-      paidSteps: true, qaMode: 'answer'
+      key: 'gold', file: 'inheritGold.html', label: '2단계 · 무료',
+      title: '계산 후 셀프 절세',
+      desc: '예상 상속세와 함께 배우자·동거주택·금융재산 공제, 취득세·종부세·양도세·청약·기초연금 절세 방법을 직접 계산합니다.',
+      paidSteps: true, qaMode: 'none', next: 'royal'
     },
     royal: {
-      key: 'royal', file: 'inheritRoyal.html', label: '로얄 (R) · 대면상담',
-      title: '상속세 절세 보고서 (R)',
-      desc: '절세 보고서를 바탕으로 여러 세무사·전문가가 대면으로 심층 상담합니다. 대면상담을 신청하세요.',
-      paidSteps: true, qaMode: 'consult'
+      key: 'royal', file: 'inheritRoyal.html', label: '3단계 · 33만원(부가세 포함)',
+      title: '계산 후 세무사 문의',
+      desc: '입력한 내용과 질문을 보내면 담당 세무사가 서면 답변서와 전화 상담으로 답합니다.',
+      paidSteps: true, qaMode: 'consult', fee: 330000
+    },
+    goldAnswer: {
+      key: 'goldAnswer', file: 'inheritGoldAnswer.html', label: '답변서 (사무실용)',
+      title: '세무사 문의 답변서',
+      desc: '고객이 보낸 질문에 세무사가 답변을 달아 인쇄하는 답변서입니다.',
+      paidSteps: true, qaMode: 'answer'
+    },
+    premium: {                                   // 옛 주소 → 2단계로 자동 이동 (링크 호환용)
+      key: 'premium', file: 'inheritPremium.html', redirect: 'inheritGold.html', label: '', title: '계산 후 셀프 절세', desc: '', paidSteps: true, qaMode: 'none'
     }
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = TIERS;

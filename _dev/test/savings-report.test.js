@@ -1,7 +1,7 @@
-// 상속세 절세 보고서 5종(inheritFree/Premium/Gold/GoldAnswer/Royal.html) 검사 (jsdom).
+// 상속세 절세 보고서 4종(inheritFree/Gold/GoldAnswer/Royal.html) 검사 (jsdom). inheritPremium.html 은 Gold 로 이동하는 빈 페이지.
 // 실행:  node _dev/test/savings-report.test.js      손계산은 각 사례 주석에 적었다.
 const { open, expect, near } = require('./harness');
-const files = ['inheritFree.html', 'inheritPremium.html', 'inheritGold.html', 'inheritGoldAnswer.html', 'inheritRoyal.html'];
+const files = ['inheritFree.html', 'inheritGold.html', 'inheritGoldAnswer.html', 'inheritRoyal.html'];
 // jsdom(file://)에는 localStorage 가 없으므로 가짜 저장소를 끼워 넣는다
 const fakeStorage = (w, init) => { const s = Object.assign({}, init || {}); Object.defineProperty(w, 'localStorage', { value: { getItem: k => (k in s ? s[k] : null), setItem: (k, v) => { s[k] = String(v); }, removeItem: k => { delete s[k]; } }, configurable: true }); return s; };
 
@@ -15,17 +15,17 @@ const fakeStorage = (w, init) => { const s = Object.assign({}, init || {}); Obje
     const title = p.d.querySelector('h1').textContent.trim();
     if (f === 'inheritFree.html') {
       expect('  프리: step13~19 없음', [13, 14, 15, 16, 17, 18, 19].filter(has).length, 0);
-      expect('  프리: 업그레이드 카드 3개', p.d.querySelectorAll('.upgrade a').length, 3);
+      expect('  프리: 다음 단계 카드 2개(셀프 절세·세무사 문의)', p.d.querySelectorAll('.upgrade a[data-carry]').length, 2);
       expect('  프리: 평가 교실 링크 없음', p.d.querySelectorAll('.links').length, 0);
       expect('  프리: Quill 없음', p.d.querySelectorAll('.editor-container').length, 0);
     } else {
       expect('  ' + f + ': step13~19 모두 있음', [13, 14, 15, 16, 17, 18, 19].filter(has).length, 7);
       expect('  ' + f + ': 인쇄 선택 체크박스 7개', p.d.querySelectorAll('.print-checkbox').length, 7);
     }
-    if (f === 'inheritRoyal.html') { expect('  로얄: 제목에 (R)', title.includes('(R)') ? 1 : 0, 1); expect('  로얄: 상담신청 폼', p.d.querySelectorAll('#consultForm').length, 1); }
-    if (f === 'inheritGold.html') { expect('  골드: 제목에 (G)', title.includes('(G)') ? 1 : 0, 1); expect('  골드: 이메일 버튼', p.d.querySelectorAll('#btnQaMail').length, 1); expect('  골드: 답변 편집기 없음', p.d.querySelectorAll('#ansEditor').length, 0); }
+    if (f === 'inheritRoyal.html') { expect('  로얄: 제목 「계산 후 세무사 문의」', title.includes('계산 후 세무사 문의') ? 1 : 0, 1); expect('  로얄: 문의 폼 + 상담료 체크', p.d.querySelectorAll('#consultForm #consultAgreeFee').length, 1); expect('  로얄: 상담료 33만원 표기', p.d.body.textContent.includes('33만원') ? 1 : 0, 1); }
+    if (f === 'inheritGold.html') { expect('  골드: 제목 「계산 후 셀프 절세」', title.includes('계산 후 셀프 절세') ? 1 : 0, 1); expect('  골드: 세무사 문의 이동 링크', p.d.querySelectorAll('.fee-card a[data-carry][href="inheritRoyal.html"]').length, 1); expect('  골드: 질문·답변 편집기 없음', p.d.querySelectorAll('#ansEditor, #qaEditor').length, 0); }
     if (f === 'inheritGoldAnswer.html') { expect('  골드답변: 답변 편집기', p.d.querySelectorAll('#ansEditor').length, 1); expect('  골드답변: 질문 편집기 없음', p.d.querySelectorAll('#qaEditor').length, 0); }
-    if (f === 'inheritPremium.html') { expect('  프리미엄: 제목에 (P)', title.includes('(P)') ? 1 : 0, 1); expect('  프리미엄: 질문·상담 없음', p.d.querySelectorAll('.qa').length, 0); }
+    expect('  ' + f + ': 배우자 선택이 1단계에', p.d.querySelectorAll('#step1 input[name="hasSpouse"]').length, 2);
     expect('  ' + f + ': 인라인 onclick 없음', p.d.querySelectorAll('[onclick]').length, 0);
     expect('  ' + f + ': 입력칸 모두 data-save 안', p.d.querySelectorAll('input:not([data-save] input):not(#dhConsult input), select:not([data-save] select)').length, 0);
   }
@@ -179,24 +179,28 @@ const fakeStorage = (w, init) => { const s = Object.assign({}, init || {}); Obje
   p.click('.tax-tips .tip[data-go="13"]');
   expect('프리: 절세 목록 클릭 → 안내(20)', p.d.getElementById('step20').classList.contains('on') ? 1 : 0, 1);
 
-  /* ---------- 13. 골드: 질문 저장·요약·mailto ---------- */
+  /* ---------- 13. 2단계 → 3단계 → 답변서: 입력값·질문이 주소(#d=)로 그대로 넘어간다 ---------- */
   p = await open('inheritGold.html');
-  const qStore = fakeStorage(p.w);
   p.set('houseValue', 1.5e9); p.set('otherProperty', 3e8); p.set('debts', 2e8); p.set('funeralExpense', 1.2e7); p.click('#btnCalc');
-  p.set('customerName', '홍길동'); p.click('#btnQaToggle');
-  const ta = p.d.querySelector('#qaEditor textarea'); ta.value = '배우자가 전부 상속받으면 어떻게 되나요?'; p.click('#btnQaSave');
-  expect('골드: 질문 저장됨', qStore['dh.inherit-report.question'] ? 1 : 0, 1);
-  expect('골드: 질문 화면 표시', p.text('qaContent').includes('배우자가 전부') ? 1 : 0, 1);
-  p.click('#btnQaMail'); const href = p.w.REPORT.lastMailto();
-  expect('골드: mailto 주소', href.startsWith('mailto:sjlee@taxdh.net?subject=' + encodeURIComponent('[상속세 보고서 질문] 홍길동')) ? 1 : 0, 1);
-  expect('골드: mailto 본문에 납부세액', decodeURIComponent(href).includes('113,490,000') ? 1 : 0, 1);
-  // 같은 브라우저에서 답변서를 열면 질문이 보인다 (저장소를 끼운 뒤 초기화 함수를 다시 실행)
-  const q = qStore['dh.inherit-report.question'];
-  p = await open('inheritGoldAnswer.html');
-  fakeStorage(p.w, { 'dh.inherit-report.question': q, 'answer_0': '<p>옛 답변</p>' });
-  p.w.REPORT.setupQa();
+  expect('골드: 상담료 안내에 내 예상세액', p.text('feeAnchor').includes('113,490,000') ? 1 : 0, 1);
+  const royalUrl = p.w.REPORT.reportLink('inheritRoyal.html');
+  expect('골드: 3단계 링크에 #d=', /inheritRoyal\.html#d=[A-Za-z0-9_-]+$/.test(royalUrl) ? 1 : 0, 1);
+  const carried = p.w.REPORT.decodeData(royalUrl.split('#d=')[1]);
+  expect('골드: 링크에 주택가격 실림', carried.houseValue, '1,500,000,000');
+  expect('골드: 링크에 배우자 선택 실림', carried.hasSpouse, 'yes');
+  // 3단계: 링크로 열면 값이 채워지고 세무사 문의 화면(20)으로
+  p = await open('inheritRoyal.html', { hash: '#d=' + royalUrl.split('#d=')[1] });
+  fakeStorage(p.w);
+  expect('로얄: 링크 값 복원 → 납부세액', p.num('payableTaxValueCell'), 113490000);
+  expect('로얄: 문의 화면으로 이동', p.d.getElementById('step20').classList.contains('on') ? 1 : 0, 1);
+  p.set('consultQuestion', '배우자가 전부 상속받으면 어떻게 되나요?'); p.set('consultName', '홍길동'); p.set('consultPhone', '010-1234-5678'); p.set('consultEmail', 'hong@example.com');
+  const ansUrl = p.w.REPORT.reportLink('inheritGoldAnswer.html', { _question: '배우자가 전부 상속받으면 어떻게 되나요?', _name: '홍길동', _no: 'R-20261018-01' });
+  // 답변서: 메일의 링크로 열면 질문·연락처·입력값이 함께 나타난다
+  p = await open('inheritGoldAnswer.html', { hash: '#d=' + ansUrl.split('#d=')[1] });
+  fakeStorage(p.w); p.w.REPORT.setupQa();
   expect('골드답변: 고객 질문 표시', p.text('qaContent').includes('배우자가 전부') ? 1 : 0, 1);
-  expect('골드답변: 옛 answer_0 → 답변으로 이관', p.text('ansContent').includes('옛 답변') ? 1 : 0, 1);
+  expect('골드답변: 접수번호 표시', p.text('qaContent').includes('R-20261018-01') ? 1 : 0, 1);
+  expect('골드답변: 입력값 복원 → 납부세액', p.num('payableTaxValueCell'), 113490000);
 
   console.log(process.exitCode ? '\n실패한 검사가 있습니다.' : '\n모두 통과');
 })();

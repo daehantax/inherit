@@ -83,6 +83,15 @@ function build(tierKey) {
 const only = process.argv.slice(2);
 for (const k of Object.keys(TIERS)) {
   if (only.length && !only.includes(k)) continue;
+  if (TIERS[k].redirect) {                       // 옛 주소: 입력값(#d=)을 그대로 넘기며 새 주소로 이동
+    const html = '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>' + TIERS[k].title + ' · 대한세무법인</title>' +
+      '<meta name="robots" content="noindex"><script>location.replace("' + TIERS[k].redirect + '" + location.hash);</script>' +
+      '<meta http-equiv="refresh" content="0;url=' + TIERS[k].redirect + '"></head><body>' +
+      '<p style="font-family:sans-serif;padding:24px">이 보고서는 <a href="' + TIERS[k].redirect + '">' + TIERS[k].title + '</a>로 옮겨졌습니다.</p></body></html>';
+    writeFileSync(resolve(ROOT, TIERS[k].file), html);
+    console.log('  ' + TIERS[k].file.padEnd(26) + '→ ' + TIERS[k].redirect);
+    continue;
+  }
   const r = build(k);
   console.log('  ' + r.file.padEnd(26) + (r.bytes / 1024).toFixed(1) + ' KB');
 }

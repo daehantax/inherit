@@ -383,7 +383,7 @@
     document.body.prepend(top);
     DH.mobileNav();
     if (opt.contact !== false) {
-      const c = document.createElement('div'); c.className = 'dh-contact no-print';
+      const c = document.createElement('div'); c.className = 'dh-contact no-print'; c.id = 'contact';
       c.innerHTML = '<div class="wrap">' + DH.consultHtml({ title: opt.contactTitle }) + '</div>';
       document.body.appendChild(c);
       DH.bindConsult();

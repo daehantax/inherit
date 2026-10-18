@@ -52,7 +52,7 @@
         <div class="ask-out" id="askPre" hidden>
           <p><b>미리 준비하면 가장 많이 줄어듭니다.</b> 지금 재산 기준으로 예상 상속세를 보고, 증여로 줄일 수 있는지 먼저 검토하세요.</p>
           <div class="ask-cta">
-            <a class="btn" href="inheritPremium.html">상속세 절세보고서 →</a>
+            <a class="btn" href="inheritGold.html">상속세 절세보고서 →</a>
             <a class="btn ghost" href="gift.html">상황별 증여세 계산</a>
           </div>
         </div>
@@ -77,12 +77,11 @@
         <div class="card">
           <span class="num">2</span>
           <h2>상속세 절세보고서</h2>
-          <p>재산 구성과 공제를 반영해 절세 포인트를 정리한 보고서. 필요한 깊이를 고르세요.</p>
+          <p>재산과 가족 구성을 넣고 3단계로 갑니다. 입력한 값은 다음 단계로 그대로 이어집니다.</p>
           <div class="chips">
-            <a href="inheritFree.html">프리</a>
-            <a href="inheritPremium.html">프리미엄</a>
-            <a href="inheritGold.html">골드</a>
-            <a href="inheritRoyal.html">로얄</a>
+            <a href="inheritFree.html">1 간단 계산 · 무료</a>
+            <a href="inheritGold.html">2 계산 후 셀프 절세 · 무료</a>
+            <a href="inheritRoyal.html">3 계산 후 세무사 문의 · 33만원</a>
           </div>
         </div>
       </li>
@@ -164,7 +163,7 @@
       $('askLeft').textContent='오늘부터 '+days+'일 남음';
       $('askTip').textContent='시간이 있습니다. 세액을 확인하고, 배우자공제·동거주택공제 등 줄일 수 있는 항목을 절세보고서로 검토한 뒤 신고하세요.';
       $('askPrimary').textContent='상속세 바로 계산하기 →'; $('askPrimary').href='cal_Inherit_simple.html';
-      $('askSecondary').textContent='절세보고서로 줄이기'; $('askSecondary').href='inheritPremium.html';
+      $('askSecondary').textContent='절세보고서로 줄이기'; $('askSecondary').href='inheritGold.html';
     }
     try{ localStorage.setItem('dh.inherit-class.v1', JSON.stringify({deathDate:v})); }catch(e){}
   }

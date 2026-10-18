@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/dh.css">
 <link rel="stylesheet" href="css/report.css">
-<link data-tier="gold,goldAnswer" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<link data-tier="goldAnswer" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
 </head>
 <body data-store="inherit-report" data-subject="상속세" data-wide="1" data-autoload="1" data-tier="{{TIER}}">
 
@@ -23,9 +23,9 @@
 
   <div class="toolbar no-print">
     <button class="btn ghost sm" data-action="load">입력 데이터 불러오기</button>
-    <button class="btn ghost sm" data-action="save" data-tier="premium,gold,goldAnswer,royal">입력 데이터 저장</button>
+    <button class="btn ghost sm" data-action="save" data-tier="gold,goldAnswer,royal">입력 데이터 저장</button>
     <button class="btn ghost sm" data-action="clear">지우기</button>
-    <button class="btn sm" data-action="print" data-tier="premium,gold,goldAnswer,royal">인쇄 / PDF 저장</button>
+    <button class="btn sm" data-action="print" data-tier="gold,goldAnswer,royal">인쇄 / PDF 저장</button>
   </div>
 
   <section class="card">
@@ -44,15 +44,20 @@
   <!-- ================= 1~10 단계 : 입력 ================= -->
   <section class="card step input-step on" id="step1">
     <span class="step-no">1 / 10</span>
-    <h2 class="title">주택가격</h2>
+    <h2 class="title">배우자 · 주택가격</h2>
+    <div class="field"><label>배우자 <small>돌아가신 분의 배우자가 상속개시일에 살아 계신지. 공제가 크게 달라집니다</small></label>
+      <div class="ctl radio-row" id="spouseChoice">
+        <label><input type="radio" name="hasSpouse" value="yes" checked><span>배우자 있음</span></label>
+        <label><input type="radio" name="hasSpouse" value="no"><span>배우자 없음</span></label>
+      </div></div>
     <div class="field"><label for="houseValue">주택가격 <small>상속개시일 현재 시가</small></label>
       <div class="ctl"><input type="text" id="houseValue" data-money placeholder="주택가격"><span class="unit">원</span><span class="won"></span></div></div>
-    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+    <ul class="tips" data-tier="gold,goldAnswer,royal">
       <li>시가평가 원칙.</li>
       <li>시가는 이 주택의 감정평가액 또는 매매사례가액.</li>
       <li>시가가 없는 경우 기준시가 평가.</li>
     </ul>
-    <div class="links no-print" data-tier="premium,gold,goldAnswer,royal">
+    <div class="links no-print" data-tier="gold,goldAnswer,royal">
       <a class="hot" href="https://tuzaga.com/%ec%83%81%ec%86%8d%ec%8b%9c-%ec%95%84%ed%8c%8c%ed%8a%b8-%ed%8f%89%ea%b0%80/" target="_blank" rel="noopener">⚠️ 상속주택 평가교실 바로가기 꼭 ~~ 클릭 !!! ⚠️</a>
       <ul>
         <li><a href="https://www.hometax.go.kr/" target="_blank" rel="noopener">🏠 홈텍스 실거래가</a></li>
@@ -68,14 +73,14 @@
     <h2 class="title">비주거용건물(대지 포함)</h2>
     <div class="field"><label for="buildingValue">비주거용 건물 <small>대지 포함</small></label>
       <div class="ctl"><input type="text" id="buildingValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+    <ul class="tips" data-tier="gold,goldAnswer,royal">
       <li>시가 평가 원칙.</li>
       <li>감정평가가액이 있는 경우 감정가액.</li>
       <li>시가가 없는 경우 기준시가로 평가.</li>
       <li>고가의 건물의 경우, 2020년부터 기준시가로 과세하는 것에 대한 과세 형평성 문제가 제기되었습니다.</li>
       <li>국세청은 자체 감정평가예산을 배정하여 예상감정가와 시가의 차액이 10억을 넘거나, 10%이상 차이가 나는 경우 감정평가를 하여 과세하고 있습니다.</li>
     </ul>
-    <div class="links no-print" data-tier="premium,gold,goldAnswer,royal">
+    <div class="links no-print" data-tier="gold,goldAnswer,royal">
       <a class="hot" href="https://tuzaga.com/%ea%b1%b4%eb%ac%bc%ec%9d%98-%ea%b0%90%ec%a0%95%ed%8f%89%ea%b0%80%ec%99%80-%eb%b3%b4%ec%b6%a9%ec%a0%81-%ed%8f%89%ea%b0%80%eb%b0%a9%eb%b2%95/" target="_blank" rel="noopener">⚠️ 상속 건물평가 교실 꼭 ~~ 클릭 !!! ⚠️</a>
       <ul><li><a href="https://www.hometax.go.kr/" target="_blank" rel="noopener">🏢 비주거용 건물평가하러 가기 : 홈텍스</a></li></ul>
     </div>
@@ -87,12 +92,12 @@
     <h2 class="title">농지</h2>
     <div class="field"><label for="agriculturalLandValue">농지</label>
       <div class="ctl"><input type="text" id="agriculturalLandValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+    <ul class="tips" data-tier="gold,goldAnswer,royal">
       <li>시가로 평가.</li>
       <li>감정평가로 평가 할수 있음</li>
       <li>시가가 없는 경우 기준시가로 평가.</li>
     </ul>
-    <div class="links no-print" data-tier="premium,gold,goldAnswer,royal">
+    <div class="links no-print" data-tier="gold,goldAnswer,royal">
       <a class="hot" href="https://tuzaga.com/%ec%83%81%ec%86%8d%eb%86%8d%ec%a7%80-%ed%8f%89%ea%b0%80/" target="_blank" rel="noopener">⚠️ 상속농지 평가 교실 바로가기 중요 ⚠️</a>
       <ul><li><a href="https://www.realtyprice.kr/" target="_blank" rel="noopener">🏢 상속농지 평가하러 가기 : 국토교통부 공시가격</a></li></ul>
     </div>
@@ -104,12 +109,12 @@
     <h2 class="title">임야(산)</h2>
     <div class="field"><label for="forestLandValue">임야</label>
       <div class="ctl"><input type="text" id="forestLandValue" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
-    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+    <ul class="tips" data-tier="gold,goldAnswer,royal">
       <li>시가로 평가.</li>
       <li>감정평가로 평가 할수 있음</li>
       <li>시가가 없는 경우 기준시가로 평가.</li>
     </ul>
-    <div class="links no-print" data-tier="premium,gold,goldAnswer,royal">
+    <div class="links no-print" data-tier="gold,goldAnswer,royal">
       <a class="hot" href="https://tuzaga.com/%ec%83%81%ec%86%8d%eb%86%8d%ec%a7%80-%ed%8f%89%ea%b0%80/" target="_blank" rel="noopener">⚠️ 상속임야 평가 교실 바로가기 중요 ⚠️</a>
       <ul><li><a href="https://www.realtyprice.kr/" target="_blank" rel="noopener">🏢 임야 평가하러 가기 : 국토교통부 공시가격</a></li></ul>
     </div>
@@ -139,7 +144,7 @@
       <div class="ctl"><input type="text" id="funeralExpense" data-money placeholder="5백만원 미만이면 비워두셔도 5백만원 공제"><span class="unit">원</span><span class="won"></span></div></div>
     <div class="field"><label for="funeralEnshrine">봉안시설·자연장지 비용</label>
       <div class="ctl"><input type="text" id="funeralEnshrine" data-money placeholder="없으면 비워두세요 (5백만원 한도)"><span class="unit">원</span><span class="won"></span></div></div>
-    <ul class="tips" data-tier="premium,gold,goldAnswer,royal">
+    <ul class="tips" data-tier="gold,goldAnswer,royal">
       <li>장례비(봉안시설비 제외) : 5백만원 미만시 최소 5백만원 공제. 1천만원 초과시 1천만원까지만 공제.</li>
       <li>봉안시설, 자연장지에 사용된 금액 : 별도로 5백만원을 한도로 공제.</li>
       <li>합계 1천5백만원까지 한도</li>
@@ -167,11 +172,7 @@
   <section class="card step input-step" id="step9">
     <span class="step-no">9 / 10</span>
     <h2 class="title">상속공제</h2>
-    <div class="field"><label>배우자 <small>피상속인의 배우자가 상속개시일에 생존해 있는지</small></label>
-      <div class="ctl radio-row" id="spouseChoice">
-        <label><input type="radio" name="hasSpouse" value="yes" checked><span>배우자 있음</span></label>
-        <label><input type="radio" name="hasSpouse" value="no"><span>배우자 없음</span></label>
-      </div></div>
+    <div class="field"><label>배우자</label><div class="ctl"><span id="spouseEcho" class="muted"></span> <button type="button" class="btn ghost sm no-print" data-go="1">바꾸기</button></div></div>
     <div class="field"><label for="inheritanceDeduction">상속공제 <small id="dedDefaultNote">배우자 있음: 일괄공제 5억 + 배우자공제 5억</small></label>
       <div class="ctl"><input type="text" id="inheritanceDeduction" data-money value="1,000,000,000" readonly><span class="unit">원</span><span class="won"></span></div></div>
     <ul class="tips">
@@ -254,8 +255,9 @@
       <button class="tip" data-go="17"><span class="n">5</span>상속 받은 주택 외 가지고 있던 주택 양도시 ! 1세대 1주택 비과세 만들수 있습니다.</button>
       <button class="tip" data-go="18"><span class="n">6</span>주택 상속으로 2주택인 경우, 청약기회 사라진 건 아닐까요 ?</button>
       <button class="tip" data-go="19"><span class="n">7</span>부모님 기초연금 받게 할 순 없을까요 ?</button>
-      <button class="tip" data-go="20" data-tier="premium"><span class="n">8</span>주의사항. 저장하기 . 인쇄하기</button>
-      <button class="tip" data-go="20" data-tier="gold,goldAnswer,royal"><span class="n">8</span>유의사항. 저장하기 . 인쇄하기</button>
+      <button class="tip" data-go="20" data-tier="gold"><span class="n">8</span>주의사항 · 세무사에게 물어보기</button>
+      <button class="tip" data-go="20" data-tier="royal"><span class="n">8</span>세무사에게 물어보기 (질문 보내기)</button>
+      <button class="tip" data-go="20" data-tier="goldAnswer"><span class="n">8</span>고객 질문 · 답변 달기</button>
       <button class="tip" data-go="20" data-tier="free"><span class="n">8</span>안내말씀</button>
     </div>
     <h3>뒤로 가기</h3>
@@ -274,13 +276,13 @@
     </div>
     <div class="actions">
       <button class="btn ghost" data-go="11">뒤로가기</button>
-      <button class="btn" data-go="13" data-tier="premium,gold,goldAnswer,royal">상속세 줄이러 가기</button>
+      <button class="btn" data-go="13" data-tier="gold,goldAnswer,royal">상속세 줄이러 가기</button>
       <button class="btn" data-go="20" data-tier="free">안내 보기</button>
     </div>
   </section>
 
   <!-- ================= 13 단계 : 상속세 절세 ================= -->
-  <section class="card step page-break print-section" id="step13" data-tier="premium,gold,goldAnswer,royal">
+  <section class="card step page-break print-section" id="step13" data-tier="gold,goldAnswer,royal">
     <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section13-checkbox" checked> 이 부분 인쇄</label>
     <h2 class="title">상속세 절세 방법</h2>
 
@@ -414,7 +416,7 @@
   </section>
 
   <!-- ================= 14 단계 : 취득세 ================= -->
-  <section class="card step page-break print-section" id="step14" data-tier="premium,gold,goldAnswer,royal">
+  <section class="card step page-break print-section" id="step14" data-tier="gold,goldAnswer,royal">
     <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section14-checkbox" checked> 이 부분 인쇄</label>
     <h2 class="title">◈ 배우자와 자녀의 취득세는 얼마일까요 ?</h2>
     <ul class="tips">
@@ -467,7 +469,7 @@
   </section>
 
   <!-- ================= 15 단계 : 종부세·재산세 ================= -->
-  <section class="card step page-break print-section" id="step15" data-tier="premium,gold,goldAnswer,royal">
+  <section class="card step page-break print-section" id="step15" data-tier="gold,goldAnswer,royal">
     <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section1-checkbox" checked> 이 부분 인쇄</label>
     <h2 class="title">◈ 종부세 절세 방법이 있을까요 ?</h2>
     <h4>1) 상속주택 특례를 이용합니다.</h4>
@@ -521,7 +523,7 @@
   </section>
 
   <!-- ================= 16 단계 : 상속부동산 양도 ================= -->
-  <section class="card step page-break print-section" id="step16" data-tier="premium,gold,goldAnswer,royal">
+  <section class="card step page-break print-section" id="step16" data-tier="gold,goldAnswer,royal">
     <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section16-checkbox" checked> 이 부분 인쇄</label>
     <h2 class="title">◈ 상속받은 부동산을 매도하는 경우 양도세는 어떻게 되나요 ?</h2>
     <details class="dh"><summary>반드시 ! 상속세뿐만 아니라 양도세까지 검토하여 부동산을 평가해야</summary>
@@ -575,7 +577,7 @@
   </section>
 
   <!-- ================= 17 단계 : 일반주택 1세대1주택 ================= -->
-  <section class="card step page-break print-section" id="step17" data-tier="premium,gold,goldAnswer,royal">
+  <section class="card step page-break print-section" id="step17" data-tier="gold,goldAnswer,royal">
     <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section2-checkbox" checked> 이 부분 인쇄</label>
     <h2 class="title">◈ 주택을 상속받고 나서 종전 일반주택 양도하는 경우 비과세를 받을수 있나요 ?</h2>
     <ul class="tips">
@@ -626,7 +628,7 @@
   </section>
 
   <!-- ================= 18 단계 : 주택청약 ================= -->
-  <section class="card step page-break print-section" id="step18" data-tier="premium,gold,goldAnswer,royal">
+  <section class="card step page-break print-section" id="step18" data-tier="gold,goldAnswer,royal">
     <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section3-checkbox" checked> 이 부분 인쇄</label>
     <h2 class="title">◈ 상속주택때문에 아파트 청약을 받을수 없나요 ?</h2>
     <p>주택청약시 주택소유 여부를 판단할때, 주택을 단독 또는 공유지분으로 소유하고 있는 경우도 주택을 소유하고 있는 것으로 봅니다.<br>그러나 다음의 상속주택은 없는 것으로 봅니다.</p>
@@ -653,7 +655,7 @@
   </section>
 
   <!-- ================= 19 단계 : 기초연금 ================= -->
-  <section class="card step page-break print-section" id="step19" data-tier="premium,gold,goldAnswer,royal">
+  <section class="card step page-break print-section" id="step19" data-tier="gold,goldAnswer,royal">
     <label class="print-pick no-print"><input type="checkbox" class="print-checkbox" id="section4-checkbox" checked> 이 부분 인쇄</label>
     <h2 class="title">◈ 홀로 남은 배우자가 기초연금을 받기 위해서 재산과 소득이 얼마 이하여야 하나요 ?</h2>
     <details class="dh"><summary>기초연금 대상자</summary>
@@ -717,69 +719,87 @@
       </select></div></div>
     <div class="actions no-print"><button class="btn" id="btnPension">계산하기</button></div>
     <div id="resultPention"></div>
-    <div class="actions no-print"><button class="btn ghost" data-go="18">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="20" data-tier="premium">주의사항 !</button><button class="btn" data-go="20" data-tier="gold,goldAnswer">질문하기 !</button><button class="btn" data-go="20" data-tier="royal">대면상담신청 !</button></div>
+    <div class="actions no-print"><button class="btn ghost" data-go="18">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-go="20" data-tier="gold">주의사항 · 세무사 문의</button><button class="btn" data-go="20" data-tier="goldAnswer">답변 달기</button><button class="btn" data-go="20" data-tier="royal">세무사에게 물어보기</button></div>
   </section>
 
-  <!-- ================= 20 단계 : 유의사항 · 질문 · 상담 · 안내 ================= -->
+  <!-- ================= 20 단계 : 안내 · 주의사항 · 세무사 문의 · 답변 ================= -->
   <section class="card step page-break" id="step20">
     <div data-tier="free">
-      <h2 class="title">안내 말씀</h2>
-      <p>상속세에 대한 궁금한 점이나, 상속세 계산에 대한 질문이 있으시면 아래의 보고서를 이용해 주세요.</p>
+      <h2 class="title">다음 단계</h2>
+      <p>예상 상속세를 확인하셨습니다. 입력한 내용은 그대로 이어집니다.</p>
       <div class="upgrade">
-        <a href="inheritPremium.html" class="p"><span class="tag">P</span><strong>셀프절세방법 (P)</strong><span>상속세·취득세·종부세·양도세·청약·기초연금 절세 방법을 직접 계산해 봅니다.</span></a>
-        <a href="inheritGold.html" class="g"><span class="tag">G</span><strong>서면상담 (G)</strong><span>절세 보고서에 질문을 적어 보내면 세무사가 서면으로 답변합니다.</span></a>
-        <a href="inheritRoyal.html" class="r"><span class="tag">R</span><strong>대면상담 (R)</strong><span>보고서를 바탕으로 여러 세무사·전문가가 대면으로 심층 상담합니다.</span></a>
+        <a href="inheritGold.html" class="g" data-carry><span class="tag">2</span><strong>계산 후 셀프 절세 · 무료</strong><span>배우자·동거주택·금융재산 공제와 취득세·종부세·양도세·청약·기초연금까지 직접 계산해 봅니다.</span></a>
+        <a href="inheritRoyal.html" class="r" data-carry><span class="tag">3</span><strong>계산 후 세무사 문의 · 33만원(부가세 포함)</strong><span>입력한 내용과 질문을 보내면 담당 세무사가 서면 답변서와 전화 상담으로 답합니다.</span></a>
       </div>
       <div class="actions no-print"><button class="btn ghost" data-go="12">뒤로가기</button><button class="btn" data-go="1">처음으로 가기</button></div>
     </div>
 
-    <div data-tier="premium,gold,goldAnswer,royal">
-      <h2 class="title" data-tier="premium">주의사항</h2>
-      <h2 class="title" data-tier="gold,goldAnswer,royal">유의사항</h2>
-      <ul class="tips" data-tier="premium">
+    <div data-tier="gold">
+      <h2 class="title">주의사항</h2>
+      <ul class="tips">
         <li>본 내용은 세법과 위의 기본사항 요건에 한정하여 본인이 입력한 데이터로 산출한 “상황별 예상세금 모의계산”으로서 예상세금 단순비교를 위한 평가내용입니다.</li>
         <li>이용자의 개별적인 의사결정에 대한 법적 책임은 없습니다.</li>
         <li>따라서 실제 의사결정 및 관련 세무신고는 사전에 세무사와 반드시 상담하시기 바랍니다.</li>
       </ul>
-      <ul class="tips" data-tier="gold">
-        <li>이 보고서와 아래의 내용은 고객님이 입력한 데이터를 바탕으로 한 “상황별 예상세금 모의계산 보고서” 입니다.</li>
-        <li>고객님의 개별적인 판단에 따른 의사결정에 대한 법적 책임은 없습니다.</li>
-        <li>따라서 중요한 실제 의사결정 및 관련 세무신고는 사전에 세무사와 반드시 대면 상담하시기 바랍니다.</li>
-        <li>"대면상담"은 여러세무사와 전문가가 심층적으로 대응합니다.</li>
-      </ul>
-      <ul class="tips" data-tier="goldAnswer,royal">
-        <li>이 보고서와 아래의 내용은 고객님이 입력한 데이터에 추가로 질문한 내용을 반영한 “상황별 예상세금 모의계산 보고서” 입니다.</li>
-        <li>고객님의 질문 외 고객님의 개별적인 판단에 따른 의사결정에 대한 법적 책임은 없습니다.</li>
-        <li>따라서 중요한 실제 의사결정 및 관련 세무신고는 사전에 세무사와 반드시 대면 상담하시기 바랍니다.</li>
-        <li>"대면상담"은 여러세무사와 전문가가 심층적으로 대응합니다.</li>
-      </ul>
+      <div class="actions no-print"><button class="btn ghost" data-action="save">입력 데이터 저장</button><button class="btn ghost" data-action="print">인쇄 / PDF 저장</button></div>
+      <p class="subtle">፠ 입력한 데이터는 사용자의 컴퓨터 웹브라우저에서만 저장되며, 외부로 유출되지 않습니다.</p>
 
-      <div data-tier="premium">
-        <div class="actions no-print"><button class="btn ghost" data-action="save">입력 데이터 저장</button><button class="btn" data-action="print">인쇄 / PDF 저장</button></div>
-        <p class="subtle">፠ 입력한 데이터는 사용자의 컴퓨터 웹브라우저에서만 저장되며, 외부로 유출되지 않습니다.
-          <a class="no-print" href="https://tuzaga.com/%eb%a1%9c%ec%bb%ac-%ec%8a%a4%ed%86%a0%eb%a6%ac%ec%a7%80-%eb%b8%8c%eb%9d%bc%ec%9a%b0%ec%a0%80%ec%97%90-%ec%a0%80%ec%9e%a5%ed%95%9c%eb%8b%a4%eb%8a%94-%ea%b2%83%ec%9d%98-%ec%9d%98%eb%af%b8/" target="_blank" rel="noopener">자세히 알아보기</a></p>
+      <div class="fee-card">
+        <h3>여기까지 계산한 내용을 세무사가 직접 검토해 드립니다</h3>
+        <div class="fee-head"><span>계산 후 세무사 문의</span><b>33만원 <small>(부가세 포함)</small></b></div>
+        <ul>
+          <li>입력하신 재산·가족 구성과 질문을 보고 쓴 <b>서면 답변서</b> (공제 적용 가능 여부, 놓친 절세 포인트, 신고 시 주의점)</li>
+          <li>답변서 전달 후 <b>전화 상담 30분</b> (분당 사무실 방문 가능)</li>
+          <li>입금 확인 후 <b>영업일 2일 안</b>에 답변</li>
+          <li>상속세 신고를 맡기시면 <b>33만원을 수수료에서 전액 빼 드립니다</b></li>
+        </ul>
+        <p class="fee-anchor" id="feeAnchor"></p>
+        <div class="actions no-print"><a class="btn" href="inheritRoyal.html" data-carry>세무사에게 물어보기 →</a><a class="btn ghost" href="#contact">간단한 문의는 무료 전화 상담</a></div>
       </div>
+      <div class="actions no-print"><button class="btn ghost" data-go="19">뒤로가기</button><button class="btn ghost" data-go="12">목록</button></div>
+    </div>
 
-      <!-- 골드: 고객 질문 -->
-      <div class="qa" data-tier="gold">
-        <h3>▶ 질문하기</h3>
-        <p class="subtle">궁금한 점을 적어 저장하고, 이메일로 보내거나 파일로 내려받아 함께 전달하세요. 질문에는 재산 합계·공제·예상세액 요약이 자동으로 붙습니다.</p>
-        <div class="field"><label for="customerName">이름</label><div class="ctl"><input type="text" id="customerName" class="mid" placeholder="홍길동"></div></div>
-        <div class="actions no-print"><button class="btn ghost" id="btnQaToggle">질문 작성</button></div>
-        <div class="qa-form" id="qaForm" hidden>
-          <div class="editor-container" id="qaEditor"></div>
-          <div class="actions no-print">
-            <button class="btn ghost sm" id="btnQaSave">저장</button>
-            <button class="btn ghost sm" id="btnQaLoad">불러오기</button>
-            <button class="btn sm" id="btnQaMail">이메일로 보내기</button>
-            <button class="btn ghost sm" id="btnQaFile">질문 내용 파일로 저장</button>
-          </div>
+    <div data-tier="royal">
+      <h2 class="title">세무사에게 물어보기</h2>
+      <div class="fee-card">
+        <div class="fee-head"><span>계산 후 세무사 문의</span><b>33만원 <small>(부가세 포함)</small></b></div>
+        <ul>
+          <li>입력하신 재산·가족 구성과 아래 질문을 보고 쓴 <b>서면 답변서</b> + 답변서 전달 후 <b>전화 상담 30분</b> (방문 가능)</li>
+          <li>접수 → 담당 세무사가 전화로 질문 범위 확인 → 계좌 안내 → <b>입금 확인 후 영업일 2일 안</b> 답변</li>
+          <li>답변서 발송 전 취소하면 전액 환불 · 상속세 신고를 맡기시면 33만원을 수수료에서 전액 차감</li>
+        </ul>
+        <p class="fee-anchor" id="feeAnchor"></p>
+        <p class="subtle">간단한 문의는 <a href="#contact">무료 전화 상담</a>으로 남겨 주세요.</p>
+      </div>
+      <form id="consultForm" class="consult">
+        <div class="field"><label for="consultQuestion">질문 <small>궁금한 점을 자유롭게. 입력하신 숫자는 자동으로 함께 전달됩니다</small></label>
+          <div class="ctl"><textarea id="consultQuestion" class="plain" rows="7" placeholder="예) 동거주택공제를 받을 수 있는지, 배우자가 얼마를 상속받는 것이 유리한지, 사전증여 합산이 맞는지…" required></textarea></div></div>
+        <div class="field"><label for="consultName">이름</label><div class="ctl"><input type="text" id="consultName" class="mid" required></div></div>
+        <div class="field"><label for="consultPhone">연락처</label><div class="ctl"><input type="tel" id="consultPhone" class="mid" placeholder="010-0000-0000" required></div></div>
+        <div class="field"><label for="consultEmail">이메일 <small>답변서를 받을 주소</small></label><div class="ctl"><input type="email" id="consultEmail" placeholder="example@email.com" required></div></div>
+        <div class="field"><label>원하는 답변 방식</label>
+          <div class="ctl radio-row">
+            <label><input type="radio" name="consultMode" value="서면+전화" checked><span>서면 답변서 + 전화</span></label>
+            <label><input type="radio" name="consultMode" value="서면+방문"><span>서면 답변서 + 방문 상담</span></label>
+          </div></div>
+        <div class="field"><label for="consultWhen">전화 받기 편한 시간 <small>선택</small></label><div class="ctl"><input type="text" id="consultWhen" placeholder="예) 평일 오후 2~5시"></div></div>
+        <div class="consent-box">
+          <label class="check"><input type="checkbox" id="consultAgreePrivacy"> 상담을 위한 개인정보(이름·연락처·이메일·입력 내용) 수집·이용에 동의합니다</label>
+          <label class="check"><input type="checkbox" id="consultAgreeFee"> 상담료 33만원(부가세 포함) 안내를 확인했습니다. 입금 전에는 비용이 발생하지 않습니다</label>
         </div>
-        <div class="qa-content" id="qaContent"></div>
-      </div>
+        <div class="actions no-print"><button type="submit" class="btn" id="btnConsultSend">세무사에게 물어보기</button><button type="button" class="btn ghost" id="btnConsultFile">보낼 내용 파일로 저장</button></div>
+      </form>
+      <div class="qa-content" id="consultContent"></div>
+      <div class="actions no-print"><button class="btn ghost" data-go="19">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn ghost" data-action="print">인쇄 / PDF 저장</button></div>
+    </div>
 
-      <!-- 골드 답변서: 세무사 답변 -->
-      <div class="qa" data-tier="goldAnswer">
+    <div data-tier="goldAnswer">
+      <h2 class="title">세무사 문의 답변서</h2>
+      <ul class="tips">
+        <li>이 답변서는 고객님이 입력한 데이터와 질문을 바탕으로 한 “상황별 예상세금 모의계산”에 대한 세무사의 서면 의견입니다.</li>
+        <li>질문 외 고객님의 개별적인 판단에 따른 의사결정에 대한 법적 책임은 없습니다. 실제 신고 전에는 서류 확인이 필요합니다.</li>
+      </ul>
+      <div class="qa">
         <h3>▶ 고객 질문</h3>
         <div class="qa-content" id="qaContent"></div>
         <h3>▶ 답변 달기</h3>
@@ -794,30 +814,14 @@
         </div>
         <div class="qa-content" id="ansContent"></div>
       </div>
-
-      <!-- 로얄: 대면상담 신청 -->
-      <div class="qa consult" data-tier="royal">
-        <h3>▶ 대면상담신청</h3>
-        <p class="subtle">이름 이메일 전화번호 문의사항등을 입력해 주세요. 이 보고서의 기본적인 내용들을 실행해 보시고, PDF 저장후 이메일에 첨부해 주시면 더욱 풍부한 상담이 됩니다. 담당자가 대면면담 일정을 잡기 위해 직접 연락드리겠습니다.</p>
-        <form id="consultForm">
-          <div class="field"><label for="consultName">이름</label><div class="ctl"><input type="text" id="consultName" class="mid" required></div></div>
-          <div class="field"><label for="consultPhone">연락처</label><div class="ctl"><input type="tel" id="consultPhone" class="mid" placeholder="010-0000-0000" required></div></div>
-          <div class="field"><label for="consultEmail">이메일</label><div class="ctl"><input type="email" id="consultEmail" placeholder="example@email.com"></div></div>
-          <div class="field"><label for="consultWhen">희망 일시</label><div class="ctl"><input type="text" id="consultWhen" placeholder="예) 10월 25일 오후 2시"></div></div>
-          <div class="field"><label for="consultMemo">메모</label><div class="ctl"><textarea id="consultMemo" placeholder="문의사항"></textarea></div></div>
-          <div class="actions no-print"><button type="submit" class="btn" id="btnConsultMail">이메일로 신청하기</button><button type="button" class="btn ghost" id="btnConsultFile">신청 내용 파일로 저장</button></div>
-        </form>
-        <div class="qa-content" id="consultContent"></div>
-      </div>
-
-      <div class="actions no-print"><button class="btn ghost" data-go="19">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-action="print" data-tier="gold,goldAnswer,royal">인쇄 / PDF 저장</button></div>
+      <div class="actions no-print"><button class="btn ghost" data-go="19">뒤로가기</button><button class="btn ghost" data-go="12">목록</button><button class="btn" data-action="print">인쇄 / PDF 저장</button></div>
     </div>
   </section>
 
   </div><!-- /data-save -->
 </main>
 
-<script data-tier="gold,goldAnswer" src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script data-tier="goldAnswer" src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script src="js/dh.js"></script>
 <script src="js/report-tiers.js"></script>
 <script src="js/report-engine.js"></script>
