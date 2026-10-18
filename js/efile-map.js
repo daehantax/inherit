@@ -178,10 +178,10 @@
 
     /* 03 세액계산 (공제 합계는 11 레코드와 같아야 함) */
     const t20 = Math.round(inh.taxBase), t22 = Math.round(inh.calculatedTax), t23 = Math.round(inh.surcharge), t24 = t22 + t23;
-    const t29 = Math.round(inh.giftCredit), t33 = Math.round(inh.reportCredit), t27 = t29 + t33;
+    const t29 = Math.round(inh.giftCredit), t32 = Math.round(inh.shortTermCredit || 0), t33 = Math.round(inh.reportCredit), t27 = t29 + t32 + t33;
     const t40 = Math.max(0, t24 - t27);
     if (t40 !== Math.round(inh.payable)) add('납부세액 검산 불일치: ' + t40 + ' ≠ ' + inh.payable);
-    R.push({ code: '03', values: { 3: f29, 4: Math.round(d.applied), 5: Math.round(inh.appraisalFee), 6: t20, 7: t20 ? inh.rate.rate * 100 : 0, 8: t22, 9: t23, 10: t24, 13: t27, 14: t29, 15: t29, 19: t33, 26: t40, 33: t40 ? today() : '', 34: t40 } });
+    R.push({ code: '03', values: { 3: f29, 4: Math.round(d.applied), 5: Math.round(inh.appraisalFee), 6: t20, 7: t20 ? inh.rate.rate * 100 : 0, 8: t22, 9: t23, 10: t24, 13: t27, 14: t29, 15: t29, 18: t32, 19: t33, 26: t40, 33: t40 ? today() : '', 34: t40 } });
 
     // 수록 순서: 01, 02, 03, 그다음 첨부서류(자료구분 순)
     const order = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '19', '20', '23', '24'];

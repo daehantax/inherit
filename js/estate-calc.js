@@ -71,6 +71,35 @@
     return Math.max(0, lim);
   }
 
+  /* ---------- 단기재상속 세액공제 (상증법 30조) ----------
+     전의 상속개시 후 10년 안에 상속인·수유자가 사망해 다시 상속이 시작되면, 전에 상속세를 낸 재산 중 다시 상속되는 몫만큼
+     공제액 = 전의 상속세 산출세액 × [재상속분 재산가액 × (전의 과세가액 ÷ 전의 상속재산가액)] ÷ 전의 과세가액 × 공제율
+            = 전의 산출세액 × 재상속분 ÷ 전의 상속재산가액 × 공제율
+     공제율: 1년 이내 100%, 이후 1년마다 10%p 감소(10년 이내 10%)
+     한도: 이번 상속세 산출세액(할증 포함) − 증여세액공제 − 외국납부세액공제 (30조③). 신고세액공제 3%는 이 공제를 뺀 뒤 계산(69조) */
+  function shortYears(prevDate, curDate) {          // 몇 년 이내인지(1~10), 10년 넘으면 0
+    const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(prevDate || ''), c = /^(\d{4})-(\d{2})-(\d{2})$/.exec(curDate || '');
+    if (!p || !c) return 0;
+    const pd = new Date(Date.UTC(+p[1], +p[2] - 1, +p[3])), cd = new Date(Date.UTC(+c[1], +c[2] - 1, +c[3]));
+    if (cd <= pd) return 0;
+    for (let n = 1; n <= 10; n++) { const lim = new Date(Date.UTC(+p[1] + n, +p[2] - 1, +p[3])); if (cd <= lim) return n; }
+    return 0;
+  }
+  function shortRate(n) { n = Math.floor(Number(n) || 0); return n >= 1 && n <= 10 ? (11 - n) / 10 : 0; }
+  // prior: { date | years, prevTax(전의 산출세액), prevEstate(전의 상속재산가액), prevTaxable(전의 과세가액, 선택), reinherit(재상속분 재산가액) }
+  function shortCredit(prior, curDate) {
+    prior = prior || {};
+    const years = prior.years ? Math.floor(Number(prior.years)) : shortYears(prior.date, curDate);
+    const rate = shortRate(years);
+    const tax = n0(prior.prevTax), estate = n0(prior.prevEstate), taxable = n0(prior.prevTaxable) || estate;
+    let re = n0(prior.reinherit);
+    if (!rate || !tax || !estate || !re) return { years: years, rate: rate, amount: 0, reinherit: re };
+    // 재상속분 중 전의 과세가액 상당액을 넘는 부분은 없는 것으로 봄
+    re = Math.min(re, estate);
+    const amount = Math.floor(tax * (re * (taxable / estate)) / taxable * rate);
+    return { years: years, rate: rate, amount: amount, reinherit: re };
+  }
+
   /* ---------- 상속인·법정상속분 ---------- */
   // 배우자 1.5 : 자녀 각 1. 대습상속 손자녀(먼저 돌아가신 자녀 몫)는 한 몫을 나눠 갖는 것으로 본다.
   // 자녀가 없으면 배우자 1.5 : 부모 각 1. 둘 다 없으면 배우자 단독, 배우자도 없으면 부모 → 그 밖의 가족 균등.
@@ -228,8 +257,14 @@
     const withSurcharge = calculatedTax + surcharge;
     const giftCreditLimit = (taxBase > 0 && priorGiftTaxBase > 0) ? Math.floor(withSurcharge * Math.min(1, priorGiftTaxBase / taxBase)) : 0;
     const giftCredit = Math.min(giftTaxPaid, giftCreditLimit, withSurcharge);
-    const reportCredit = Math.floor((withSurcharge - giftCredit) * R.reportCredit);
-    const payable = Math.max(0, withSurcharge - giftCredit - reportCredit);
+    // 단기재상속 세액공제: 전의 상속이 여럿이면 각각 계산해 더하고, 한도(산출세액 − 증여세액공제) 안에서
+    const deathDate = (e.deceased || {}).date;
+    const shortRows = (e.priors || []).filter(function (p) { return p && (p.prevTax || p.reinherit); }).map(function (p) { return shortCredit(p, deathDate); });
+    const shortRaw = sum(shortRows, function (r) { return r.amount; });
+    const shortLimit = Math.max(0, withSurcharge - giftCredit);
+    const shortTermCredit = Math.min(shortRaw, shortLimit);
+    const reportCredit = Math.floor((withSurcharge - giftCredit - shortTermCredit) * R.reportCredit);
+    const payable = Math.max(0, withSurcharge - giftCredit - shortTermCredit - reportCredit);
 
     // 상속인별 상속세 부담(연대납부 의무가 있지만 보통 받은 비율로 나눔)
     const net = {}; let netSum = 0;
@@ -246,6 +281,7 @@
       funeralGeneral: n0(f.cost), funeralGrave: n0(f.grave), debtParts: { loan: n0(d.loan), deposit: n0(d.deposit), tax: n0(d.tax), other: n0(d.other) },
       appraisalFee: appraisalFee, taxBase: taxBase, rate: inheritRateOf(taxBase), calculatedTax: calculatedTax, surcharge: surcharge,
       giftCredit: giftCredit, giftCreditLimit: giftCreditLimit, giftTaxPaid: giftTaxPaid, reportCredit: reportCredit, payable: payable,
+      shortTermCredit: shortTermCredit, shortRaw: shortRaw, shortLimit: shortLimit, shortRows: shortRows,
       byHeir: byHeir, net: net, taxShare: taxShare, legal: legal
     };
   }
@@ -505,7 +541,7 @@
     legalShares: legalShares, sharesOf: sharesOf, assetValue: assetValue, valueBasis: valueBasis,
     calcInheritance: calcInheritance, calcAcquisition: calcAcquisition, calcHolding: calcHolding, calcTransfer: calcTransfer,
     propTaxHouse: propTaxHouse, acqSpecial: acqSpecial, mainHeir: mainHeir, isLocalHouse: isLocalHouse, standardPrice: standardPrice, GONGSI_RATIO: GONGSI_RATIO, comprehensive: comprehensive, transferRateTax: transferRateTax,
-    dates: dates, calcAll: calcAll, PLAN_YEARS: PLAN_YEARS, HORIZON: HORIZON, holdYears: holdYears, sells: sells
+    dates: dates, calcAll: calcAll, shortYears: shortYears, shortRate: shortRate, shortCredit: shortCredit, PLAN_YEARS: PLAN_YEARS, HORIZON: HORIZON, holdYears: holdYears, sells: sells
   };
   if (typeof module === 'object' && module.exports) module.exports = root.EC;
 })(typeof window !== 'undefined' ? window : globalThis);

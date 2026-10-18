@@ -33,6 +33,7 @@
       return a ? { obj: a, key: p[2] } : null;
     }
     if (p[0] === 'g') { const g = E.gifts.find(function (x) { return x.id === p[1]; }); return g ? { obj: g, key: p[2] } : null; }
+    if (p[0] === 'p') { E.priors = E.priors || []; const q = E.priors.find(function (x) { return x.id === p[1]; }); return q ? { obj: q, key: p[2] } : null; }
     if (p[0] === 'debts' || p[0] === 'funeral' || p[0] === 'misc') { E[p[0]] = E[p[0]] || {}; return { obj: E[p[0]], key: p[1] }; }
     return null;
   }
@@ -186,6 +187,24 @@
         row('그때 낸 증여세', money(base + 'taxPaid'), '상속세에서 빼 줍니다') + '<p data-teach="T14"></p></details></div>';
     }).join('') : '<p class="es-empty">아래 버튼으로 추가하세요.</p>');
     TEACH.render($('giftList'));
+    renderPriors();
+  }
+  // 단기재상속: 돌아가신 분이 10년 안에 받은 상속
+  function renderPriors() {
+    E.priors = E.priors || [];
+    const has = E.priors.length > 0;
+    document.querySelectorAll('input[name="hasPriors"]').forEach(function (r) { r.checked = E.meta.priors ? r.value === (has ? 'yes' : 'no') : (has && r.value === 'yes'); });
+    $('priorList').innerHTML = E.priors.map(function (q) {
+      const base = 'p.' + q.id + '.';
+      const c = EC.shortCredit(q, E.deceased.date);
+      return '<div class="es-item"><div class="es-item-head"><div><b>그때의 상속</b></div><button type="button" class="es-del" data-del-prior="' + q.id + '">삭제</button></div>' +
+        row('그때 돌아가신 분', textIn(base + 'who', 'name', '예: 아버지')) +
+        row('그때 돌아가신 날', '<input type="date" id="f_p_' + q.id + '_date" data-path="' + base + 'date" data-type="text" value="' + esc(q.date || '') + '">', '이번에 돌아가신 날까지 10년 안이어야 합니다') +
+        row('그때 상속세 산출세액', money(base + 'prevTax'), '그때 신고서의 산출세액(할증 포함)') +
+        row('그때 상속재산가액', money(base + 'prevEstate'), '빚·장례비 빼기 전 전체 재산, 사전증여 포함') +
+        row('그중 이번에 다시 상속되는 재산', money(base + 'reinherit'), '그때 평가한 금액 기준') +
+        '<p class="es-note prior-out">' + (c.years ? (c.years + '년 이내 · 공제율 ' + Math.round(c.rate * 100) + '%' + (c.amount ? ' · 공제액 약 ' + kor(c.amount) + ' (이번 상속세 한도 안에서)' : '')) : (q.date && E.deceased.date ? '10년이 지나 공제 대상이 아닙니다.' : '두 날짜를 넣으면 공제율이 나옵니다.')) + '</p></div>';
+    }).join('');
   }
 
   /* ---------- F. 나누기 ---------- */
@@ -275,7 +294,14 @@
   /* ---------- 저장 ---------- */
   let timer = null;
   function save() { clearTimeout(timer); timer = setTimeout(function () { EST.save(E); }, 300); }
-  function changed() { renderSum(); if (screen === 'F') renderSplitTable(); save(); }
+  function changed() { renderSum(); if (screen === 'F') renderSplitTable(); if (screen === 'E') refreshPriorNotes(); save(); }
+  function refreshPriorNotes() {
+    document.querySelectorAll('#priorList .es-item').forEach(function (box, i) {
+      const q = (E.priors || [])[i]; const out = box.querySelector('.prior-out'); if (!q || !out) return;
+      const c = EC.shortCredit(q, E.deceased.date);
+      out.textContent = c.years ? (c.years + '년 이내 · 공제율 ' + Math.round(c.rate * 100) + '%' + (c.amount ? ' · 공제액 약 ' + kor(c.amount) + ' (이번 상속세 한도 안에서)' : '')) : (q.date && E.deceased.date ? '10년이 지나 공제 대상이 아닙니다.' : '두 날짜를 넣으면 공제율이 나옵니다.');
+    });
+  }
   window.addEventListener('pagehide', function () { EST.save(E); });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') EST.save(E); });
 
@@ -299,6 +325,7 @@
   document.addEventListener('change', function (ev) {
     const el = ev.target;
     if (el.name === 'hasSpouse') { E.meta.family = true; EST.setSpouse(E, el.value === 'yes'); renderA(); changed(); return; }
+    if (el.name === 'hasPriors') { E.meta.priors = el.value; E.priors = E.priors || []; if (el.value === 'no') E.priors = []; else if (!E.priors.length) E.priors.push({ id: EST.id('p') }); renderPriors(); changed(); return; }
     if (el.name === 'hasGifts') { E.meta.gifts = el.value; if (el.value === 'no') E.gifts = []; else if (!E.gifts.length) E.gifts.push({ id: EST.id('g') }); renderE(); changed(); return; }
     if (el.dataset.splitMode) {
       const key = el.dataset.splitMode, m = el.value;
@@ -342,6 +369,7 @@
     if (b.dataset.life) { const inp = document.getElementById('f_' + b.dataset.life.replace(/\./g, '_')); if (inp && window.DH && DH.openLifeHelper) DH.openLifeHelper(inp); return; }
     if (b.id === 'addAsset') { E.assets.push({ id: EST.id('a'), type: 'apt' }); renderB(); changed(); const last = document.querySelector('#assetList .es-item:last-child input[data-type="money"]'); if (last) last.focus(); return; }
     if (b.dataset.delAsset) { const id = b.dataset.delAsset; if (!confirm('이 재산을 지울까요?')) return; E.assets = E.assets.filter(function (a) { return a.id !== id; }); renderB(); changed(); return; }
+    if (b.dataset.delPrior) { const id = b.dataset.delPrior; E.priors = (E.priors || []).filter(function (q) { return q.id !== id; }); renderPriors(); changed(); return; }
     if (b.id === 'addGift') { E.gifts.push({ id: EST.id('g') }); renderE(); changed(); return; }
     if (b.dataset.delGift) { const id = b.dataset.delGift; E.gifts = E.gifts.filter(function (g) { return g.id !== id; }); renderE(); changed(); return; }
     if (b.id === 'btnPrev') { const i = SCREENS.indexOf(screen); if (i > 0) show(SCREENS[i - 1], true); return; }

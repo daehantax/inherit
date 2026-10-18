@@ -71,6 +71,17 @@
         <div class="ctl"><input type="text" id="giftTaxBase" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
       <div class="field"><label for="giftTaxPaid">그때 낸 증여세 <small>산출세액 기준</small></label>
         <div class="ctl"><input type="text" id="giftTaxPaid" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <details class="dh short-box"><summary>돌아가신 분이 10년 안에 상속받은 재산이 있나요? (단기재상속 세액공제)</summary>
+        <p class="muted" style="font-size:13px">예) 아버지가 돌아가신 뒤 10년 안에 어머니가 돌아가신 경우. 그때 낸 상속세 중 다시 상속되는 몫을 빼 줍니다(상증법 30조).</p>
+        <div class="field"><label for="shortYears">그때 상속에서 이번 상속까지</label>
+          <div class="ctl"><select id="shortYears"><option value="">해당 없음</option><option value="1">1년 이내 (100%)</option><option value="2">2년 이내 (90%)</option><option value="3">3년 이내 (80%)</option><option value="4">4년 이내 (70%)</option><option value="5">5년 이내 (60%)</option><option value="6">6년 이내 (50%)</option><option value="7">7년 이내 (40%)</option><option value="8">8년 이내 (30%)</option><option value="9">9년 이내 (20%)</option><option value="10">10년 이내 (10%)</option></select></div></div>
+        <div class="field"><label for="shortPrevTax">그때 상속세 산출세액</label>
+          <div class="ctl"><input type="text" id="shortPrevTax" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+        <div class="field"><label for="shortPrevEstate">그때 상속재산가액 <small>채무·장례비 빼기 전</small></label>
+          <div class="ctl"><input type="text" id="shortPrevEstate" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+        <div class="field"><label for="shortReinherit">그중 이번에 다시 상속되는 재산 <small>그때 평가액</small></label>
+          <div class="ctl"><input type="text" id="shortReinherit" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      </details>
     </section>
 
     <section class="card">
@@ -112,6 +123,7 @@
     <div class="kv"><span>= 과세표준</span><b id="r_base">0원</b></div>
     <div class="kv"><span>× 세율 <span class="sub" id="r_rateNote"></span></span><b id="r_calc">0원</b></div>
     <div class="kv"><span>− 증여세액공제</span><b id="r_giftCredit">0원</b></div>
+    <div class="kv" id="r_shortRow" hidden><span>− 단기재상속 세액공제 <span class="sub" id="r_shortNote"></span></span><b id="r_shortCredit">0원</b></div>
     <div class="kv"><span>− 신고세액공제 (3%)</span><b id="r_reportCredit">0원</b></div>
     <div class="kv total"><span>납부할 상속세</span><b id="r_pay">0원</b></div>
 
@@ -200,7 +212,11 @@
     // 증여세액공제 §28 한도
     const giftLimit = (base>0 && giftBase>0) ? Math.floor(calc * Math.min(1, giftBase/base)) : 0;
     const giftCredit = Math.min(giftPaid, giftLimit, calc);
-    const afterGift = Math.max(0, calc - giftCredit);
+    // 단기재상속 세액공제 §30: 한도 = 산출세액 − 증여세액공제
+    const shortYears = document.getElementById('shortYears').value;
+    const shortRaw = DH.shortCredit(shortYears, DH.val('shortPrevTax'), DH.val('shortPrevEstate'), DH.val('shortReinherit'));
+    const shortCredit = Math.min(shortRaw, Math.max(0, calc - giftCredit));
+    const afterGift = Math.max(0, calc - giftCredit - shortCredit);
     const reportCredit = late ? 0 : Math.floor(afterGift * R.reportCredit);
     const pay = Math.max(0, afterGift - reportCredit);
 
@@ -211,6 +227,8 @@
     DH.set('r_fee',fee); DH.set('r_base',base); DH.set('r_calc',calc);
     document.getElementById('r_rateNote').textContent = base>0 ? '('+(rt.rate*100)+'%, 누진공제 '+DH.kor(rt.ded)+')' : '';
     DH.set('r_giftCredit',giftCredit); DH.set('r_reportCredit',reportCredit); DH.set('r_pay',pay);
+    DH.set('r_shortCredit',shortCredit); document.getElementById('r_shortRow').hidden = !shortCredit;
+    document.getElementById('r_shortNote').textContent = shortCredit ? '(공제율 '+Math.round(DH.shortRate(shortYears)*100)+'%'+(shortRaw>shortCredit?', 한도 적용':'')+')' : '';
     DH.set('r_d1',d1); document.getElementById('r_d1note').textContent=d1note;
     DH.set('r_d2',d2); document.getElementById('r_d2note').textContent=d2note;
     DH.set('r_d3',d3); DH.set('r_d4',d4);
@@ -246,6 +264,7 @@
         appraisalFee: v('appraisalFee'),
         childrensNumber: v('childCount'), children: v('childCount'), minorYears: v('minorYears'), seniors: v('seniorCount'), disabledYears: v('disabledYears'),
         financialAssets: v('financialValue'), financialDebts: v('financialDebt'),
+        shortYears: v('shortYears'), shortPrevTax: v('shortPrevTax'), shortPrevEstate: v('shortPrevEstate'), shortReinherit: v('shortReinherit'),
         _from: 'simple'
       };
       Object.keys(d).forEach(function (k) { if (d[k] === '' || d[k] == null) delete d[k]; });

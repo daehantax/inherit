@@ -73,7 +73,8 @@
       kv('= 산출세액', won(inh.calculatedTax)) +
       (inh.surcharge ? kv('+ 손자녀 할증', won(inh.surcharge)) : '') +
       (inh.giftCredit ? kv('− 그때 낸 증여세', won(inh.giftCredit)) : '') +
-      kv('− 기한 안 신고 공제 3%', won(inh.reportCredit)) +
+      (inh.shortTermCredit ? kv('− 단기재상속 세액공제', won(inh.shortTermCredit), inh.shortRows.map(function (r) { return r.years + '년 이내 ' + Math.round(r.rate * 100) + '%'; }).join(', ') + (inh.shortRaw > inh.shortTermCredit ? ' · 한도 적용' : '')) : '') +
+      kv('− 기한 안 신고 공제 3%', won(inh.reportCredit), inh.giftCredit || inh.shortTermCredit ? '앞의 공제를 뺀 금액의 3%' : '') +
       kv('= 낼 상속세', won(inh.payable), '', 'total');
 
     // 취득세 내역

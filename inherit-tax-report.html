@@ -309,7 +309,7 @@
             <tr><td>㉙ 「상속세 및 증여세법」 제28조 <span class="muted s">(사전증여 증여세 산출세액)</span></td><td><input type="text" id="giftTaxCredit" data-money placeholder="0"></td></tr>
             <tr><td>㉚ 「조세특례제한법」 제30조의5 · 제30조의6</td><td><input type="text" id="giftTaxSpecial" data-money placeholder="0"></td></tr>
             <tr><td>㉛ 외국납부세액공제 (법 §29)</td><td><input type="text" id="foreignTaxCredit" data-money placeholder="0"></td></tr>
-            <tr><td>㉜ 단기재상속세액공제 (법 §30)</td><td><input type="text" id="shortTermCredit" data-money placeholder="0"></td></tr>
+            <tr><td>㉜ 단기재상속세액공제 (법 §30) <span class="muted s" id="t32note"></span><br><span class="muted s">10년 안에 다시 상속된 재산 · 1년 이내 100%, 1년마다 10%p 감소</span></td><td><input type="text" id="shortTermCredit" data-money placeholder="0"></td></tr>
             <tr><td>㉝ 신고세액공제 (법 §69) <span class="muted s" id="t33note"></span></td><td class="num"><b class="calc" id="t33">0</b></td></tr>
             <tr><td>㉞ 그 밖의 공제</td><td><input type="text" id="otherCredit" data-money placeholder="0"></td></tr>
           </tbody>
@@ -391,6 +391,7 @@
       <li>기초공제 2억 + 인적공제(자녀 5천만, 미성년 1천만×잔여연수, 65세 이상 5천만, 장애인 1천만×기대여명)와 일괄공제 5억 중 큰 금액 (§18·§20·§21). 신고가 없으면(무신고 결정) 일괄공제 5억만(기한후신고는 큰 금액 선택 가능), 배우자 단독상속이면 기초+인적공제만, 비거주자는 기초공제 2억만 적용됩니다.</li>
       <li>배우자상속공제는 최소 5억, 한도는 법정상속분 상당액(배우자 사전증여 과세표준 차감)과 30억 중 작은 금액 (§19). 금융재산공제 최대 2억 (§22), 동거주택공제 최대 6억 (§23조의2).</li>
       <li>공제 종합한도(§24) = 과세가액 − 상속인 외의 자에게 유증한 재산 − 상속포기로 후순위 상속인이 받은 재산 − (과세가액 5억 초과 시) 사전증여재산의 증여세 과세표준. 공제 합계가 한도를 넘으면 한도까지만 공제됩니다.</li>
+      <li>단기재상속세액공제 (§30): 상속개시 후 10년 안에 다시 상속되면 전의 산출세액 × 재상속분 ÷ 전의 상속재산가액 × 공제율(1년 이내 100%, 1년마다 10%p 감소). 한도는 ㉔ − ㉘ − ㉛이며, 신고세액공제는 이 공제를 뺀 뒤 3%입니다.</li>
       <li>세율 10~50% 5단계 (§26). 과세표준 50만원 미만은 과세하지 않습니다 (§25②). 세대생략 할증 30%, 미성년자가 20억 초과 상속 시 40% (§27). 신고세액공제 3%는 기한 내 신고만 (§69).</li>
     </ul>
   </details>
@@ -644,7 +645,10 @@
     const t23 = (t22 > 0 && skipV > 0 && f12 > 0) ? Math.floor(t22 * skipV / f12 * skipRate) : 0;
     const t24 = t22 + t23;
     const t25 = num('interestAmount'), t26 = num('culturalDeferred');
-    const t29 = num('giftTaxCredit'), t30 = num('giftTaxSpecial'), t28 = t29 + t30, t31 = num('foreignTaxCredit'), t32 = num('shortTermCredit'), t34 = num('otherCredit');
+    const t29 = num('giftTaxCredit'), t30 = num('giftTaxSpecial'), t28 = t29 + t30, t31 = num('foreignTaxCredit'), t34 = num('otherCredit');
+    // ㉜ 단기재상속세액공제 한도: 산출세액(㉔) − 증여세액공제(㉘) − 외국납부세액공제(㉛) (법 §30③)
+    const t32in = num('shortTermCredit'), t32 = Math.min(t32in, Math.max(0, t24 - t28 - t31));
+    note('t32note', t32in > t32 ? '한도 적용: 입력 ' + DH.fmt(t32in) + ' → ' + DH.fmt(t32) : '');
     const creditBase = Math.max(0, t24 - t26 - (t28 + t31 + t32));
     const t33 = filing === 'ontime' ? Math.floor(creditBase * R.reportCredit) : 0;
     const t27 = t28 + t31 + t32 + t33 + t34;

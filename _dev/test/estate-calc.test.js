@@ -163,6 +163,26 @@ expect('아파트는 시세 우선', EC.assetValue({ type: 'apt', value: 9e8, go
 e = { heirs: [H('s', 'spouse'), H('p', 'parent')], assets: [{ id: 'd', type: 'deposit', value: 1e9 }], gifts: [{ to: 'p', value: 1e8 }] };
 expect('직계존속 증여공제 5천만', EC.calcInheritance(e).priorGiftTaxBase, 5e7);
 
+/* ---------- 9-2. 단기재상속 세액공제 (상증법 30조) ---------- */
+// 해설 예시: 전 산출세액 2억, 전 상속재산가액 10억, 재상속분 4억, 1년 8개월(2년 이내 90%) → 2억×4/10×90% = 7,200만
+expect('단기재상속 예시 7,200만', EC.shortCredit({ date: '2025-01-10', prevTax: 2e8, prevEstate: 1e9, reinherit: 4e8 }, '2026-09-10').amount, 72000000);
+expect('정확히 1년 되는 날은 1년 이내(100%)', EC.shortYears('2025-10-18', '2026-10-18'), 1);
+expect('1년 하루 지나면 2년 이내', EC.shortYears('2025-10-18', '2026-10-19'), 2);
+expect('10년 넘으면 공제 없음', EC.shortYears('2016-10-18', '2026-10-19'), 0);
+expect('공제율 7년 이내 = 40%', Math.round(EC.shortRate(7) * 100), 40);
+// 사례A 에 전의 상속(1년 이내, 전 산출세액 3천만, 전 상속재산 6억, 재상속분 3억) → 1,500만 공제 → 신고공제는 공제 뒤 금액의 3%
+// 산출 58,857,143 − 15,000,000 = 43,857,143 → 3% 1,315,714 → 납부 42,541,429
+a = caseA(); a.priors = [{ date: '2026-01-05', prevTax: 3e7, prevEstate: 6e8, reinherit: 3e8 }];
+r = EC.calcInheritance(a);
+expect('사례A + 단기재상속 공제 1,500만', r.shortTermCredit, 15000000);
+expect('신고세액공제는 공제 뒤 3%', r.reportCredit, 1315714);
+expect('납부세액', r.payable, 42541429);
+// 한도: 산출세액 − 증여세액공제를 넘지 못함
+a.priors = [{ years: 1, prevTax: 5e8, prevEstate: 6e8, reinherit: 6e8 }];
+r = EC.calcInheritance(a);
+expect('한도 = 산출세액(공제 전부 넘으면 산출세액까지)', r.shortTermCredit, r.calculatedTax);
+expect('한도 꽉 차면 납부 0', r.payable, 0);
+
 /* ---------- 10. 전체 합계 ---------- */
 const all = EC.calcAll(caseA());
 expect('calcAll: 지금 내는 세금 = 상속세 + 취득세', all.now, all.parts.inheritance + all.parts.acquisition);

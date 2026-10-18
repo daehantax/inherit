@@ -41,7 +41,7 @@
 
   /* ---------- 기본 모양 ---------- */
   EST.blank = function () {
-    return { v: 1, deceased: { date: '' }, heirs: [], assets: [], debts: {}, funeral: {}, gifts: [], misc: {}, opened: [], meta: {} };
+    return { v: 1, deceased: { date: '' }, heirs: [], assets: [], debts: {}, funeral: {}, gifts: [], priors: [], misc: {}, opened: [], meta: {} };
   };
   let seq = 0;
   EST.id = function (p) { seq += 1; return (p || 'x') + Date.now().toString(36).slice(-4) + seq.toString(36); };
@@ -49,7 +49,7 @@
     const b = EST.blank();
     e = (e && typeof e === 'object') ? e : {};
     Object.keys(b).forEach(function (k) { if (e[k] === undefined || e[k] === null) e[k] = b[k]; });
-    ['heirs', 'assets', 'gifts', 'opened'].forEach(function (k) { if (!Array.isArray(e[k])) e[k] = []; });
+    ['heirs', 'assets', 'gifts', 'priors', 'opened'].forEach(function (k) { if (!Array.isArray(e[k])) e[k] = []; });
     e.heirs = e.heirs.filter(function (h) { return h && h.id && h.rel; });
     e.assets = e.assets.filter(function (a) { return a && a.id && a.type; });
     e.v = 1;
@@ -136,6 +136,9 @@
       if (h.houses === undefined || h.houses === '') out.push({ screen: 'A', field: 'houses_' + h.id, text: EST.heirLabel(h, i + 1) + '님이 지금 가진 집 수 — 취득세·종부세가 달라집니다' });
       else if (Number(h.houses) >= 1 && !Number(h.ownGongsi)) out.push({ screen: 'A', field: 'ownGongsi_' + h.id, text: EST.heirLabel(h, i + 1) + '님 집의 공시가격 — 종부세를 계산합니다' });
     });
+    (e.priors || []).forEach(function (q) {
+      if (!q.date || !Number(q.prevTax) || !Number(q.prevEstate) || !Number(q.reinherit)) out.push({ screen: 'E', field: 'prior_' + q.id, text: '그때의 상속(단기재상속) — 날짜·그때 산출세액·상속재산가액·다시 상속되는 재산을 넣으면 공제가 계산됩니다' });
+    });
     return out;
   };
 
@@ -154,6 +157,7 @@
     if (Number(d.tax)) out.push('밀린 세금·공과금 고지서');
     if (Number((e.funeral || {}).cost) > 5e6) out.push('장례비 영수증(장례식장·상조·묘지·봉안)');
     if ((e.gifts || []).length) out.push('10년 안에 낸 증여세 신고서');
+    if ((e.priors || []).length) out.push('10년 안에 있었던 그때 상속의 상속세 신고서·결정통지서(단기재상속 세액공제용)');
     out.push('협의분할서(가족끼리 나누기로 했다면, 인감증명서 첨부)');
     return out;
   };
@@ -191,6 +195,12 @@
     d.financialAssets = won(e.assets.filter(EC.isFin).reduce(function (s, a) { return s + EC.assetValue(a); }, 0));
     d.financialDebts = won((e.debts || {}).loan);
     d.skipGenAmount = won(inh.skipAmount);
+    // 단기재상속: 20단계 보고서는 한 건만 받으므로 합쳐서 넘기고 기간은 가장 짧은 것
+    const pr = (e.priors || []).filter(function (q) { return Number(q.prevTax) && Number(q.reinherit); });
+    if (pr.length) {
+      const yrs = pr.map(function (q) { return EC.shortYears(q.date, e.deceased.date); }).filter(Boolean);
+      if (yrs.length) { d.shortYears = String(Math.min.apply(null, yrs)); d.shortPrevTax = won(pr[0].prevTax); d.shortPrevEstate = won(pr[0].prevEstate); d.shortReinherit = won(pr[0].reinherit); }
+    }
     d._from = 'estate';
     Object.keys(d).forEach(function (k) { if (d[k] === '' || d[k] === '0' && /Value|Property|debts|gift/.test(k)) delete d[k]; });
     return d;
@@ -237,7 +247,7 @@
         spouseInheritance: won(inh.ded.spouse), financialInheritance: won(inh.ded.fin), cohabitationDeduction: won(inh.ded.cohabit), enshrineAmount: won(f.grave),
         priorGiftBase: won(inh.priorGiftTaxBase), renounced: '',
         rows: { debt: debt, utility: utility, funeral: funeral } },
-      step4: { inheritance_date: e.deceased.date || '', skipValue: won(inh.skipAmount), skipMinor: !!inh.skipBig, giftTaxCredit: won(inh.giftTaxPaid), appraisalFee: won((e.misc || {}).appraisalFee) },
+      step4: { inheritance_date: e.deceased.date || '', skipValue: won(inh.skipAmount), skipMinor: !!inh.skipBig, giftTaxCredit: won(inh.giftTaxPaid), shortTermCredit: won(inh.shortTermCredit), appraisalFee: won((e.misc || {}).appraisalFee) },
       _from: 'estate', _savedAt: new Date().toISOString()
     };
   };

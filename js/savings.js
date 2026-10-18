@@ -56,7 +56,7 @@
       const netAll = Math.max(1, inh.totalProperty - inh.debts);
       const s = Math.min(1, inh.ded.spouseLimit / netAll);
       return { title: '배우자가 조금 더 받으면',
-        body: '지금은 배우자가 ' + kor(inh.ded.spouseActual) + '을 받는 것으로 계산했습니다. 배우자 공제 한도는 법정상속분 상당액(최대 30억원)인 ' + kor(inh.ded.spouseLimit) + '이고, 여기까지 받으면(전체의 약 ' + Math.round(s * 100) + '%) 그만큼 공제가 늘어납니다. 다만 배우자가 나중에 돌아가실 때 그 재산에 다시 상속세가 나옵니다(이 계산에는 넣지 않았습니다). 배우자 몫은 신고기한 다음 날부터 9개월 안에 등기·명의이전까지 끝내야 인정됩니다.',
+        body: '지금은 배우자가 ' + kor(inh.ded.spouseActual) + '을 받는 것으로 계산했습니다. 배우자 공제 한도는 법정상속분 상당액(최대 30억원)인 ' + kor(inh.ded.spouseLimit) + '이고, 여기까지 받으면(전체의 약 ' + Math.round(s * 100) + '%) 그만큼 공제가 늘어납니다. 다만 배우자가 나중에 돌아가실 때 그 재산에 다시 상속세가 나옵니다(이 계산에는 넣지 않았습니다. 10년 안에 돌아가시면 단기재상속 세액공제로 일부 덜어집니다). 배우자 몫은 신고기한 다음 날부터 9개월 안에 등기·명의이전까지 끝내야 인정됩니다.',
         mod: withSpouseShare(e, sp.id, s), action: '배우자 ' + Math.round(s * 100) + '%로 바꿔 다시 계산' };
     } },
     { code: 'S02', kind: 'save', teach: 'T06', run: function (e, cur) {
@@ -182,6 +182,19 @@
       Object.keys(cur.transfer).forEach(function (id) { cur.transfer[id].rows.forEach(function (r) { if (r.heavyRisk) risky.push(nameOf(e, id) + '님의 ' + r.name); }); });
       if (!risky.length) return null;
       return { title: '팔 때 다주택 중과를 확인하세요', body: risky.join(', ') + ': 집이 여러 채인 상태로 상속일부터 5년이 지나 조정대상지역(2026년 현재 서울 전역·경기 일부)의 집을 팔면 양도세가 20~30%p 더 붙고 장기보유공제도 없습니다. 위 양도세는 중과 없이 계산한 금액입니다. 5년 안에 팔지, 언제 팔지 세무사와 미리 정하세요.' };
+    } },
+    { code: 'C10', kind: 'check', teach: 'T25', run: function (e, cur) {
+      const pr = e.priors || [];
+      if (!pr.length) {
+        // 배우자가 없고, 돌아가신 분이 고령이면 먼저 돌아가신 배우자에게서 받은 재산이 있을 수 있음
+        if (heirs(e).some(function (h) { return h.rel === 'spouse'; })) return null;
+        return { title: '먼저 돌아가신 배우자에게서 받은 재산이 있나요?', body: '돌아가신 분이 10년 안에 배우자 등에게서 상속받은 재산이 이번에 다시 상속되면, 그때 낸 상속세의 일부(1년 이내 100% … 10년 이내 10%)를 이번 상속세에서 뺍니다(단기재상속 세액공제). 입력 화면 E에서 넣을 수 있습니다.' };
+      }
+      const r = cur.inheritance;
+      const miss = pr.some(function (q) { return !q.date || !Number(q.prevTax) || !Number(q.prevEstate) || !Number(q.reinherit); });
+      if (miss) return { title: '그때 상속세 신고서를 찾아 주세요', body: '단기재상속 세액공제는 그때의 상속세 산출세액·상속재산가액과, 그중 이번에 다시 상속되는 재산 가액이 있어야 계산됩니다. 그때 상속세 신고서나 결정통지서에 있습니다.' };
+      if (r.shortRaw > r.shortTermCredit) return { title: '단기재상속 공제가 한도에 걸렸습니다', body: '계산한 공제액 ' + kor(r.shortRaw) + ' 중 이번 상속세 산출세액(증여세액공제 뺀 금액)인 ' + kor(r.shortTermCredit) + '까지만 빠집니다.' };
+      return null;
     } },
     { code: 'C08', kind: 'check', teach: 'T15', run: function (e) {
       return { title: '돌아가시기 전 큰 출금이 있었나요?', body: '돌아가시기 1년 안에 2억원 이상, 2년 안에 5억원 이상 예금이 나가거나 부동산 등을 팔거나 빚을 졌다면(재산 종류별로 따짐) 어디에 썼는지 설명해야 합니다. 설명하지 못한 금액에서 일부(20%와 2억원 중 적은 금액)를 뺀 나머지가 상속재산에 더해집니다.' };

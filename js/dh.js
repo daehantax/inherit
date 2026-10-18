@@ -390,6 +390,65 @@
     });
   };
 
+  /* ---------- 단기재상속 세액공제 (상증법 §30) ----------
+     공제액 = 전의 상속세 산출세액 × 재상속분 재산가액 ÷ 전의 상속재산가액 × 공제율
+     공제율: 전의 상속개시일부터 1년 이내 100%, 1년마다 10%p 감소, 10년 이내 10%
+     한도: 상속세 산출세액(할증 포함) − 증여세액공제 − 외국납부세액공제. 신고세액공제는 이 공제를 뺀 뒤 3%.
+     js/estate-calc.js 의 EC.shortCredit 과 같은 산식(둘 다 고칠 것) */
+  DH.shortYears = function (prevDate, curDate) {
+    const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(prevDate || ''), c = /^(\d{4})-(\d{2})-(\d{2})$/.exec(curDate || '');
+    if (!p || !c) return 0;
+    const pd = Date.UTC(+p[1], +p[2] - 1, +p[3]), cd = Date.UTC(+c[1], +c[2] - 1, +c[3]);
+    if (cd <= pd) return 0;
+    for (let n = 1; n <= 10; n++) if (cd <= Date.UTC(+p[1] + n, +p[2] - 1, +p[3])) return n;
+    return 0;
+  };
+  DH.shortRate = function (n) { n = Math.floor(Number(n) || 0); return n >= 1 && n <= 10 ? (11 - n) / 10 : 0; };
+  DH.shortCredit = function (years, prevTax, prevEstate, reinherit) {
+    const rate = DH.shortRate(years); prevTax = DH.clamp0(prevTax); prevEstate = DH.clamp0(prevEstate); reinherit = Math.min(DH.clamp0(reinherit), prevEstate);
+    if (!rate || !prevTax || !prevEstate || !reinherit) return 0;
+    return Math.floor(prevTax * reinherit / prevEstate * rate);
+  };
+  DH.SHORT_YEARS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) { return [String(n), n + '년 이내 (' + (110 - n * 10) + '%)']; });
+  // 신고서 칸(㉜) 옆 도우미: 전의 상속 정보로 공제액을 계산해 넣는다
+  DH.openShortHelper = function (target) {
+    let box = document.getElementById('dhShort');
+    if (!box) {
+      box = document.createElement('div'); box.id = 'dhShort'; box.className = 'dh-life no-print'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+      box.innerHTML = '<div class="dh-life-card"><div class="dh-life-head"><b>단기재상속 세액공제 계산</b><button type="button" class="dh-life-x" aria-label="닫기">×</button></div>' +
+        '<p class="dh-life-lead">돌아가신 분이 <b>10년 안에</b> 다른 분(예: 먼저 돌아가신 배우자)에게서 상속받은 재산이 이번에 다시 상속되면, 그때 낸 상속세 일부를 빼 줍니다(상증법 §30).</p>' +
+        '<div class="field"><label>그때 상속에서 이번 상속까지 <small>전의 상속개시일 기준</small></label><div class="ctl"><select id="dsYears">' + DH.SHORT_YEARS.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') + '</select></div></div>' +
+        '<div class="field"><label>그때 상속세 산출세액 <small>전의 상속세 신고서 ㉒(+㉓)</small></label><div class="ctl"><input type="text" id="dsTax" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>' +
+        '<div class="field"><label>그때 상속재산가액 <small>채무·장례비 빼기 전, 사전증여 포함</small></label><div class="ctl"><input type="text" id="dsEstate" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>' +
+        '<div class="field"><label>그중 이번에 다시 상속되는 재산 <small>그때 평가한 금액</small></label><div class="ctl"><input type="text" id="dsRe" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>' +
+        '<div class="kv total"><span>공제액 <small id="dsFormula"></small></span><b id="dsAmt">0원</b></div>' +
+        '<p class="dh-life-src">공제액 = 그때 산출세액 × 다시 상속되는 재산 ÷ 그때 상속재산가액 × 공제율. 이번 산출세액에서 증여세액공제·외국납부세액공제를 뺀 금액까지만 공제되며, 신고서 계산에서 자동으로 한도를 적용합니다.</p>' +
+        '<div class="dh-life-btns"><span class="sp"></span><button type="button" class="btn ghost sm dh-life-x">취소</button><button type="button" class="btn sm" id="dsApply">공제액 넣기</button></div></div>';
+      document.body.appendChild(box); DH.bindMoney(box);
+      const recalc = function () {
+        const y = box.querySelector('#dsYears').value, a = DH.shortCredit(y, DH.val('dsTax'), DH.val('dsEstate'), DH.val('dsRe'));
+        box.querySelector('#dsAmt').textContent = DH.won(a); box.querySelector('#dsFormula').textContent = '(공제율 ' + Math.round(DH.shortRate(y) * 100) + '%)'; box.dataset.amt = a;
+      };
+      box.addEventListener('input', recalc); box.addEventListener('change', recalc);
+      box.addEventListener('click', function (e) {
+        if (e.target === box || e.target.closest('.dh-life-x')) { box.classList.remove('open'); return; }
+        if (e.target.closest('#dsApply')) { const t = box._target; if (t) { DH.set(t.id, box.dataset.amt || 0); t.dispatchEvent(new Event('input', { bubbles: true })); t.dispatchEvent(new Event('change', { bubbles: true })); } box.classList.remove('open'); }
+      });
+      box._recalc = recalc;
+    }
+    box._target = target; box._recalc(); box.classList.add('open');
+  };
+  DH.bindShortHelper = function () {
+    document.querySelectorAll('input#shortTermCredit, input#v32').forEach(function (inp) {
+      if (inp.dataset.shortBound) return; inp.dataset.shortBound = '1';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'dh-life-btn no-print'; b.textContent = '계산하기 ▸';
+      b.title = '전의 상속 정보로 단기재상속 세액공제를 계산합니다';
+      inp.insertAdjacentElement('afterend', b);
+      b.addEventListener('click', function () { DH.openShortHelper(inp); });
+    });
+  };
+  document.addEventListener('DOMContentLoaded', function () { DH.bindShortHelper(); });
+
   /* ---------- 장애인공제 기대여명 찾기 (상증법 §20①4호·③) ----------
      국가데이터처 「2024년 완전생명표(1세별)」 2025.12.3. 공표, 성별·연령별 기대여명(년).
      공제 연수 = 기대여명의 1년 미만을 1년으로 올림(§20③). 상속개시일 현재 고시된 표를 쓴다. */

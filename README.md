@@ -27,6 +27,7 @@ https://daehantax.github.io/inherit/
 - 가격: `js/estate.js` 의 `EST.PRICE` / 입금 계좌: `EST.FIRM.bank`
 - 영상: `js/teach.js` 목록의 `video`, `t`(시작 초)
 - 세율·공제: `js/estate-calc.js` 맨 위 `R` 과 `js/dh.js` 의 `DH.RULES` (둘 다 고칠 것)
+- 단기재상속 세액공제(§30): `EC.shortCredit`(estate-calc.js) 와 `DH.shortCredit`(dh.js) 같은 산식. 쓰는 곳: 새 엔진·단순 계산기·20단계 보고서(_dev/report/template.html 8단계)·신고서 ㉜(도우미 「계산하기」)·전자신고 03레코드 18번
 
 ## 검사
 ```

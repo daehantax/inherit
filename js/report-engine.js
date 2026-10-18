@@ -98,16 +98,19 @@
     // 증여세액공제 (상증법 28조): 한도 = 산출세액(할증 포함) × min(1, 증여 과세표준 ÷ 상속세 과세표준)
     const giftCreditLimit = (taxBase > 0 && priorGiftTaxBase > 0) ? Math.floor(taxWithSurcharge * Math.min(1, priorGiftTaxBase / taxBase)) : 0;
     const giftCredit = Math.min(giftTaxDeduction, giftCreditLimit, taxWithSurcharge);
-    // 신고세액공제 3% = (산출세액 − 증여세액공제) × 3% (상증법 69조)
-    const reportCredit = Math.floor((taxWithSurcharge - giftCredit) * R.reportCredit);
-    const taxDeduction = giftCredit + reportCredit;
+    // 단기재상속 세액공제 (상증법 30조): 한도 = 산출세액(할증 포함) − 증여세액공제
+    const shortRaw = DH.shortCredit(($('shortYears') || {}).value, num('shortPrevTax'), num('shortPrevEstate'), num('shortReinherit'));
+    const shortTermCredit = Math.min(shortRaw, Math.max(0, taxWithSurcharge - giftCredit));
+    // 신고세액공제 3% = (산출세액 − 증여세액공제 − 단기재상속공제) × 3% (상증법 69조)
+    const reportCredit = Math.floor((taxWithSurcharge - giftCredit - shortTermCredit) * R.reportCredit);
+    const taxDeduction = giftCredit + shortTermCredit + reportCredit;
     const payableTax = Math.max(0, taxWithSurcharge - taxDeduction);
 
     return {
       totalProperty: totalProperty, debts: debts, funeralExpense: funeralExpense, priorGifts: priorGifts, priorGiftTaxBase: priorGiftTaxBase,
       taxableAmount: taxableAmount, skipAmount: skipAmount, deductionLimit: deductionLimit, requestedDeduction: ded, appliedDeduction: appliedDeduction,
       appraisalFee: appraisalFee, taxBase: taxBase, rate: rate, calculatedTax: calculatedTax, surcharge: surcharge,
-      giftCreditLimit: giftCreditLimit, giftCredit: giftCredit, giftTaxDeduction: giftTaxDeduction, reportCredit: reportCredit,
+      giftCreditLimit: giftCreditLimit, giftCredit: giftCredit, giftTaxDeduction: giftTaxDeduction, reportCredit: reportCredit, shortTermCredit: shortTermCredit, shortRaw: shortRaw,
       taxDeduction: taxDeduction, payableTax: payableTax
     };
   }
@@ -151,6 +154,7 @@
     if (r.taxBase === 0 && r.taxableAmount > 0) notes.push('과세표준이 0원이라 상속세가 없습니다. 다만 신고는 하는 것이 유리합니다(취득가액 인정).');
     if (r.giftTaxDeduction > r.giftCredit) notes.push('증여세액공제는 한도(산출세액 × 증여 과세표준 ÷ 상속세 과세표준) ' + fmt(r.giftCreditLimit) + '원까지만 적용했습니다.');
     if (r.priorGifts > 0 && isBlank('priorGiftTaxBase')) notes.push('사전증여의 과세표준을 넣지 않아 증여가액 전액을 과세표준으로 보고 계산했습니다. 증여세 신고서의 과세표준을 확인해 넣으면 더 정확합니다.');
+    if (r.shortTermCredit > 0) notes.push('세액공제에 단기재상속 세액공제 ' + fmt(r.shortTermCredit) + '원이 들어 있습니다' + (r.shortRaw > r.shortTermCredit ? '(한도 적용, 계산액 ' + fmt(r.shortRaw) + '원)' : '') + '.');
     if (r.payableTax > 0) notes.push('신고·납부 기한은 상속개시일이 속한 달의 말일부터 6개월입니다. 2천만 원 초과 시 연부연납(최장 10년)을 검토하세요.');
     const noteEl = $('resultNote'); if (noteEl) { noteEl.textContent = notes.join(' '); noteEl.hidden = notes.length === 0; }
     updatePrintSummary(); updateFeeAnchor();

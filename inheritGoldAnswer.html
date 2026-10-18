@@ -208,6 +208,18 @@
     <div class="field"><label for="priorGiftTaxBase">위 증여의 증여세 과세표준 합계 <small>모르면 비워두세요</small></label>
       <div class="ctl"><input type="text" id="priorGiftTaxBase" data-money placeholder="비워두면 증여가액 전액으로 계산"><span class="unit">원</span><span class="won"></span></div></div>
     <p class="subtle">※ 상속공제 종합한도와 증여세액공제 한도 계산에 씁니다. 비워두면 증여가액 전액을 과세표준으로 보아 보수적으로(세금이 많게) 계산합니다. 과세가액이 5억 이하이면 종합한도에서 사전증여분을 빼지 않습니다(상증법 24조).</p>
+    <details class="dh short-box"><summary>돌아가신 분이 10년 안에 상속받은 재산이 있나요? (단기재상속 세액공제)</summary>
+      <p class="subtle">예) 아버지가 돌아가신 뒤 10년 안에 어머니가 돌아가셔서, 그때 어머니가 받은 재산이 다시 자녀에게 상속되는 경우. 그때 낸 상속세 중 다시 상속되는 몫을 이번 상속세에서 빼 줍니다(상증법 30조).</p>
+      <div class="field"><label for="shortYears">그때 상속에서 이번 상속까지</label>
+        <div class="ctl"><select id="shortYears"><option value="">해당 없음</option><option value="1">1년 이내 (100%)</option><option value="2">2년 이내 (90%)</option><option value="3">3년 이내 (80%)</option><option value="4">4년 이내 (70%)</option><option value="5">5년 이내 (60%)</option><option value="6">6년 이내 (50%)</option><option value="7">7년 이내 (40%)</option><option value="8">8년 이내 (30%)</option><option value="9">9년 이내 (20%)</option><option value="10">10년 이내 (10%)</option></select></div></div>
+      <div class="field"><label for="shortPrevTax">그때 상속세 산출세액 <small>전의 신고서 ㉒(+㉓)</small></label>
+        <div class="ctl"><input type="text" id="shortPrevTax" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="shortPrevEstate">그때 상속재산가액 <small>채무·장례비 빼기 전, 사전증여 포함</small></label>
+        <div class="ctl"><input type="text" id="shortPrevEstate" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <div class="field"><label for="shortReinherit">그중 이번에 다시 상속되는 재산 <small>그때 평가한 금액</small></label>
+        <div class="ctl"><input type="text" id="shortReinherit" data-money placeholder="0"><span class="unit">원</span><span class="won"></span></div></div>
+      <p class="subtle">공제액 = 그때 산출세액 × 다시 상속되는 재산 ÷ 그때 상속재산가액 × 공제율. 이번 산출세액에서 증여세액공제를 뺀 금액까지만 공제되고, 신고세액공제 3%는 이 공제를 뺀 뒤 계산합니다.</p>
+    </details>
     <div class="actions"><button class="btn ghost" data-go="7">뒤로가기</button><button class="btn" data-go="9">다음</button></div>
   </section>
 
@@ -278,7 +290,7 @@
         <tr><td class="lab">(9) 세율</td><td class="num" id="taxRateValueCell">10%~50%</td><td class="rem">누진세율</td></tr>
         <tr><td class="lab">(10) 산출세액</td><td class="num" id="calculatedTaxValueCell"></td><td class="rem">(8) × (9)</td></tr>
         <tr><td class="lab">(10-1) 세대생략 할증</td><td class="num" id="surchargeValueCell"></td><td class="rem">손자녀 등 상속분 × 30% (40%)</td></tr>
-        <tr><td class="lab">(11) 세액공제</td><td class="num" id="taxDeductionValueCell"></td><td class="rem">증여세액공제 + 신고세액공제 3%<br>(3%는 산출세액에서 증여세액공제를 뺀 금액에 적용)</td></tr>
+        <tr><td class="lab">(11) 세액공제</td><td class="num" id="taxDeductionValueCell"></td><td class="rem">증여세액공제 + 단기재상속 세액공제 + 신고세액공제 3%<br>(3%는 산출세액에서 앞의 두 공제를 뺀 금액에 적용)</td></tr>
         <tr class="total"><td class="lab">(12) 자진납부할세액</td><td class="num" id="payableTaxValueCell"></td><td class="rem">(10) + (10-1) - (11)</td></tr>
       </tbody>
     </table>
