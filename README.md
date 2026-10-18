@@ -10,6 +10,8 @@ https://daehantax.github.io/inherit/
 - 공통: `css/dh.css` `js/dh.js` (디자인·세법 상수 `DH.RULES`) · 규칙 `_dev/PAGE-GUIDE.md`
 
 ## 상속 파일 플랫폼 (2026-10 추가)
+계획서: [`_dev/PLAN-v3.md`](_dev/PLAN-v3.md) (상속세 플랫폼 계획서 v3 — 여정·입력·티칭·절세·결제·신고 대행·기술·진행 상황)
+
 한 번 입력한 내용(상속 파일)을 모든 화면이 같이 씁니다.
 
 | 화면·파일 | 하는 일 |
