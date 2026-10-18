@@ -310,7 +310,7 @@
   });
 
   /* ---------- 상담 접수 (구글 시트, 기존 Apps Script 엔드포인트) ---------- */
-  DH.CONSULT_URL = 'https://script.google.com/macros/s/AKfycbxosuJSvfkc-RwP1V8gYTTwTDrugOINAsJ-P43auIP2d8yFnkhdEC7yxx_Xh5YHFpevqg/exec';
+  DH.CONSULT_URL = 'https://script.google.com/macros/s/AKfycbzI15I_g4DyBabMwo1xntqq5SKV_mAcPWNGrK9Woa95pPa7NXOZ8VNDr53eaAHmq1fMCQ/exec';   // 체납 자가진단 접수명단 시트 (탭: 상속 접수 / 상속 문의)
   // 계산기 페이지는 window.DH_summary = () => '예상 상속세 1.1억 (재산 18억…)' 를 정의하면 접수에 함께 담긴다.
   DH.consultHtml = function (opt) {
     opt = opt || {};
@@ -345,7 +345,7 @@
       const tags = ['[상속 랜딩] ' + page, name ? '이름: ' + name : '', summary].filter(Boolean).join(' / ');
       const btn = document.getElementById('dhSend'); btn.disabled = true; btn.textContent = '보내는 중…';
       try {
-        await fetch(DH.CONSULT_URL, { method: 'POST', body: JSON.stringify({ phone: phone, tags: tags, name: name, source: 'inherit/' + location.pathname.split('/').pop(), summary: summary, at: new Date().toISOString() }) });
+        await fetch(DH.CONSULT_URL, { method: 'POST', body: JSON.stringify({ form: 'inherit', page: page, phone: phone, tags: tags, name: name, source: 'inherit/' + location.pathname.split('/').pop(), summary: summary, at: new Date().toISOString() }) });
         show('접수되었습니다. 담당자가 영업일 기준 1일 안에 연락드립니다.' + (name ? ' (' + name + '님)' : ''));
         f.reset(); if (withCalc) withCalc.checked = true;
         try { localStorage.setItem('dh.consult.sent', new Date().toISOString()); } catch (e) { }
