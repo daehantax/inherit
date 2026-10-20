@@ -50,6 +50,7 @@
   function build(e, S) {
     S = S || {};
     const problems = [], add = function (t) { problems.push(t); };
+    const warnings = [], warnAdd = function (t) { warnings.push(t); };
     const inh = EC.calcInheritance(e), d = inh.ded, legal = EC.legalShares(e);
     const date = e.deceased.date || '', ym = ymd(date).slice(0, 6);
     const F = FIL.get(e);
@@ -235,7 +236,7 @@
       const base = Math.max(0, r.value - Math.round(Number(r.a.secured) || 0));
       const target = Math.floor(base * qPct / 100);
       R.push({ code: '23', values: { 3: r.no, 5: Math.max.apply(null, q.map(function (h) { return Math.floor(Number(h.livedYears) || 0); })), 6: base, 7: 'Y', 8: 'ZZ', 9: qPct, 10: target, 11: EC.R.cohabitMax, 12: Math.min(target, EC.R.cohabitMax) } });
-      if (Math.min(target, EC.R.cohabitMax) !== Math.round(d.cohabit)) add('동거주택공제 검산 불일치(지분 % 반올림): ' + Math.min(target, EC.R.cohabitMax) + ' ≠ ' + d.cohabit);
+      if (Math.min(target, EC.R.cohabitMax) !== Math.round(d.cohabit)) warnAdd('동거주택공제: 전산매체 23레코드는 지분을 정수 %로만 받아(' + qPct + '%) 공제액이 ' + Math.min(target, EC.R.cohabitMax).toLocaleString('ko-KR') + '원으로 계산되지만, 11·03레코드와 신고서는 엔진 값 ' + Math.round(d.cohabit).toLocaleString('ko-KR') + '원입니다. 홈택스 변환 결과에서 어느 쪽을 쓰는지 확인하고 필요하면 11레코드 14번을 맞추세요.');
       q.forEach(function (h) { const p = Math.round(r.shares[h.id] * 10000) / 100; R.push({ code: '24', values: { 3: heirSeq[h.id], 4: p, 5: 'Y', 6: 'Y', 7: p } }); });
     }
 
@@ -249,7 +250,7 @@
     // 수록 순서: 01, 02, 03, 그다음 첨부서류(자료구분 순)
     const order = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '19', '20', '23', '24'];
     R.sort(function (x, y) { return order.indexOf(x.code) - order.indexOf(y.code); });
-    return { records: R, problems: problems, totals: { taxable: f29, payable: t40 } };
+    return { records: R, problems: problems, warnings: warnings, totals: { taxable: f29, payable: t40 } };
   }
 
   // 레코드 → 바이트 + 형식 오류
@@ -257,6 +258,7 @@
     const lines = built.records.map(function (r) { return EF.record(r.code, r.values); });
     const errors = [], warn = [];
     lines.forEach(function (l) { Array.prototype.push.apply(errors, l.errors); Array.prototype.push.apply(warn, l.warn); });
+    Array.prototype.push.apply(warn, built.warnings || []);
     return { lines: lines, errors: errors, warn: warn, bytes: EF.fileBytes(lines) };
   }
 
