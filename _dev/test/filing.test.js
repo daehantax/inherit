@@ -143,7 +143,7 @@ function sample() {
   p.click('[data-go="done"]');
   expect('미리 보기 행 수', p.d.querySelectorAll('#flPreview tbody tr').length, 6);   // 5행 + 계
   expect('계좌번호는 미리 보기에서 가림', /99998888|12345678901234/.test(p.el('flPreview').textContent) ? 1 : 0, 0);
-  expect('상품 없으면 선택 안내', p.d.querySelectorAll('#flNext .fl-choice a').length, 3);
+  expect('상품 없으면 선택 안내(검토·맡기기, 셀프는 준비 중)', p.d.querySelectorAll('#flNext .fl-choice a').length, 2);
   console.log('[6] 세무사용 화면 (efile.html) — 고객이 적은 값이 미리 보이고, 비밀 칸만 채우면 통과');
   const E6 = sample(); FIL.sync(E6);
   const q = await open('efile.html', { hash: '#e=' + EST.encode(E6) });

@@ -1,5 +1,5 @@
 # 고객 → 세무사 전체 흐름을 실제 브라우저(크로미움)로 걸어 본다.
-#   1단계 입력 → 결과 → 셀프 신고서 → 신고서 채우기 → 신청(접수 서버는 가짜로) → 열쇠 코드 → 신고서 서식
+#   1단계 입력 → 결과 → 세무사 검토(셀프는 준비 중) → 신고서 채우기 → 신청(접수 서버는 가짜로) → (열쇠 코드 → 신고서 서식: 셀프를 열면 다시 검증)
 #   → 세무사: 접수 링크로 efile.html 열기 → 비밀 칸 → 검사 → 파일 → 신고서 서식 열기
 # 실행: python3 _dev/test/flow-e2e.py   (실패하면 exit 1)
 import json, re, sys, os
@@ -50,10 +50,11 @@ with sync_playwright() as p:
 
     print('[고객] 결과 → 셀프 신고서 카드')
     pg.goto(URL + 'result.html'); pg.wait_for_timeout(500)
-    ok('셀프 카드에 「신고서 채우러 가기」', pg.locator('#products a[href="filing.html?p=self"]').count() == 1)
+    ok('셀프 카드는 「준비 중」(버튼 없음)', pg.locator('#products .pd.soon[data-pd="self"]').count() == 1 and pg.locator('#products a[href="filing.html?p=self"]').count() == 0)
+    ok('검토 카드에 「신고서 채우러 가기」', pg.locator('#products a[href="filing.html?p=review"]').count() == 1)
     ok('맡기기 카드는 바로 신청 버튼', pg.locator('#products [data-pick="file"]').count() == 1)
-    pg.click('#products a[href="filing.html?p=self"]'); pg.wait_for_timeout(500)
-    ok('신고서 채우기로 이동(셀프)', 'filing.html?p=self' in pg.url and '셀프 신고서' in pg.text_content('#flProd'))
+    pg.click('#products a[href="filing.html?p=review"]'); pg.wait_for_timeout(500)
+    ok('신고서 채우기로 이동(검토)', 'filing.html?p=review' in pg.url and '세무사 검토' in pg.text_content('#flProd'))
 
     print('[고객] 신고서 채우기')
     def typ(sel, v):
@@ -91,39 +92,25 @@ with sync_playwright() as p:
     sec = pg.evaluate('JSON.parse(localStorage.getItem("dh.estate.secret.v1"))')
     ok('비밀 저장소에 주민번호·계좌번호', sec['deceased']['ssn'] == '4001011234567' and sec['fin'][ids[0]]['account'] == '12345678901234', sec)
     pg.click('[data-go="done"]'); pg.wait_for_timeout(200)
-    ok('비운 칸: 둘째 주소 등 남음 → 안내만, 진행 가능', pg.locator('#flNext a[href="result.html?p=self#ask"]').count() == 1)
+    ok('비운 칸 있어도 진행 가능 · 검토 신청 링크', pg.locator('#flNext a[href="result.html?p=review#ask"]').count() == 1)
     ok('서식 미리 보기 3행 + 계', pg.locator('#flPreview tbody tr').count() == 4)
 
     print('[고객] 신청 (접수 서버는 가짜) → 접수번호')
-    pg.click('#flNext a[href="result.html?p=self#ask"]'); pg.wait_for_timeout(600)
-    ok('결과 화면 신청 폼에서 셀프 선택됨', pg.evaluate('document.querySelector("input[name=askProd]:checked").value') == 'self')
+    pg.click('#flNext a[href="result.html?p=review#ask"]'); pg.wait_for_timeout(600)
+    ok('결과 화면 신청 폼에서 검토 선택됨', pg.evaluate('document.querySelector("input[name=askProd]:checked").value') == 'review')
+    ok('열쇠 코드 칸 숨김(셀프 준비 중)', pg.evaluate('document.getElementById("keyBox").hidden'))
     ok('「함께 보냅니다」 체크 보임', pg.evaluate('!document.getElementById("askWith").hidden && document.getElementById("askWithCheck").checked'))
     typ('#askName', '홍자녀'); typ('#askPhone', '010-1111-2222'); typ('#askEmail', 'kid@example.com')
     pg.click('label:has(#askAgree)'); pg.click('#askSend'); pg.wait_for_timeout(800)
     ok('접수번호 표시', 'F-20261019-07' in (pg.text_content('#askDone') or ''))
     ok('접수 서버로 1건 전송', len(posts) == 1)
     pay = posts[0]
-    ok('전송 내용: 상품·가격·링크·요약', pay.get('product') == 'self' and pay.get('price') == 99000 and pay['link'].startswith('file://') and '#e=' in pay['link'] and '신고서 채우기' in pay.get('summary', ''), {k: pay.get(k) for k in ['product', 'price', 'summary']})
+    ok('전송 내용: 상품·가격·링크·요약', pay.get('product') == 'review' and pay.get('price') == 330000 and pay['link'].startswith('file://') and '#e=' in pay['link'] and '신고서 채우기' in pay.get('summary', ''), {k: pay.get(k) for k in ['product', 'price', 'summary']})
     ok('전송 링크에 주민번호·계좌 없음', '4001011234567' not in pay['link'] and '12345678901234' not in json.dumps(pay))
     link = pay['link']
 
-    print('[고객] 열쇠 코드 → 신고서 서식')
-    typ('#keyNo', 'F-20261019-07'); typ('#keyCode', 'ABCD1234'); pg.click('#keyOpen'); pg.wait_for_timeout(500)
-    ok('열쇠 코드 확인 → 신고서 열기 버튼', pg.evaluate('!document.getElementById("keyOk").hidden'))
-    pg.click('#btnReturn'); pg.wait_for_timeout(800)
-    ok('신고서 페이지로', 'inherit-tax-report.html' in pg.url)
-    rows = pg.evaluate('Array.from(document.querySelectorAll("#assetBody tr")).map(tr => ({loc: tr.querySelector(".loc").value, price: tr.querySelector(".price").value, reg: tr.querySelector(".reg").value})).filter(r => r.price)')
-    ok('서식 재산 행: 아파트 + 예금 2', len(rows) == 3 and any('KB국민' in r['loc'] for r in rows) and any('84.97' in r['loc'] for r in rows), rows)
-    ok('서식에 계좌번호(비밀 저장소에서)', any(r['reg'] == '12345678901234' for r in rows), rows)
-    ok('4단계 신고인·피상속인·주민번호', pg.input_value('#applicant_name') == '홍자녀' and pg.input_value('#deceased_name') == '홍길동' and pg.input_value('#deceased_ssn') == '4001011234567' and pg.input_value('#applicant_ssn') == '8001011234567')
-    ok('채무·장례 행', pg.evaluate('document.querySelectorAll("#debtBody tr").length') >= 1 and pg.evaluate('document.querySelectorAll("#funeralBody tr").length') >= 1)
-    ok('칸별 입력 가이드 버튼(열쇠 있음)', pg.evaluate('!document.getElementById("btnGuide").hidden'))
-    pg.click('#btnGuide'); pg.wait_for_timeout(200)
-    ok('가이드 내용 있음', len(pg.text_content('#guideBody') or '') > 200)
-    t20 = pg.text_content('#t20')
-    ok('과세표준 계산됨', t20 is not None)
-    pg.goto(URL + 'filing.html?p=self#s=done'); pg.wait_for_timeout(500)
-    ok('신고서 채우기 확인 화면: 결제 완료 표시 + 서식 열기 버튼 + 홈택스 순서', '완료' in pg.text_content('#flNext') and pg.locator('#btnOpenReturn').count() == 1 and '홈택스' in pg.text_content('#flNext'))
+    # (셀프 신고서는 준비 중: 열쇠 코드 → 신고서 서식 흐름은 셀프를 열 때 다시 검증)
+    ok('filing?p=self 로 들어와도 검토로', (pg.goto(URL + 'filing.html?p=self#s=done') or True) and (pg.wait_for_timeout(400) or True) and '세무사 검토' in pg.text_content('#flProd'))
 
     print('[세무사] 접수 링크로 세무사용 화면')
     ctx2 = b.new_context(viewport={'width': 1280, 'height': 900})      # 다른 기기(세무사 PC): localStorage 비어 있음

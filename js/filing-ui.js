@@ -20,8 +20,9 @@
   const E = cur.e; const F = FIL.get(E); let SEC = FIL.loadSecret();
   const PRODUCTS = { self: '셀프 신고서', review: '세무사 검토', file: '신고까지 맡기기' };
   let product = (/[?&]p=(self|review|file)/.exec(location.search) || [])[1] || '';
+  if (product && !EST.OPEN[product]) product = 'review';            // 닫힌 상품(셀프 준비 중)은 검토로
   if (product) { try { localStorage.setItem('dh.estate.product', product); } catch (e) { } }
-  else { try { product = localStorage.getItem('dh.estate.product') || ''; } catch (e) { } }
+  else { try { product = localStorage.getItem('dh.estate.product') || ''; } catch (e) { } if (product && !EST.OPEN[product]) product = 'review'; }
   let screen = (/[#&]s=(\w+)/.exec(location.hash) || [])[1]; if (SCREENS.indexOf(screen) < 0) screen = 'people';
 
   /* ---------- 경로 읽기·쓰기 (filing) : 배열은 id로 찾는다 ---------- */
@@ -183,7 +184,7 @@
     let h = '';
     if (!product) {
       h = '<h3 class="subhead">어떻게 진행할까요?</h3><div class="fl-choice">' +
-        (over ? '' : '<a class="btn" href="filing.html?p=self#s=done">셀프 신고서로</a><a class="btn" href="filing.html?p=review#s=done">세무사 검토로</a>') + '<a class="btn' + (over ? '' : ' ghost') + '" href="result.html?p=file#ask">신고까지 맡기기</a></div>' +
+        (over ? '' : (EST.OPEN.self ? '<a class="btn" href="filing.html?p=self#s=done">셀프 신고서로</a>' : '') + '<a class="btn" href="filing.html?p=review#s=done">세무사 검토로</a>') + '<a class="btn' + (over ? '' : ' ghost') + '" href="result.html?p=file#ask">신고까지 맡기기</a></div>' +
         (over ? '<p class="es-note">총 상속재산이 15억원을 넘어 셀프 신고서·세무사 검토는 진행하지 않습니다.</p>' : '');
     } else if (product === 'self') {
       h = '<h3 class="subhead">셀프 신고서 — 이렇게 끝냅니다</h3><ol class="fl-steps">' +

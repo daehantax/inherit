@@ -23,7 +23,8 @@ const E = { v: 1, deceased: { date: '2026-03-10' },
   expect('양도세 내역 행 1개(분당 아파트)', p.d.querySelectorAll('#trDetail tbody tr').length, 1);
   expect('20단계 링크 없음(단순화)', p.el('btnGold') ? 1 : 0, 0);
   expect('상품 카드 3개(상속세 있음)', p.d.querySelectorAll('#products .pd').length, 3);
-  expect('추천 배지 1개', p.d.querySelectorAll('#products .badge').length, 1);
+  expect('추천 배지 1개', p.d.querySelectorAll('#products .badge.ok').length, 1);
+  expect('셀프 신고서 카드는 「준비 중」', p.d.querySelectorAll('#products .pd.soon[data-pd="self"]').length, 1);
   expect('달력 항목 있음', p.d.querySelectorAll('#calList li').length >= 5 ? 1 : 0, 1);
   // 절세 적용 → 다시 계산 → 되돌리기
   const before = p.text('bigNow');
@@ -57,7 +58,8 @@ const E = { v: 1, deceased: { date: '2026-03-10' },
   // 15억 이하 사례: 셀프·검토는 「신고서 채우기」로, 맡기기는 바로 신청
   const mid = JSON.parse(JSON.stringify(E)); mid.assets[0].value = 8e8; mid.assets[0].gongsi = 6e8;
   const m = await open('result.html', { hash: '#e=' + EST.encode(mid) });
-  expect('셀프·검토 카드 → 신고서 채우기 링크(2) + 맡기기 선택 링크(1)', m.d.querySelectorAll('#products a[href^="filing.html?p="]').length, 3);
+  expect('검토 카드 → 신고서 채우기 링크(1) + 맡기기 선택 링크(1) (셀프는 준비 중)', m.d.querySelectorAll('#products a[href^="filing.html?p="]').length, 2);
+  expect('신청 폼 라디오에 셀프 없음', m.d.querySelectorAll('input[name="askProd"]').length, 2);
   expect('맡기기 카드 → 바로 신청 버튼', m.d.querySelectorAll('#products [data-pick="file"]').length, 1);
   m.radio('askProd', 'review');
   expect('검토 고르면 버튼 글자', m.text('askSend'), '세무사 검토 신청하기');

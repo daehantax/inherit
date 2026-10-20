@@ -133,7 +133,7 @@
     return [
       { key: 'self', name: '셀프 신고서', say: '자산·빚을 건별로 적으면 신고서를 다 채워 드립니다. 직접 내시면 됩니다.', price: P.self, priceNote: '부가세 포함 · 총 상속재산 15억원 이하',
         items: ['건별로 적은 내용으로 채운 신고서 서식 전체 (인쇄·PDF)', '홈택스 직접 제출 순서 (화면·칸 단위)', '납부 안내', '결제 확인 후 열쇠 코드를 이메일로 보내 드림'] },
-      { key: 'review', name: '세무사 검토', say: '적은 내용을 세무사가 한 번 봐 드립니다.', price: P.review, priceNote: '셀프 신고서를 결제하셨다면 9만9천원 빼 드림 · 15억원 이하',
+      { key: 'review', name: '세무사 검토', say: '적은 내용을 세무사가 한 번 봐 드립니다.', price: P.review, priceNote: '부가세 포함 · 총 상속재산 15억원 이하',
         items: ['건별 입력값·평가액·공제 검토', '위 절세 포인트 중 적용되는 것 확정', '서면 답변서 + 30분 통화', '검토 끝난 신고서 서식(PDF) 전달'] },
       { key: 'file', name: '신고까지 맡기기', say: '세무사가 대신 신고합니다.', price: EST.fileFee(tp, 0), priceNote: '기본 99만원 + 10억 초과분 0.1% · 앞 단계 결제분 차감',
         items: ['세무사 검토 포함', '필요한 서류 목록 안내', '세무사가 홈택스로 전자신고, 접수증 전달', '취득세 기한·다음 해 재산세·종부세 달력'] }
@@ -144,8 +144,8 @@
     const fee = ps[2].price;
     let rec = 'self', line = '';
     if (!inh.payable) {
-      line = '상속세는 <b class="ok">0원</b>으로 계산됩니다. 신고하지 않아도 가산세는 없지만, 신고해 두면 나중에 팔 때 유리한 경우가 있습니다(감정가로 평가해 두는 경우 등). <b>셀프 신고서</b>로 직접 하셔도 충분합니다.';
-      rec = 'self';
+      line = '상속세는 <b class="ok">0원</b>으로 계산됩니다. 신고하지 않아도 가산세는 없지만, 신고해 두면 나중에 팔 때 유리한 경우가 있습니다(감정가로 평가해 두는 경우 등). 입력한 내용이 맞는지 <b>세무사 검토</b>만 받아 두셔도 됩니다.';
+      rec = 'review';
     } else if (best >= fee) {
       line = '위에서 찾은 절세 가능액은 <b class="ok">최대 ' + kor(best) + '</b>입니다. 신고까지 맡기시면 비용은 <b>약 ' + priceText(fee) + '</b>입니다.';
       rec = 'file';
@@ -153,17 +153,19 @@
       line = '위에서 찾은 절세 가능액은 <b class="ok">최대 ' + kor(best) + '</b>입니다. 적용되는지 세무사가 확인해 드리는 비용은 <b>' + priceText(EST.PRICE.review) + '</b>입니다.';
       rec = 'review';
     } else {
-      line = '이 경우는 <b>직접 신고하셔도 충분합니다.</b> 셀프 신고서(' + priceText(EST.PRICE.self) + ')로 서식을 모두 채워 드립니다.';
-      rec = 'self';
+      line = '이 경우는 복잡하지 않습니다. 입력한 내용을 세무사가 한 번 확인하는 <b>세무사 검토</b>(' + priceText(EST.PRICE.review) + ')면 충분합니다.';
+      rec = 'review';
     }
-    product = product && (product !== 'file' || inh.payable) ? product : rec;
+    if (!EST.OPEN[rec]) rec = EST.OPEN.review ? 'review' : 'file';
+    product = product && EST.OPEN[product] && (product !== 'file' || inh.payable) ? product : rec;
     if (!$('askForm').dataset.touched) product = rec;
     $('offerLine').innerHTML = line;
-    const shown = ps.filter(function (p) { return p.key !== 'file' || inh.payable; });
+    const shown = ps.filter(function (p) { return EST.OPEN[p.key] && (p.key !== 'file' || inh.payable); });
     const over = FIL.overLimit(E, inh), filled = FIL.has(E);
-    $('products').innerHTML = shown.map(function (p) {
-      const limited = over && p.key !== 'file';
+    $('products').innerHTML = ps.filter(function (p) { return p.key !== 'file' || inh.payable; }).map(function (p) {
+      const limited = over && p.key !== 'file', closed = !EST.OPEN[p.key];
       let act;
+      if (closed) return '<div class="pd off soon" data-pd="' + p.key + '"><div class="name">' + p.name + ' <span class="badge">준비 중</span></div><div class="say">' + p.say + '</div><div class="price">' + priceText(p.price) + '<small>' + p.priceNote + '</small></div><p class="pd-limit soon">지금은 세무사 검토로 진행합니다. 검토를 받으시면 신고서 서식도 함께 드립니다.</p></div>';
       if (limited) act = '<p class="pd-limit">총 상속재산 15억원 초과 — 이 상품은 15억원 이하만 진행합니다. 신고까지 맡기기 또는 세무사 문의(031-783-8877)</p>';
       else if (p.key === 'file') act = '<button type="button" class="btn' + (p.key === product ? '' : ' ghost') + ' wide" data-pick="' + p.key + '">이걸로 신청</button><a class="pd-sub" href="filing.html?p=file">신고서 먼저 채우기 (선택) →</a>';
       else act = '<a class="btn' + (p.key === product ? '' : ' ghost') + ' wide" href="filing.html?p=' + p.key + '">' + (filled ? '신고서 채우기 이어서 →' : '신고서 채우러 가기 →') + '</a>' + (filled ? '<button type="button" class="pd-sub as-link" data-pick="' + p.key + '">다 채웠으면 바로 신청</button>' : '<span class="pd-sub">자산·빚을 건별로 적은 뒤 신청합니다</span>');
@@ -178,6 +180,7 @@
     $('askWith').hidden = !filled;
     if (filled) $('askWithText').textContent = '신고서 채우기에서 적은 내용을 함께 보냅니다 (' + FIL.summary(E).replace(/^신고서 채우기: /, '') + ') · 주민등록번호·계좌번호는 빠집니다';
     $('askNoFill').hidden = filled || product === 'file';
+    $('keyBox').hidden = !EST.OPEN.self && !savedKey();   // 셀프 신고서가 닫혀 있으면 열쇠 코드 칸도 숨김(이미 받은 사람은 예외)
     if (!$('askNoFill').hidden) $('askNoFill').innerHTML = '아직 자산·빚을 건별로 적지 않았습니다. <a href="filing.html?p=' + product + '">신고서 채우기</a>를 먼저 하시면 ' + (product === 'self' ? '신고서가 바로 채워집니다.' : '세무사 검토가 빨라집니다.') + ' 지금 바로 신청하셔도 됩니다.';
     $('prodRadio').innerHTML = shown.map(function (p) { return '<label><input type="radio" name="askProd" value="' + p.key + '"' + (p.key === product ? ' checked' : '') + '><span>' + p.name + ' · ' + (p.price / 10000).toLocaleString('ko-KR') + '만원</span></label>'; }).join('');
     $('askSend').textContent = (shown.find(function (p) { return p.key === product; }) || shown[0]).name + ' 신청하기';
@@ -333,7 +336,7 @@
     }
     if (b.id === 'btnUndo') { if (undo) { E = undo.e; undo = null; EST.save(E); render(); } return; }
     if (b.dataset.pick) { product = b.dataset.pick; $('askForm').dataset.touched = '1'; renderAsk(); try { $('askForm').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { } return; }
-    if (b.dataset.ask) { const q = $('askQ'); if (q && !q.value) q.value = '「' + b.dataset.ask + '」이 저에게 적용되는지 궁금합니다.'; product = ALL.parts.inheritance ? 'review' : 'self'; $('askForm').dataset.touched = '1'; renderAsk(); return; }
+    if (b.dataset.ask) { const q = $('askQ'); if (q && !q.value) q.value = '「' + b.dataset.ask + '」이 저에게 적용되는지 궁금합니다.'; product = 'review'; $('askForm').dataset.touched = '1'; renderAsk(); return; }
     if (b.id === 'alarmSend') { sendAlarm(); return; }
     if (b.id === 'keyOpen') { openKey(); return; }
     if (b.id === 'btnReturn') { openReturn(); return; }
@@ -345,7 +348,7 @@
   TEACH.onOpen(function (id) { if (E.opened.indexOf(id) < 0) { E.opened.push(id); EST.save(E); } });
 
   if (cur.from === 'link') { try { history.replaceState(null, '', location.pathname); } catch (err) { } }
-  { const m = /[?&]p=(self|review|file)/.exec(location.search); if (m) { product = m[1]; $('askForm').dataset.touched = '1'; try { localStorage.setItem('dh.estate.product', m[1]); } catch (e) { } } }
+  { const m = /[?&]p=(self|review|file)/.exec(location.search); if (m) { product = EST.OPEN[m[1]] ? m[1] : 'review'; $('askForm').dataset.touched = '1'; try { localStorage.setItem('dh.estate.product', m[1]); } catch (e) { } } }
   render();
   if (/[?&]p=/.test(location.search)) { try { $('askForm').scrollIntoView({ block: 'start' }); } catch (e) { } }
   if (savedKey()) showUnlocked(savedKey());

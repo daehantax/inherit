@@ -32,6 +32,8 @@
     fileRate: 0.001,      // 신고 대행: 상속재산 10억 초과분 × 0.1%
     fileOver: 1e9
   };
+  // 지금 열어 둔 상품 (시범 운영: 셀프 신고서는 「준비 중」으로 잠금 — 검토 3건을 돌려 본 뒤 열지 결정)
+  EST.OPEN = { self: false, review: true, file: true };
   EST.FIRM = { name: '대한세무법인', email: 'sjlee@taxdh.net', bank: '' /* 예: '○○은행 000-000-000000 대한세무법인' — 비어 있으면 접수 후 이메일로 안내 */ };
   EST.fileFee = function (totalProperty, paidBefore) {
     const p = EST.PRICE;
