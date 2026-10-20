@@ -19,6 +19,7 @@ const INHERIT_HEADERS = ['접수일시', '이름', '휴대폰', '페이지', '�
 const ROYAL_SHEET = '상속 문의';
 const ROYAL_TO = 'sjlee@taxdh.net';          // 문의 메일을 받을 주소 (쉼표로 여러 명 가능)
 const ROYAL_FEE = '33만원(부가세 포함)';
+/* v7 (2026-10-21): 검토표·답변서(reviewSave/reviewLoad/answerGet) 추가 — 배포 › 배포 관리 › 새 버전 으로 다시 배포해야 적용됨 */
 const ROYAL_HEADERS = ['접수번호', '접수일시', '이름', '휴대폰', '이메일', '답변방식', '통화가능시간', '예상상속세', '배우자', '질문', '계산요약', '보고서 열기', '상태', '입금확인', '메모', '입력값JSON'];
 
 function doPost(e) {
@@ -31,6 +32,7 @@ function doPost(e) {
 
     if (d.form === 'inherit-royal') return royalIntake(ss, d);   // ── 계산 후 세무사 문의 (33만원)
     if (d.form === 'inherit-file') return fileIntake(ss, d);     // ── 셀프 신고서 / 세무사 검토 / 신고 대행 (result.html)
+    if (d.form === 'inherit-review') return reviewSave(ss, d);   // ── 세무사 검토표·답변서 저장 / 고객에게 보내기 (review.html)
 
     if (d.form === 'inherit') {                       // ── 상속·증여 랜딩 접수
       let sh = ss.getSheetByName(INHERIT_SHEET);
@@ -261,6 +263,8 @@ function doGet(e) {
     const ok = /^F-\d{8}-\d{2,}$/.test(p.verify) && String(p.key || '').toUpperCase() === fileKey(p.verify);
     return ContentService.createTextOutput(JSON.stringify({ ok: ok })).setMimeType(ContentService.MimeType.JSON);
   }
+  if (p.load) return reviewLoad(p);        // 세무사: 접수번호로 접수 내용 + 저장된 검토표 불러오기 (agent 키 필요)
+  if (p.answer) return answerGet(p);       // 고객: 답변서 링크 (접수번호 + 확인코드)
   return ContentService.createTextOutput('OK');
 }
 
@@ -268,4 +272,101 @@ function testFile() {
   const r = doPost({ postData: { contents: JSON.stringify({ form: 'inherit-file', product: 'self', productName: '셀프 신고서', price: 99000, name: '테스트', phone: '010-0000-0000', email: FILE_TO,
     pay: '계좌이체', payable: 12345678, total: 1800000000, summary: '테스트 접수', opened: 'T02,T05', link: 'https://daehantax.github.io/inherit/result.html', question: '' }) } });
   Logger.log(r.getContent());
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   세무사 검토표·답변서 (review.html / answer.html)  — v7
+   · 탭 「검토」: 접수번호마다 한 줄. 세무사가 「시트에 저장」을 누를 때마다 덮어씀(원본).
+   · 세무사 화면은 스크립트 속성 AGENT_KEY 값을 알아야 접수 내용을 읽을 수 있다. review.html 에서 한 번 넣으면 그 PC에 기억.
+   · 고객 답변서 링크 = answer.html?no=접수번호&t=확인코드(접수번호를 KEY_SECRET 으로 서명). 링크를 열면 doGet(?answer=)로 답변서 JSON 을 받는다.
+   ══════════════════════════════════════════════════════════════════ */
+const REVIEW_SHEET = '검토';
+const REVIEW_HEADERS = ['접수번호', '저장일시', '상태', '담당', '고객', '이메일', '답변 링크', '검토표 JSON', '답변서 JSON', '보낸 일시'];
+const REVIEW_COL = { no: 1, at: 2, status: 3, agent: 4, name: 5, email: 6, link: 7, review: 8, answer: 9, sent: 10 };
+// 세무사 키: 코드에 적지 않고 Apps Script 「프로젝트 설정 › 스크립트 속성」에 AGENT_KEY 로 저장한다 (저장소가 공개라서).
+function agentKey_() { return PropertiesService.getScriptProperties().getProperty('AGENT_KEY') || ''; }
+function agentOk_(k) { const a = agentKey_(); return !!a && String(k || '') === a; }
+const ANSWER_BASE = 'https://daehantax.github.io/inherit/answer.html';
+
+function answerToken(no) {
+  const sig = Utilities.computeHmacSha256Signature(String(no) + '|answer', fileSecret_());
+  return sig.slice(0, 6).map(b => ('0' + (b & 255).toString(16)).slice(-2)).join('').toUpperCase();   // 12자리
+}
+function reviewSheet_(ss) {
+  let sh = ss.getSheetByName(REVIEW_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(REVIEW_SHEET);
+    sh.appendRow(REVIEW_HEADERS);
+    sh.getRange(1, 1, 1, REVIEW_HEADERS.length).setFontWeight('bold').setBackground('#f8eded');
+    sh.setFrozenRows(1); sh.setColumnWidth(7, 320); sh.setColumnWidth(8, 200); sh.setColumnWidth(9, 200);
+  }
+  return sh;
+}
+function reviewRow_(sh, no) {
+  const last = sh.getLastRow(); if (last < 2) return 0;
+  const vals = sh.getRange(2, 1, last - 1, 1).getValues();
+  for (let i = 0; i < vals.length; i++) if (String(vals[i][0]) === String(no)) return i + 2;
+  return 0;
+}
+function fileRow_(ss, no) {
+  const sh = ss.getSheetByName(FILE_SHEET); if (!sh) return null;
+  const last = sh.getLastRow(); if (last < 2) return null;
+  const vals = sh.getRange(2, 1, last - 1, FILE_HEADERS.length).getValues();
+  for (let i = 0; i < vals.length; i++) if (String(vals[i][0]) === String(no)) {
+    const r = vals[i], f = sh.getRange(i + 2, FILE_COL.link).getFormula();
+    const m = /HYPERLINK\("([^"]+)"/.exec(f || '');
+    return { row: i + 2, product: r[2], price: r[3], name: r[4], phone: String(r[5]).replace(/^'/, ''), email: r[6], pay: r[7], status: r[10], link: m ? m[1] : String(r[11] || ''), question: r[13], summary: r[14], opened: r[15] };
+  }
+  return null;
+}
+function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+
+// 세무사: 접수번호로 불러오기
+function reviewLoad(p) {
+  if (!agentOk_(p.agent)) return json_({ ok: false, error: agentKey_() ? 'agent' : 'nokey' });
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const f = fileRow_(ss, p.load); if (!f) return json_({ ok: false, error: 'nofile' });
+  const sh = reviewSheet_(ss), row = reviewRow_(sh, p.load);
+  let review = null, answer = null, status = '', sent = '';
+  if (row) { const r = sh.getRange(row, 1, 1, REVIEW_HEADERS.length).getValues()[0]; status = r[2]; try { review = JSON.parse(r[7] || 'null'); } catch (e) { } try { answer = JSON.parse(r[8] || 'null'); } catch (e) { } sent = r[9] ? Utilities.formatDate(new Date(r[9]), 'Asia/Seoul', 'yyyy-MM-dd HH:mm') : ''; }
+  return json_({ ok: true, no: p.load, file: f, review: review, answer: answer, status: status, sent: sent, answerLink: ANSWER_BASE + '?no=' + encodeURIComponent(p.load) + '&t=' + answerToken(p.load) });
+}
+// 세무사: 저장 / 고객에게 보내기
+function reviewSave(ss, d) {
+  if (!agentOk_(d.agent)) return json_({ ok: false, error: agentKey_() ? 'agent' : 'nokey' });
+  const no = String(d.no || ''); if (!/^F-\d{8}-\d{2,}$/.test(no)) return json_({ ok: false, error: 'no' });
+  const sh = reviewSheet_(ss); let row = reviewRow_(sh, no);
+  const now = new Date(), link = ANSWER_BASE + '?no=' + encodeURIComponent(no) + '&t=' + answerToken(no);
+  const cut = v => String(v == null ? '' : v).slice(0, 49000);
+  const f = fileRow_(ss, no) || {};
+  const send = d.action === 'send';
+  const status = send ? '답변 발송' : (d.status || '검토 중');
+  const vals = [no, now, status, cut(d.agentName || ''), cut(d.customerName || f.name || ''), cut(d.customerEmail || f.email || ''), link, cut(d.review ? JSON.stringify(d.review) : ''), cut(d.answer ? JSON.stringify(d.answer) : '')];
+  if (!row) { sh.appendRow(vals.concat([send ? now : ''])); row = sh.getLastRow(); }
+  else { sh.getRange(row, 1, 1, vals.length).setValues([vals]); if (send) sh.getRange(row, REVIEW_COL.sent).setValue(now); }
+  if ((d.review && JSON.stringify(d.review).length > 49000) || (d.answer && JSON.stringify(d.answer).length > 49000)) return json_({ ok: false, error: 'toolong' });
+  if (send) {
+    const email = String(d.customerEmail || f.email || '');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json_({ ok: false, error: 'email' });
+    const name = String(d.customerName || f.name || '고객');
+    const body = [name + '님, 대한세무법인입니다. 신청하신 세무사 검토 답변서를 보내 드립니다.', '',
+      '답변서 보기: ' + link, '', '링크를 열면 화면에서 바로 읽을 수 있고, 「인쇄·PDF 저장」으로 보관하실 수 있습니다. 내용이 바뀌면 같은 링크에서 최신 답변서가 보입니다.',
+      '접수번호: ' + no, '', '궁금한 점은 이 메일에 회신하시거나 031-783-8877로 연락 주세요.', '대한세무법인 · ' + FILE_TO].join('\n');
+    try { MailApp.sendEmail({ to: email, cc: FILE_TO, subject: '[대한세무법인] 상속세 검토 답변서 (' + no + ')', body: body, name: '대한세무법인', replyTo: FILE_TO }); } catch (e) { return json_({ ok: false, error: 'mail', link: link }); }
+    // 「신고 접수」 상태도 「검토」로
+    try { const fr = fileRow_(ss, no); if (fr) { const fs = ss.getSheetByName(FILE_SHEET); const cur = fs.getRange(fr.row, FILE_COL.status).getValue(); if (cur === '신청' || cur === '입금' || cur === '서류') fs.getRange(fr.row, FILE_COL.status).setValue('검토'); } } catch (e) { }
+  }
+  return json_({ ok: true, no: no, link: link, status: status });
+}
+// 고객: 답변서 받기
+function answerGet(p) {
+  const no = String(p.answer || '');
+  if (!/^F-\d{8}-\d{2,}$/.test(no) || String(p.t || '').toUpperCase() !== answerToken(no)) return json_({ ok: false, error: 'token' });
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = reviewSheet_(ss), row = reviewRow_(sh, no); if (!row) return json_({ ok: false, error: 'none' });
+  const r = sh.getRange(row, 1, 1, REVIEW_HEADERS.length).getValues()[0];
+  let answer = null; try { answer = JSON.parse(r[8] || 'null'); } catch (e) { }
+  if (!answer || !r[9]) return json_({ ok: false, error: 'notsent' });     // 보내기 전에는 고객이 볼 수 없다
+  return json_({ ok: true, no: no, answer: answer, sent: Utilities.formatDate(new Date(r[9]), 'Asia/Seoul', 'yyyy-MM-dd HH:mm'), updated: Utilities.formatDate(new Date(r[1]), 'Asia/Seoul', 'yyyy-MM-dd HH:mm') });
 }

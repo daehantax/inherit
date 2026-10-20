@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>세무사 검토표 · 답변서 (세무사용) · 대한세무법인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/dh.css">
+<link rel="stylesheet" href="css/estate.css">
+<link rel="stylesheet" href="css/review.css">
+</head>
+<body data-chrome="off" class="rv-page">
+<main class="wrap wide">
+  <div class="dh-head">
+    <div class="crumb">세무사용 · <a href="efile.html">전자신고 파일 만들기</a></div>
+    <h1>세무사 검토표 → 답변서</h1>
+    <p>접수번호로 고객 입력을 불러오면 계산 내역·판정·절세 포인트가 검토표로 정리됩니다. 항목마다 「확인·고침·서류 확인」과 의견을 적고, 답변서 초안을 고쳐 고객에게 보냅니다. 저장은 사무실 구글 시트 「검토」 탭(원본)과 이 PC(백업)에 됩니다.</p>
+  </div>
+
+  <section class="card">
+    <h2>1. 불러오기</h2>
+    <div class="rv-load">
+      <div class="fl-f"><label>접수번호</label><input type="text" id="rvNo" placeholder="F-20261020-02" autocomplete="off"></div>
+      <div class="fl-f"><label>세무사 키 <small>Apps Script 스크립트 속성 AGENT_KEY · 이 PC에 기억</small></label><input type="password" id="rvAgent" autocomplete="off"></div>
+      <div class="fl-f"><label>담당 세무사</label><input type="text" id="rvAgentName" placeholder="이석제" autocomplete="off"></div>
+      <div class="fl-f btns"><button type="button" class="btn" id="rvLoad">시트에서 불러오기</button></div>
+    </div>
+    <details class="fl-more"><summary>시트 없이 링크로 열기 (접수 서버 배포 전·테스트)</summary>
+      <div class="es-ctl"><input type="text" id="rvLink" placeholder="https://daehantax.github.io/inherit/result.html#e=…" style="max-width:none;flex:1"><button type="button" class="btn sm" id="rvLoadLink">링크로 열기</button><button type="button" class="btn ghost sm" id="rvLoadLocal">이 기기의 입력 쓰기</button></div>
+      <div class="es-ctl" style="margin-top:6px"><input type="file" id="rvFile" accept="application/json"><span class="es-note">내보낸 검토표 파일(.json) 불러오기</span></div>
+    </details>
+    <p id="rvLoaded" class="es-note"></p>
+  </section>
+
+  <div id="rvBody" hidden>
+    <section class="card">
+      <h2>2. 고객</h2>
+      <div class="fl-grid">
+        <div class="fl-f"><label>이름</label><input type="text" data-m="name"></div>
+        <div class="fl-f"><label>휴대폰</label><input type="text" data-m="phone"></div>
+        <div class="fl-f"><label>이메일 <small>답변서 링크를 보낼 주소</small></label><input type="email" data-m="email"></div>
+        <div class="fl-f"><label>상품</label><input type="text" data-m="product"></div>
+        <div class="fl-f wide"><label>고객 질문 <small>시트 「질문」 열</small></label><textarea data-m="question" rows="2"></textarea></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. 검토표 <small>자동 정리된 내용을 보고, 항목마다 판단과 의견을 적습니다. 의견은 답변서 초안에 「세무사 의견」으로 들어갑니다.</small></h2>
+      <div id="rvSections"></div>
+      <div class="fl-f wide"><label>세무사 메모 (내부용, 답변서에 안 들어감)</label><textarea data-r="memo" rows="3"></textarea></div>
+    </section>
+
+    <section class="card">
+      <h2>4. 답변서 <small>초안은 검토표의 판단·의견으로 만들어집니다. 문단을 자유롭게 고치세요.</small></h2>
+      <div class="actions"><button type="button" class="btn ghost sm" id="rvDraft">초안 다시 만들기</button><span class="es-note">이미 고친 답변서가 있으면 덮어씁니다.</span></div>
+      <div id="rvAnswer"></div>
+    </section>
+
+    <section class="card rv-save">
+      <h2>5. 저장·보내기</h2>
+      <div class="actions">
+        <button type="button" class="btn" id="rvSave">시트에 저장</button>
+        <button type="button" class="btn ghost" id="rvPreview">답변서 미리 보기</button>
+        <button type="button" class="btn ghost" id="rvExport">파일로 내보내기</button>
+        <button type="button" class="btn" id="rvSend">고객에게 보내기 (메일로 링크)</button>
+      </div>
+      <p class="es-note" id="rvStatus"></p>
+      <p class="es-note">고객 링크: <span id="rvAnswerLink">(시트에 저장하면 나옵니다)</span></p>
+    </section>
+  </div>
+</main>
+
+<script src="js/dh.js"></script>
+<script src="js/estate-calc.js"></script>
+<script src="js/estate.js"></script>
+<script src="js/filing.js"></script>
+<script src="js/savings.js"></script>
+<script src="js/teach.js"></script>
+<script src="js/review-engine.js"></script>
+<script src="js/review-ui.js"></script>
+</body>
+</html>
