@@ -235,7 +235,7 @@ footer a.staff{color:var(--muted)}
 /* ---- 추모 히어로: [글] [국화] [비석] 나란히, 경계는 그라데이션으로 이어 붙임 ---- */
 .hero.memorial{--bg:#f6f4f1;background:var(--bg);height:min(80vh,640px);min-height:440px}
 .hero.memorial::before{display:none}
-.hero.memorial .hero-pics{position:absolute;top:0;right:0;bottom:0;width:66%;display:flex;justify-content:flex-end}
+.hero.memorial .hero-pics{position:absolute;top:0;right:0;bottom:0;width:100%;display:flex;justify-content:flex-end}   /* 글 없이 국화·비석만 */
 .hero.memorial .pic-flower{flex:1;background:url("../images/hero-bg.jpg") 38% 40%/cover no-repeat;
   -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 45%);mask-image:linear-gradient(90deg,transparent 0%,#000 45%)}
 .hero.memorial .pic-stone{position:relative;height:100%;width:clamp(280px,31vw,400px);flex:none;margin-left:-70px;overflow:hidden;
@@ -254,9 +254,8 @@ footer a.staff{color:var(--muted)}
 .hero-go:hover span{transform:translateX(4px)}
 @media (max-width:720px){
   .hero.memorial{height:auto;min-height:0;display:flex;flex-direction:column}
-  .hero.memorial .wrap{order:1;width:100%;box-sizing:border-box;height:auto;padding-top:44px;padding-bottom:28px}
   .hero.memorial h1{font-size:28px;margin-bottom:20px}
-  .hero.memorial .hero-pics{order:2;position:relative;width:100%;height:440px;
+  .hero.memorial .hero-pics{position:relative;width:100%;height:440px;
     -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 50px);mask-image:linear-gradient(180deg,transparent 0,#000 50px)}
   .hero.memorial .pic-flower{background-position:45% 40%}
   .hero.memorial .pic-stone{width:58%;margin-left:-50px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 50px);mask-image:linear-gradient(90deg,transparent 0,#000 50px)}

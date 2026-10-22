@@ -3,7 +3,8 @@ const {open,expect}=require('./harness');
   console.log('index.html 첫 화면 질문 + 접수 폼');
   let p=await open('index.html');
   // v3: 첫 화면은 조의 문구 + 시작 버튼 하나. 사망일 질문은 입력 화면(estate.html A)으로 옮김
-  expect('시작 버튼 → estate.html', /estate\.html/.test(p.d.getElementById('heroStart').getAttribute('href'))?1:0, 1);
+  expect('첫 화면은 사진만(글 없음)', p.d.querySelector('.hero .hero-text') ? 1 : 0, 0);
+  expect('시작 링크는 아래 카드에', p.d.querySelectorAll('main a[href="estate.html"]').length >= 1 ? 1 : 0, 1);
   expect('첫 화면에 사망일 질문 없음', p.d.getElementById('deathDate')?1:0, 0);
   expect('첫 화면에 가격 문구 없음(히어로)', /만원/.test(p.d.querySelector('.hero').textContent)?1:0, 0);
   expect('특징 5가지', p.d.querySelectorAll('.feat-list li').length, 5);
